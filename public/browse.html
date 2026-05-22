@@ -267,6 +267,13 @@ async function triggerCrawler() {
 }
 triggerCrawler();
 // Crawler runs on 24 hour schedule via Netlify
+
+// Trigger crawler on page load and every 10 minutes
+async function triggerCrawler(){
+  try{ await fetch('/.netlify/functions/crawler-all?t='+Date.now()); }catch(e){}
+}
+triggerCrawler();
+setInterval(triggerCrawler, 10*60*1000);
 </script>
 </body>
 </html>
