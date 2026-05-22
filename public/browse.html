@@ -238,6 +238,13 @@ setInterval(()=>{
   loadStats();
   if(!q&&!eco&&page===1)loadPkgs();
 },10000);
+
+// Auto-trigger crawler every 60 seconds
+async function triggerCrawler() {
+  try { await fetch('/.netlify/functions/crawler-npm?t='+Date.now()); } catch(e) {}
+}
+triggerCrawler();
+setInterval(triggerCrawler, 60000);
 </script>
 </body>
 </html>
