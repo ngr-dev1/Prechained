@@ -147,6 +147,18 @@ footer a:hover{color:var(--accent);}
 <script>
 let page=1,eco='',q='',timer;
 
+function ecoUrl(e, name) {
+  const urls = {
+    npm: `https://npmjs.com/package/${name}`,
+    pypi: `https://pypi.org/project/${name}`,
+    maven: `https://mvnrepository.com/artifact/${name}`,
+    cargo: `https://crates.io/crates/${name}`,
+    go: `https://pkg.go.dev/${name}`,
+    nuget: `https://nuget.org/packages/${name}`,
+    github: `https://github.com/${name}`
+  };
+  return urls[(e||'').toLowerCase()] || '#';
+}
 function ecoC(e){
   const m={npm:'e-npm',pypi:'e-pypi',maven:'e-maven',cargo:'e-cargo',go:'e-go',nuget:'e-nuget',github:'e-gh'};
   return m[(e||'').toLowerCase()]||'e-npm';
@@ -188,9 +200,9 @@ async function loadPkgs(){
       <div class="pkg-card" onclick="location='/package.html?id=${p.id}'">
         <div class="pc-cell">
           <div class="pc-name">${p.name}</div>
-          <div class="pc-desc">${(p.description||'No description').substring(0,60)}</div>
+          <div class="pc-desc">${(p.description||'No description').substring(0,55)}${p.raw_metadata?.license ? ' · '+p.raw_metadata.license : ''}</div>
         </div>
-        <div class="pc-cell"><span class="eco ${ecoC(p.ecosystem)}">${p.ecosystem}</span></div>
+        <div class="pc-cell"><a href="${ecoUrl(p.ecosystem, p.name)}" target="_blank" onclick="event.stopPropagation()" class="eco ${ecoC(p.ecosystem)}" style="text-decoration:none;">${p.ecosystem} ↗</a></div>
         <div class="pc-cell">
           <div class="pc-ver">${p.total_versions} versions</div>
           <div class="pc-ver-sub">v${p.latest_version||'—'}</div>
