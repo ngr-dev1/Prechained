@@ -6,19 +6,21 @@ const supabase = createClient(
 );
 
 export default async function handler(req) {
-  const [pkgCount, snapCount] = await Promise.all([
+  const [pkgResult, snapResult] = await Promise.all([
     supabase.from("packages").select("*", { count: "exact", head: true }),
     supabase.from("snapshots").select("*", { count: "exact", head: true })
   ]);
 
   return new Response(JSON.stringify({
-    total_packages: pkgCount.count || 0,
-    total_snapshots: snapCount.count || 0,
+    total_packages: pkgResult.count || 0,
+    total_snapshots: snapResult.count || 0,
     timestamp: new Date().toISOString()
   }), {
-    headers: { 
+    headers: {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*"
+      "Access-Control-Allow-Origin": "*",
+      "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+      "Pragma": "no-cache"
     }
   });
 }
