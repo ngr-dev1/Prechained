@@ -75,14 +75,19 @@ footer{border-top:1px solid var(--border);padding:18px 32px;display:flex;align-i
 footer a{color:var(--ink-2);text-decoration:none;font-weight:500;}
 footer a:hover{color:var(--accent);}
 @media(max-width:700px){
-  nav{padding:0 16px;}
-  .hero{padding:52px 20px 36px;}
-  .wf-bar,.tbl-wrap,.wf-foot{padding-left:16px;padding-right:16px;}
-  .tbl-head,.row{grid-template-columns:130px 1fr 65px 85px;}
-  .tbl-head>*:last-child,.row>*:last-child{display:none;}
-  .feed{height:62vh;}
-  .bottom{padding:44px 20px;}
-  footer{padding:14px 20px;}
+  nav{padding:0 12px;}
+  .nav-r{gap:10px;}
+  .nav-r a{font-size:12px;}
+  .hero{padding:48px 16px 32px;}
+  .wf-bar,.tbl-wrap,.wf-foot{padding-left:12px;padding-right:12px;}
+  .tbl-head{grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) 70px;}
+  .tbl-head>*:nth-child(2),.tbl-head>*:nth-child(5){display:none;}
+  .row{grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) 70px;}
+  .row>*:nth-child(2),.row>*:nth-child(5){display:none;}
+  .feed{height:60vh;}
+  .bottom{padding:40px 16px;}
+  footer{padding:14px 16px;flex-direction:column;gap:6px;}
+  .hero-stats{gap:12px;font-size:12px;flex-wrap:wrap;justify-content:center;}
 }
 </style>
 </head>
