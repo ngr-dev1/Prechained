@@ -6,9 +6,9 @@
   node_bundler = "esbuild"
 
 [[scheduled-functions]]
-  name = "crawler-npm"
-  cron = "*/5 * * * *"
+  name = "crawler-all"
+  cron = "0 0 * * *"
 
 [[scheduled-functions]]
   name = "anchor-checker"
-  cron = "*/20 * * * *"
+  cron = "0 6 * * *"
