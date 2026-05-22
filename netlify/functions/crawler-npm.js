@@ -7,6 +7,88 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+const PACKAGES = [
+  "express","lodash","axios","react","vue","next","nuxt","webpack","babel",
+  "typescript","eslint","prettier","jest","mocha","chalk","commander","dotenv",
+  "moment","dayjs","uuid","nodemon","cors","helmet","bcrypt","jsonwebtoken",
+  "mongoose","sequelize","prisma","socket.io","ws","tar","semver","glob",
+  "rimraf","cross-env","concurrently","husky","lint-staged","node-fetch",
+  "crypto-js","sharp","multer","morgan","body-parser","compression",
+  "cookie-parser","passport","joi","yup","zod","fastify","koa",
+  "rxjs","ramda","immutable","immer","mobx","redux","zustand",
+  "graphql","apollo-server","typeorm","knex","objection",
+  "vitest","cypress","playwright","puppeteer",
+  "vite","rollup","parcel","esbuild",
+  "tailwindcss","postcss","sass","styled-components","emotion",
+  "three","d3","chart.js","recharts",
+  "date-fns","luxon","chrono-node",
+  "winston","pino","bunyan","debug",
+  "redis","ioredis","bull","node-cron",
+  "stripe","braintree",
+  "nodemailer","sendgrid",
+  "class-validator","ajv","fastest-validator",
+  "formidable","busboy",
+  "mqtt","amqplib","kafkajs","nats",
+  "pg","mysql2","sqlite3","better-sqlite3",
+  "cheerio","jsdom",
+  "xml2js","fast-xml-parser","csv-parser","papaparse","xlsx",
+  "jimp","canvas","pdfkit","pdf-lib",
+  "express-rate-limit","csurf","xss-clean",
+  "cache-manager","lru-cache","keyv",
+  "dotenv","config","convict","nconf",
+  "async","bluebird","p-limit","p-queue","bottleneck",
+  "chokidar","fs-extra","mkdirp","del","copy",
+  "inquirer","yargs","minimist","meow","ora","cli-progress",
+  "faker","chance","casual","lorem-ipsum",
+  "mathjs","numeric","ml-matrix","simple-statistics",
+  "marked","showdown","remarkable","markdown-it",
+  "highlight.js","prismjs","shiki",
+  "lodash-es","radash","just-clone","just-debounce",
+  "nanoid","cuid","shortid","ulid",
+  "slugify","validator","dompurify","sanitize-html",
+  "mime","mime-types","file-type","magic-bytes.js",
+  "archiver","unzipper","tar-stream","decompress",
+  "node-schedule","cron","later","agenda",
+  "pm2","forever","nodemon","ts-node",
+  "passport-jwt","passport-local","passport-google-oauth20",
+  "argon2","bcryptjs","scrypt","pbkdf2",
+  "express-session","cookie-session","connect-redis",
+  "multer-s3","multer-gridfs-storage",
+  "mongoose-paginate-v2","mongoose-aggregate-paginate-v2",
+  "sequelize-typescript","typeorm-naming-strategies",
+  "graphql-tools","graphql-subscriptions","graphql-upload",
+  "dataloader","apollo-datasource","apollo-cache-inmemory",
+  "webpack-cli","webpack-dev-server","webpack-bundle-analyzer",
+  "babel-loader","ts-loader","css-loader","style-loader",
+  "jest-circus","@jest/globals","ts-jest","babel-jest",
+  "supertest","nock","sinon","proxyquire","rewire",
+  "artillery","autocannon","loadtest","clinic",
+  "swagger-jsdoc","swagger-ui-express","openapi-validator",
+  "socket.io-client","socket.io-redis","socket.io-emitter",
+  "ioredis","redis-om","keyv-redis","cache-manager-redis-store",
+  "express-async-errors","http-errors","boom","celebrate",
+  "class-transformer","reflect-metadata","tsyringe","inversify",
+  "typestack","routing-controllers","type-graphql","typedi",
+  "nestjs","@nestjs/core","@nestjs/common","@nestjs/cli",
+  "fastify-plugin","@fastify/cors","@fastify/helmet","@fastify/jwt",
+  "hono","itty-router","trouter","find-my-way",
+  "undici","got","ky","needle","superagent","request",
+  "cheerio","crawler","node-html-parser","htmlparser2",
+  "playwright-core","puppeteer-core","selenium-webdriver",
+  "pdf-parse","pdf2pic","pdfjs-dist",
+  "opencv4nodejs","tesseract.js","face-api.js",
+  "@tensorflow/tfjs-node","brain.js","ml-classify-text",
+  "natural","compromise","franc","langdetect",
+  "socket.io","uws","ws","sockjs","primus",
+  "grpc","@grpc/grpc-js","protobufjs","thrift",
+  "amqp","amqplib","rhea","stompit",
+  "level","levelup","leveldown","rocksdb",
+  "neo4j-driver","arangodb","couchdb-nano","rethinkdb",
+  "elasticsearch","@elastic/elasticsearch","opensearch-js",
+  "influxdb-client","prometheus-client","jaeger-client",
+  "dd-trace","newrelic","elastic-apm-node","sentry"
+];
+
 function sha384(data) {
   return createHash("sha384").update(data).digest("hex");
 }
@@ -32,62 +114,11 @@ async function submitToOpenTimestamps(fingerprint) {
   }
 }
 
-async function getTopNpmPackages() {
-  try {
-    // Fetch top downloaded packages from npm registry
-    const res = await fetch(
-      "https://registry.npmjs.org/-/v1/search?text=not:unstable&size=250&popularity=1.0",
-      { headers: { "Accept": "application/json" } }
-    );
-    if (!res.ok) throw new Error("npm search failed");
-    const data = await res.json();
-    return data.objects?.map(o => o.package.name) || [];
-  } catch(e) {
-    console.error("Failed to fetch top packages:", e.message);
-    // Fallback expanded list
-    return [
-      "express","lodash","axios","react","vue","next","nuxt","webpack","babel",
-      "typescript","eslint","prettier","jest","mocha","chalk","commander","dotenv",
-      "moment","dayjs","uuid","nodemon","cors","helmet","bcrypt","jsonwebtoken",
-      "mongoose","sequelize","prisma","socket.io","ws","tar","semver","glob",
-      "rimraf","cross-env","concurrently","husky","lint-staged","node-fetch",
-      "crypto-js","sharp","multer","morgan","body-parser","compression",
-      "cookie-parser","passport","joi","yup","zod","fastify","koa","hapi",
-      "rxjs","ramda","immutable","immer","mobx","redux","recoil","zustand",
-      "graphql","apollo-server","prisma","typeorm","knex","objection",
-      "jest","vitest","cypress","playwright","puppeteer","selenium-webdriver",
-      "webpack","vite","rollup","parcel","esbuild","swc","turbopack",
-      "tailwindcss","postcss","sass","less","styled-components","emotion",
-      "three","d3","chart.js","echarts","recharts","victory","nivo",
-      "date-fns","luxon","dayjs","moment-timezone","chrono-node",
-      "lodash","ramda","underscore","fp-ts","zod","io-ts","runtypes",
-      "winston","pino","bunyan","log4js","debug","loglevel",
-      "redis","ioredis","bull","agenda","node-cron","bee-queue",
-      "stripe","paypal-rest-sdk","braintree","square","plaid",
-      "aws-sdk","@google-cloud/storage","azure-storage","cloudinary",
-      "nodemailer","sendgrid","mailgun-js","postmark","ses",
-      "passport-jwt","passport-local","jsonwebtoken","bcryptjs","argon2",
-      "express-validator","class-validator","fastest-validator","ajv",
-      "multer","formidable","busboy","multiparty","connect-busboy",
-      "socket.io","ws","uWebSockets.js","sockjs","engine.io",
-      "mqtt","amqplib","kafkajs","nats","redis-streams-adapter",
-      "mongoose","mongodb","pg","mysql2","sqlite3","better-sqlite3",
-      "sequelize","typeorm","prisma","knex","bookshelf","waterline",
-      "cheerio","puppeteer","playwright","selenium-webdriver","jsdom",
-      "xml2js","fast-xml-parser","csv-parser","papaparse","xlsx",
-      "sharp","jimp","canvas","svg.js","pdfkit","pdf-lib",
-      "ffmpeg","fluent-ffmpeg","node-media-server","mediasoup",
-      "tensorflow","@tensorflow/tfjs","brain.js","natural","compromise",
-      "express-rate-limit","helmet","cors","csurf","hpp","xss-clean",
-      "compression","cache-manager","node-cache","lru-cache","keyv"
-    ];
-  }
-}
-
 async function fetchNpmPackage(name) {
   try {
     const res = await fetch(`https://registry.npmjs.org/${encodeURIComponent(name)}`, {
-      headers: { "Accept": "application/vnd.npm.install-v1+json" }
+      headers: { "Accept": "application/json" },
+      timeout: 5000
     });
     if (!res.ok) return null;
     return res.json();
@@ -96,21 +127,68 @@ async function fetchNpmPackage(name) {
   }
 }
 
+async function captureVersion(pkg, name, version, versionData, ecosystem) {
+  // Check if this version already captured
+  const { data: existing } = await supabase
+    .from("snapshots")
+    .select("id")
+    .eq("package_id", pkg.id)
+    .eq("version", version)
+    .single();
+
+  if (existing) return false;
+
+  const payload = JSON.stringify({
+    name,
+    version,
+    ecosystem,
+    integrity: versionData.dist?.integrity || "",
+    shasum: versionData.dist?.shasum || "",
+    dependencies: Object.keys(versionData.dependencies || {}).sort(),
+    engines: versionData.engines || {},
+    timestamp: new Date().toISOString()
+  });
+
+  const fingerprint = sha384(payload);
+  const receiptId = generateReceiptId();
+  const otsProof = await submitToOpenTimestamps(fingerprint);
+
+  const { error } = await supabase.from("snapshots").insert({
+    package_id: pkg.id,
+    version,
+    ecosystem,
+    sha384_fingerprint: fingerprint,
+    receipt_id: receiptId,
+    btc_anchored: false,
+    ots_proof: otsProof,
+    raw_metadata: {
+      integrity: versionData.dist?.integrity,
+      shasum: versionData.dist?.shasum,
+      license: versionData.license,
+      engines: versionData.engines || {},
+      dependencies: Object.keys(versionData.dependencies || {})
+    }
+  });
+
+  if (error) return false;
+
+  console.log(`CAPTURED: ${name}@${version} | ${fingerprint.substring(0,12)}...`);
+  return true;
+}
+
 async function processPackage(name) {
   try {
     const data = await fetchNpmPackage(name);
-    if (!data) return { status: "skip", reason: "fetch failed" };
+    if (!data) return 0;
 
     const latest = data["dist-tags"]?.latest;
-    if (!latest) return { status: "skip", reason: "no latest" };
-
-    const versionData = data.versions?.[latest];
-    if (!versionData) return { status: "skip", reason: "no version data" };
+    if (!latest) return 0;
 
     const description = (data.description || "").substring(0, 200);
-    const totalVersions = Object.keys(data.versions || {}).length;
+    const allVersions = Object.keys(data.versions || {});
+    const totalVersions = allVersions.length;
 
-    // Upsert package record
+    // Upsert package
     const { data: pkg, error: pkgError } = await supabase
       .from("packages")
       .upsert({
@@ -124,63 +202,34 @@ async function processPackage(name) {
       .select()
       .single();
 
-    if (pkgError || !pkg) return { status: "skip", reason: "db error" };
+    if (pkgError || !pkg) return 0;
 
-    // Check if this EXACT version already captured
-    const { data: existing } = await supabase
+    // Check how many versions already captured
+    const { count: existingCount } = await supabase
       .from("snapshots")
-      .select("id, version")
-      .eq("package_id", pkg.id)
-      .eq("version", latest)
-      .single();
+      .select("*", { count: "exact", head: true })
+      .eq("package_id", pkg.id);
 
-    if (existing) return { status: "skip", reason: "already captured" };
+    // If we have all versions skip entirely
+    if (existingCount >= totalVersions) return 0;
 
-    // New version detected — fingerprint and record it
-    const payload = JSON.stringify({
-      name,
-      version: latest,
-      ecosystem: "npm",
-      integrity: versionData.dist?.integrity || "",
-      shasum: versionData.dist?.shasum || "",
-      dependencies: Object.keys(versionData.dependencies || {}).sort(),
-      devDependencies: Object.keys(versionData.devDependencies || {}).sort(),
-      engines: versionData.engines || {},
-      timestamp: new Date().toISOString()
-    });
+    // Capture versions we don't have yet — prioritize latest first then work backwards
+    const versionsToCapture = allVersions
+      .reverse() // newest first
+      .slice(0, 3); // capture up to 3 new versions per run per package
 
-    const fingerprint = sha384(payload);
-    const receiptId = generateReceiptId();
+    let captured = 0;
+    for (const version of versionsToCapture) {
+      const versionData = data.versions[version];
+      if (!versionData) continue;
+      const didCapture = await captureVersion(pkg, name, version, versionData, "npm");
+      if (didCapture) captured++;
+    }
 
-    // Submit to OpenTimestamps for Bitcoin anchoring
-    const otsProof = await submitToOpenTimestamps(fingerprint);
-
-    const { error: insertError } = await supabase.from("snapshots").insert({
-      package_id: pkg.id,
-      version: latest,
-      ecosystem: "npm",
-      sha384_fingerprint: fingerprint,
-      receipt_id: receiptId,
-      btc_anchored: false,
-      ots_proof: otsProof,
-      raw_metadata: {
-        integrity: versionData.dist?.integrity,
-        shasum: versionData.dist?.shasum,
-        license: versionData.license,
-        engines: versionData.engines || {},
-        dependencies: Object.keys(versionData.dependencies || {}),
-        devDependencies: Object.keys(versionData.devDependencies || {})
-      }
-    });
-
-    if (insertError) return { status: "skip", reason: insertError.message };
-
-    console.log(`NEW: ${name}@${latest} | ${fingerprint.substring(0,12)}... | OTS: ${otsProof ? "submitted" : "failed"}`);
-    return { status: "captured", name, version: latest };
-
+    return captured;
   } catch(err) {
-    console.error(`Error processing ${name}:`, err.message);
-    return { status: "error", reason: err.message };
+    console.error(`Error: ${name}:`, err.message);
+    return 0;
   }
 }
 
@@ -188,41 +237,26 @@ export default async function handler(req, context) {
   const startTime = Date.now();
   console.log("Crawler running at", new Date().toISOString());
 
-  // Get dynamic package list
-  const packages = await getTopNpmPackages();
-  console.log(`Checking ${packages.length} packages`);
+  // Shuffle packages so different ones get priority each run
+  const shuffled = [...PACKAGES].sort(() => Math.random() - 0.5);
 
-  let captured = 0;
-  let skipped = 0;
-  let errors = 0;
+  let totalCaptured = 0;
+  let packagesChecked = 0;
 
-  // Process in batches of 10 to avoid timeouts
-  const batchSize = 10;
-  for (let i = 0; i < packages.length; i += batchSize) {
-    const batch = packages.slice(i, i + batchSize);
-    const results = await Promise.all(batch.map(processPackage));
+  for (const name of shuffled) {
+    if (Date.now() - startTime > 8000) break;
 
-    for (const r of results) {
-      if (r.status === "captured") captured++;
-      else if (r.status === "error") errors++;
-      else skipped++;
-    }
-
-    // Stop if approaching Netlify's 10 second function timeout
-    if (Date.now() - startTime > 8000) {
-      console.log("Approaching timeout — stopping early");
-      break;
-    }
+    const captured = await processPackage(name);
+    totalCaptured += captured;
+    packagesChecked++;
   }
 
-  console.log(`Done: ${captured} captured, ${skipped} skipped, ${errors} errors`);
+  console.log(`Done: ${totalCaptured} captured across ${packagesChecked} packages`);
 
   return new Response(JSON.stringify({
     ok: true,
-    captured,
-    skipped,
-    errors,
-    packages_checked: packages.length,
+    captured: totalCaptured,
+    packages_checked: packagesChecked,
     timestamp: new Date().toISOString()
   }), {
     headers: { "Content-Type": "application/json" }
