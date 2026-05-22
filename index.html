@@ -1,37 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Prechained — Recorded before it happened.</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#ffffff;
+  --off:#f9f9f8;
+  --border:#ebebeb;
+  --ink:#111;
+  --ink-2:#555;
+  --ink-3:#999;
+  --accent:#e8390e;
+  --green:#16a34a;
+  --green-bg:#f0fdf4;
+  --amber:#d97706;
+  --amber-bg:#fffbeb;
+  --red:#dc2626;
+  --red-bg:#fef2f2;
+  --blue:#2563eb;
+  --blue-bg:#eff6ff;
+  --mono:'JetBrains Mono',monospace;
+  --serif:'Instrument Serif',serif;
+  --sans:'Inter',sans-serif;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
+
+nav{
+  height:52px;padding:0 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--bg);z-index:100;
+}
+.logo{font-family:var(--serif);font-size:19px;color:var(--ink);letter-spacing:-.01em;text-decoration:none;}
+.logo b{color:var(--accent);}
+.nav-r{display:flex;align-items:center;gap:20px;}
+.nav-r a{font-size:13px;color:var(--ink-2);text-decoration:none;}
+.nav-r a:hover{color:var(--ink);}
+.live{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green);font-family:var(--mono);}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:p 2s infinite;}
+@keyframes p{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+.hero{max-width:640px;margin:0 auto;padding:100px 32px 80px;text-align:center;}
+.hero h1{font-family:var(--serif);font-size:clamp(44px,7vw,72px);font-weight:400;line-height:1.05;letter-spacing:-.02em;color:var(--ink);margin-bottom:20px;}
+.hero h1 i{color:var(--accent);}
+.hero p{font-size:17px;color:var(--ink-2);line-height:1.7;font-weight:300;margin-bottom:32px;}
+.hero-meta{display:flex;justify-content:center;gap:24px;font-size:12px;color:var(--ink-3);font-family:var(--mono);}
+
+.ledger{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:48px 32px;background:var(--off);}
+.ledger-head{max-width:900px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between;}
+.ledger-label{font-size:11px;font-family:var(--mono);color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;}
+.ledger-rate{font-size:11px;font-family:var(--mono);color:var(--green);}
+
+.tbl{width:100%;max-width:900px;margin:0 auto;border-collapse:collapse;background:var(--bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.tbl th{font-size:10px;font-weight:500;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);background:var(--off);}
+.tbl td{padding:13px 16px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tbody tr{transition:background .1s;}
+.tbl tbody tr:hover td{background:var(--off);}
+.tbl tbody tr.new{animation:newrow .7s ease;}
+@keyframes newrow{from{background:#f0fdf4;}to{background:transparent;}}
+
+.pn{font-weight:500;color:var(--ink);}
+.pv{font-size:11px;color:var(--ink-3);font-family:var(--mono);}
+.fp{font-family:var(--mono);font-size:11px;color:var(--ink-3);}
+.eco{font-size:10px;font-weight:500;padding:2px 8px;border-radius:3px;font-family:var(--mono);}
+.e-npm{background:#fff7ed;color:#c2410c;}
+.e-pypi{background:#eff6ff;color:#1d4ed8;}
+.e-maven{background:#fdf4ff;color:#7e22ce;}
+.e-cargo{background:#fef2f2;color:#b91c1c;}
+.e-go{background:#ecfeff;color:#0e7490;}
+.e-nuget{background:#f5f3ff;color:#6d28d9;}
+.e-gh{background:#f0fdf4;color:#15803d;}
+.st{font-size:11px;font-weight:500;padding:2px 9px;border-radius:100px;}
+.s-ok{background:var(--green-bg);color:var(--green);}
+.s-lo{background:var(--blue-bg);color:var(--blue);}
+.s-md{background:var(--amber-bg);color:var(--amber);}
+.s-cr{background:var(--red-bg);color:var(--red);}
+.anc{font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:3px;display:inline-block;margin-top:3px;}
+.a-btc{background:#fffbeb;color:#92400e;border:1px solid #fde68a;}
+.a-p{background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;}
+.ts{font-size:11px;color:var(--ink-3);font-family:var(--mono);}
+
+.tbl-ft{max-width:900px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3);font-family:var(--mono);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;background:var(--off);}
+
+.bottom{max-width:640px;margin:0 auto;padding:80px 32px;text-align:center;}
+.bottom p{font-size:15px;color:var(--ink-2);line-height:1.8;font-weight:300;margin-bottom:24px;}
+.pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;}
+.pill{font-size:12px;color:var(--ink-2);border:1px solid var(--border);padding:5px 14px;border-radius:100px;}
+
+footer{border-top:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink-3);flex-wrap:wrap;gap:12px;}
+footer a{color:var(--ink-3);text-decoration:none;}
+footer a:hover{color:var(--accent);}
+
+@media(max-width:600px){
+  .tbl th:nth-child(2),.tbl td:nth-child(2),
+  .tbl th:nth-child(3),.tbl td:nth-child(3){display:none;}
+  .hero{padding:64px 20px 56px;}
+  .ledger{padding:32px 16px;}
+  .bottom{padding:56px 20px;}
+  footer{padding:16px 20px;}
+  nav{padding:0 20px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">Pre<b>chained</b></a>
+  <div class="nav-r">
+    <div class="live"><div class="dot"></div>Recording live</div>
+    <a href="/browse.html">Browse</a>
+    <a href="/verify.html">Verify</a>
+    <a href="https://github.com/ngr-dev1/prechained">GitHub</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1>Recorded<br/><i>before it<br/>happened.</i></h1>
+  <p>A free, public archive of the software supply chain. Every package. Every version. Cryptographically captured before any attack occurs.</p>
+  <div class="hero-meta">
+    <span id="snap-count">loading...</span>
+    <span>·</span>
+    <span id="pkg-count">loading...</span>
+    <span>·</span>
+    <span>$0 to access</span>
+  </div>
+</section>
+
+<section class="ledger">
+  <div class="ledger-head">
+    <div class="ledger-label">Live capture feed</div>
+    <div class="ledger-rate">↑ recording continuously</div>
+  </div>
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Package</th>
+        <th>Fingerprint</th>
+        <th>Ecosystem</th>
+        <th>Captured</th>
+        <th>State</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+      <tr><td colspan="5" style="text-align:center;color:var(--ink-3);padding:32px;font-family:var(--mono);font-size:12px;">Loading live feed...</td></tr>
+    </tbody>
+  </table>
+  <div class="tbl-ft">
+    <span>Total snapshots: <strong id="snap-ft">loading...</strong></span>
+    <span style="color:var(--green);">● live</span>
+  </div>
+</section>
+
+<section class="bottom">
+  <p>No login. No signup. No upload.<br/>You give us nothing. We record everything from public sources — automatically, continuously, forever.</p>
+  <div class="pills">
+    <div class="pill">Free forever</div>
+    <div class="pill">Open source</div>
+    <div class="pill">No account</div>
+    <div class="pill">Bitcoin anchored</div>
+    <div class="pill">Zero retention</div>
+    <div class="pill">Independently verifiable</div>
+  </div>
+</section>
+
+<footer>
+  <span>Prechained · Built by <a href="https://nextgenrails.net">NextGenRails™</a></span>
+  <span><a href="https://github.com/ngr-dev1/prechained">GitHub</a> &nbsp;·&nbsp; <a href="/verify.html">Verify</a> &nbsp;·&nbsp; <a href="#">API</a> &nbsp;·&nbsp; <a href="#">Docs</a></span>
+</footer>
+
 <script>
-// Load real stats
-async function loadStats() {
-  try {
-    const res = await fetch('/netlify/functions/stats');
-    const data = await res.json();
-    document.getElementById('snap-count').textContent = 
-      data.total_snapshots.toLocaleString();
-  } catch(e) {}
+function timeAgo(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 10) return 'just now';
+  if (diff < 60) return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  return Math.floor(diff/3600) + 'h ago';
 }
 
-// Load live snapshots
+function ecoClass(eco) {
+  const map = {npm:'e-npm',pypi:'e-pypi',maven:'e-maven',cargo:'e-cargo',go:'e-go',nuget:'e-nuget',github:'e-gh'};
+  return map[eco.toLowerCase()] || 'e-npm';
+}
+
+async function loadStats() {
+  try {
+    const res = await fetch('/.netlify/functions/stats');
+    const data = await res.json();
+    document.getElementById('snap-count').textContent = data.total_snapshots.toLocaleString() + ' snapshots';
+    document.getElementById('pkg-count').textContent = data.total_packages.toLocaleString() + ' packages';
+    document.getElementById('snap-ft').textContent = data.total_snapshots.toLocaleString();
+  } catch(e) {
+    document.getElementById('snap-count').textContent = 'live';
+    document.getElementById('pkg-count').textContent = 'growing';
+    document.getElementById('snap-ft').textContent = 'live';
+  }
+}
+
 async function loadSnapshots() {
   try {
-    const res = await fetch('/netlify/functions/snapshots');
+    const res = await fetch('/.netlify/functions/snapshots');
     const data = await res.json();
     const tbody = document.getElementById('tbody');
-    if (!data.snapshots?.length) return;
-    
-    tbody.innerHTML = data.snapshots.slice(0,8).map(s => `
-      <tr>
-        <td><div class="pn">${s.packages?.name || s.ecosystem}</div>
-            <div class="pv">${s.version}</div></td>
-        <td><div class="fp">${s.sha384_fingerprint.substring(0,6)}...${s.sha384_fingerprint.slice(-6)}</div></td>
-        <td><span class="eco e-${s.ecosystem.toLowerCase()}">${s.ecosystem}</span></td>
-        <td><div class="ts">${new Date(s.captured_at).toLocaleTimeString()} UTC</div></td>
-        <td><span class="st s-ok">✓ Clean</span><br/>
-            <span class="anc ${s.btc_anchored ? 'a-btc' : 'a-p'}">${s.btc_anchored ? '⬡ BTC' : 'Pending'}</span></td>
+    if (!data.snapshots || !data.snapshots.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--ink-3);padding:32px;font-family:var(--mono);font-size:12px;">Crawler warming up — check back in a moment.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.snapshots.slice(0,8).map((s,i) => `
+      <tr class="${i===0?'new':''}">
+        <td><div class="pn">${s.packages?.name || s.ecosystem}</div><div class="pv">${s.version}</div></td>
+        <td><div class="fp">${s.sha384_fingerprint.substring(0,8)}...${s.sha384_fingerprint.slice(-6)}</div></td>
+        <td><span class="eco ${ecoClass(s.ecosystem)}">${s.ecosystem}</span></td>
+        <td><div class="ts">${timeAgo(s.captured_at)}</div></td>
+        <td>
+          <span class="st s-ok">✓ Clean</span><br/>
+          <span class="anc ${s.btc_anchored ? 'a-btc' : 'a-p'}">${s.btc_anchored ? '⬡ BTC' : 'Pending'}</span>
+        </td>
       </tr>
     `).join('');
-  } catch(e) {}
+  } catch(e) {
+    console.error('Failed to load snapshots', e);
+  }
 }
 
 loadStats();
 loadSnapshots();
 setInterval(loadSnapshots, 10000);
+setInterval(loadStats, 30000);
 </script>
+</body>
+</html>
