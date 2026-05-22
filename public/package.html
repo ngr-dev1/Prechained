@@ -9,33 +9,32 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
   --bg:#f0ede8;--off:#e8e4de;--white:#ffffff;--border:#d8d3cc;
-  --ink:#111;--ink-2:#222;--ink-3:#444;--ink-4:#666;
-  --accent:#e8390e;--green:#16a34a;--green-bg:#dcfce7;--amber:#d97706;--amber-bg:#fef3c7;
-  --red:#dc2626;--red-bg:#fee2e2;--blue:#2563eb;--blue-bg:#dbeafe;
+  --ink:#111;--ink-2:#222;--ink-3:#444;
+  --accent:#e8390e;--green:#16a34a;--green-bg:#dcfce7;
+  --amber:#d97706;--amber-bg:#fef3c7;--red:#dc2626;--red-bg:#fee2e2;
+  --blue:#2563eb;--blue-bg:#dbeafe;
   --mono:'JetBrains Mono',monospace;--serif:'Instrument Serif',serif;--sans:'Inter',sans-serif;
 }
-html{scroll-behavior:smooth;}
-body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
-
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;margin:0;}
 nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:100;}
-.logo{font-family:var(--serif);font-size:19px;color:var(--ink);letter-spacing:-.01em;text-decoration:none;}
+.logo{font-family:var(--serif);font-size:19px;color:var(--ink);text-decoration:none;}
 .logo b{color:var(--accent);}
 .nav-r{display:flex;align-items:center;gap:20px;}
 .nav-r a{font-size:13px;color:#333;text-decoration:none;font-weight:500;}
 .nav-r a:hover{color:var(--accent);}
-.live{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green);font-family:var(--mono);}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:p 2s infinite;}
-@keyframes p{0%,100%{opacity:1;}50%{opacity:.2;}}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green);font-family:var(--mono);}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
 
-.breadcrumb{padding:16px 32px;font-size:12px;color:var(--ink-3);border-bottom:1px solid var(--border);background:var(--off);}
+.breadcrumb{padding:14px 32px;font-size:12px;color:var(--ink-3);border-bottom:1px solid var(--border);background:var(--off);}
 .breadcrumb a{color:var(--ink-2);text-decoration:none;font-weight:500;}
 .breadcrumb a:hover{color:var(--accent);}
-.breadcrumb span{margin:0 6px;color:var(--ink-3);}
+.breadcrumb span{margin:0 6px;}
 
-.pkg-header{padding:40px 32px 32px;border-bottom:1px solid var(--border);background:var(--off);}
+.pkg-header{padding:36px 32px 28px;border-bottom:1px solid var(--border);background:var(--off);}
 .pkg-header-inner{max-width:960px;margin:0 auto;}
-.pkg-top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;}
-.pkg-eco{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:4px;font-family:var(--mono);margin-bottom:10px;}
+.pkg-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+.eco-badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:4px;font-family:var(--mono);margin-bottom:8px;}
 .e-npm{background:#fff7ed;color:#c2410c;}
 .e-pypi{background:#eff6ff;color:#1d4ed8;}
 .e-maven{background:#fdf4ff;color:#7e22ce;}
@@ -43,75 +42,71 @@ nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:s
 .e-go{background:#ecfeff;color:#0e7490;}
 .e-nuget{background:#f5f3ff;color:#6d28d9;}
 .e-gh{background:#f0fdf4;color:#15803d;}
-.pkg-name{font-family:var(--serif);font-size:clamp(28px,4vw,44px);font-weight:400;letter-spacing:-.02em;color:var(--ink);margin-bottom:8px;}
-.pkg-desc{font-size:15px;color:var(--ink-2);font-weight:400;margin-bottom:16px;line-height:1.6;}
-.pkg-meta{display:flex;gap:24px;flex-wrap:wrap;}
-.pkg-meta-item{font-size:12px;color:var(--ink-3);font-family:var(--mono);}
-.pkg-meta-item strong{color:var(--ink-2);font-weight:600;}
+.pkg-name{font-family:var(--serif);font-size:clamp(26px,4vw,40px);font-weight:400;letter-spacing:-.02em;margin-bottom:6px;}
+.pkg-desc{font-size:14px;color:var(--ink-2);margin-bottom:14px;line-height:1.6;}
+.pkg-meta{display:flex;gap:20px;flex-wrap:wrap;}
+.pm{font-size:12px;color:var(--ink-3);font-family:var(--mono);}
+.pm b{color:var(--ink-2);font-weight:600;}
 
-.pkg-stats{display:flex;gap:12px;flex-wrap:wrap;}
-.pstat{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:16px 20px;text-align:center;min-width:90px;}
-.pstat-val{font-size:22px;font-weight:700;color:var(--ink);font-family:var(--mono);display:block;}
-.pstat-label{font-size:10px;color:var(--ink-3);margin-top:4px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;}
+.pkg-stats{display:flex;gap:10px;flex-wrap:wrap;}
+.pstat{background:var(--white);border:1px solid var(--border);border-radius:6px;padding:14px 18px;text-align:center;min-width:85px;}
+.pstat-val{font-size:20px;font-weight:700;color:var(--ink);font-family:var(--mono);display:block;}
+.pstat-lbl{font-size:10px;color:var(--ink-3);margin-top:3px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;}
 
-.main{max-width:960px;margin:0 auto;padding:40px 32px;}
-.section-title{font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.main{max-width:960px;margin:0 auto;padding:32px;}
+.sec-title{font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
 
-.receipt-panel{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:40px;}
-.receipt-panel h3{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border);}
-.receipt-row{display:flex;gap:16px;margin-bottom:12px;align-items:flex-start;}
-.receipt-label{font-size:11px;font-weight:600;color:var(--ink-3);font-family:var(--mono);min-width:140px;padding-top:2px;text-transform:uppercase;letter-spacing:.06em;}
-.receipt-value{font-size:12px;color:var(--ink-2);font-family:var(--mono);word-break:break-all;line-height:1.6;}
-.receipt-value.highlight{color:var(--accent);font-weight:600;font-size:13px;}
-.receipt-value.btc{color:var(--green);font-weight:600;}
-.receipt-value.anchoring{color:var(--amber);font-weight:600;}
-
-.copy-btn{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#fff;background:var(--ink);padding:10px 20px;border-radius:6px;text-decoration:none;transition:all .15s;border:none;cursor:pointer;font-family:var(--sans);margin-top:8px;}
+.receipt{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:32px;}
+.receipt h3{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.rrow{display:flex;gap:14px;margin-bottom:10px;align-items:flex-start;}
+.rlbl{font-size:11px;font-weight:600;color:var(--ink-3);font-family:var(--mono);min-width:130px;padding-top:2px;text-transform:uppercase;letter-spacing:.06em;}
+.rval{font-size:12px;color:var(--ink-2);font-family:var(--mono);word-break:break-all;line-height:1.6;}
+.rval.hi{color:var(--accent);font-weight:600;font-size:13px;}
+.rval.btc{color:var(--green);font-weight:600;}
+.rval.anch{color:var(--amber);font-weight:600;}
+.copy-btn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#fff;background:var(--ink);padding:8px 16px;border-radius:5px;border:none;cursor:pointer;font-family:var(--sans);margin-top:6px;transition:background .15s;}
 .copy-btn:hover{background:var(--accent);}
 
-.versions-table{width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:40px;}
-.versions-table th{font-size:10px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);background:var(--off);}
-.versions-table td{padding:14px 16px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;background:var(--white);}
-.versions-table tr:last-child td{border-bottom:none;}
-.versions-table tbody tr{transition:background .1s;cursor:pointer;}
-.versions-table tbody tr:hover td{background:var(--off);}
-.versions-table tbody tr.latest td{background:#fafffe;}
-
-.ver-badge{font-size:12px;font-weight:600;color:var(--ink);font-family:var(--mono);}
-.latest-tag{font-size:10px;font-weight:600;background:var(--green-bg);color:var(--green);padding:2px 7px;border-radius:100px;margin-left:8px;}
-.fp-val{font-family:var(--mono);font-size:11px;color:var(--ink-3);}
-.ts-val{font-size:12px;color:var(--ink-3);font-family:var(--mono);}
+.ver-tbl{width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:32px;}
+.ver-tbl th{font-size:10px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;padding:9px 14px;text-align:left;border-bottom:1px solid var(--border);background:var(--off);}
+.ver-tbl td{padding:12px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;background:var(--white);}
+.ver-tbl tr:last-child td{border-bottom:none;}
+.ver-tbl tbody tr{transition:background .1s;cursor:pointer;}
+.ver-tbl tbody tr:hover td{background:var(--off);}
+.ver-tbl tbody tr.latest td{background:#fafffe;}
+.vbadge{font-size:12px;font-weight:600;color:var(--ink);font-family:var(--mono);}
+.ltag{font-size:10px;font-weight:600;background:var(--green-bg);color:var(--green);padding:2px 7px;border-radius:100px;margin-left:6px;}
+.fp-v{font-family:var(--mono);font-size:11px;color:var(--ink-3);}
+.ts-v{font-size:11px;color:var(--ink-3);font-family:var(--mono);}
 .st{font-size:11px;font-weight:600;padding:2px 9px;border-radius:100px;}
 .s-ok{background:var(--green-bg);color:var(--green);}
-.anc{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:3px;display:inline-block;font-weight:600;}
+.anc{font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:3px;font-weight:600;display:inline-block;}
 .a-btc{background:#fef9c3;color:#854d0e;border:1px solid #fde68a;}
-.a-anchoring{background:var(--green-bg);color:var(--green);border:1px solid #bbf7d0;}
+.a-anch{background:var(--green-bg);color:var(--green);border:1px solid #bbf7d0;}
 .a-p{background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb;}
 
-.empty{text-align:center;padding:48px;font-size:13px;color:var(--ink-3);font-family:var(--mono);}
+.refresh-note{font-size:11px;color:var(--green);font-family:var(--mono);margin-bottom:14px;}
 
-footer{border-top:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink-3);flex-wrap:wrap;gap:12px;margin-top:40px;}
+footer{border-top:1px solid var(--border);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink-3);flex-wrap:wrap;gap:10px;margin-top:32px;}
 footer a{color:var(--ink-2);text-decoration:none;font-weight:500;}
 footer a:hover{color:var(--accent);}
-
 @media(max-width:700px){
-  nav{padding:0 20px;}
-  .breadcrumb{padding:12px 20px;}
-  .pkg-header{padding:24px 20px;}
-  .main{padding:24px 20px;}
+  nav{padding:0 16px;}
+  .breadcrumb{padding:10px 16px;}
+  .pkg-header{padding:20px 16px;}
+  .main{padding:20px 16px;}
   .pkg-top{flex-direction:column;}
-  .versions-table th:nth-child(2),.versions-table td:nth-child(2){display:none;}
-  footer{padding:16px 20px;}
+  .ver-tbl th:nth-child(2),.ver-tbl td:nth-child(2){display:none;}
+  footer{padding:14px 16px;}
 }
 </style>
 </head>
 <body>
-
 <nav>
   <a href="/" class="logo">Pre<b>chained</b></a>
   <div class="nav-r">
-    <div class="live"><div class="dot"></div>Recording live</div>
+    <div class="live-pill"><div class="dot"></div>Recording live</div>
     <a href="/">Home</a>
     <a href="/browse.html">Browse</a>
     <a href="/verify.html">Verify</a>
@@ -120,65 +115,50 @@ footer a:hover{color:var(--accent);}
 </nav>
 
 <div class="breadcrumb">
-  <a href="/">Prechained</a>
-  <span>›</span>
-  <a href="/browse.html">Browse</a>
-  <span>›</span>
+  <a href="/">Prechained</a><span>›</span>
+  <a href="/browse.html">Browse</a><span>›</span>
   <span id="bc-name">Loading...</span>
 </div>
 
 <div class="pkg-header">
   <div class="pkg-header-inner">
     <div class="pkg-top">
-      <div class="pkg-identity">
-        <div class="pkg-eco" id="pkg-eco">npm</div>
+      <div>
+        <div class="eco-badge" id="pkg-eco">npm</div>
         <div class="pkg-name" id="pkg-name">Loading...</div>
         <div class="pkg-desc" id="pkg-desc">Fetching package details...</div>
         <div class="pkg-meta">
-          <div class="pkg-meta-item">Latest: <strong id="pkg-latest">—</strong></div>
-          <div class="pkg-meta-item">Versions: <strong id="pkg-versions">—</strong></div>
-          <div class="pkg-meta-item">First captured: <strong id="pkg-first">—</strong></div>
-          <div class="pkg-meta-item">Last captured: <strong id="pkg-last">—</strong></div>
+          <div class="pm">Latest: <b id="pkg-latest">—</b></div>
+          <div class="pm">Versions: <b id="pkg-versions">—</b></div>
+          <div class="pm">First captured: <b id="pkg-first">—</b></div>
+          <div class="pm">Last captured: <b id="pkg-last">—</b></div>
         </div>
       </div>
       <div class="pkg-stats">
-        <div class="pstat">
-          <span class="pstat-val" id="stat-versions">—</span>
-          <div class="pstat-label">Versions</div>
-        </div>
-        <div class="pstat">
-          <span class="pstat-val" id="stat-snapshots">—</span>
-          <div class="pstat-label">Snapshots</div>
-        </div>
-        <div class="pstat">
-          <span class="pstat-val" id="stat-anchored">—</span>
-          <div class="pstat-label">BTC Anchored</div>
-        </div>
+        <div class="pstat"><span class="pstat-val" id="stat-v">—</span><div class="pstat-lbl">Versions</div></div>
+        <div class="pstat"><span class="pstat-val" id="stat-s">—</span><div class="pstat-lbl">Snapshots</div></div>
+        <div class="pstat"><span class="pstat-val" id="stat-b">—</span><div class="pstat-lbl">BTC Anchored</div></div>
       </div>
     </div>
   </div>
 </div>
 
 <div class="main">
-  <div class="section-title">Latest Cryptographic Receipt</div>
-  <div class="receipt-panel" id="receipt-panel">
-    <div class="empty">Loading receipt...</div>
-  </div>
+  <div class="refresh-note">● This page auto-refreshes every 15 seconds</div>
 
-  <div class="section-title">Captured Version History</div>
-  <table class="versions-table">
-    <thead>
-      <tr>
-        <th>Version</th>
-        <th>SHA-384 Fingerprint</th>
-        <th>Captured</th>
-        <th>State</th>
-        <th>Bitcoin Anchor</th>
-      </tr>
-    </thead>
-    <tbody id="versions-body">
-      <tr><td colspan="5" class="empty">Loading versions...</td></tr>
-    </tbody>
+  <div class="sec-title">Latest Cryptographic Receipt</div>
+  <div class="receipt" id="receipt"><div style="color:var(--ink-3);font-family:var(--mono);font-size:12px;">Loading receipt...</div></div>
+
+  <div class="sec-title">Version History</div>
+  <table class="ver-tbl">
+    <thead><tr>
+      <th>Version</th>
+      <th>SHA-384 Fingerprint</th>
+      <th>Captured</th>
+      <th>State</th>
+      <th>Bitcoin Anchor</th>
+    </tr></thead>
+    <tbody id="ver-body"><tr><td colspan="5" style="text-align:center;padding:32px;color:var(--ink-3);font-family:var(--mono);font-size:12px;">Loading...</td></tr></tbody>
   </table>
 </div>
 
@@ -188,146 +168,93 @@ footer a:hover{color:var(--accent);}
 </footer>
 
 <script>
-function ecoClass(eco){
-  const map={npm:'e-npm',pypi:'e-pypi',maven:'e-maven',cargo:'e-cargo',go:'e-go',nuget:'e-nuget',github:'e-gh'};
-  return map[(eco||'').toLowerCase()]||'e-npm';
+function ecoC(e){
+  const m={npm:'e-npm',pypi:'e-pypi',maven:'e-maven',cargo:'e-cargo',go:'e-go',nuget:'e-nuget',github:'e-gh'};
+  return m[(e||'').toLowerCase()]||'e-npm';
 }
-
-function formatDate(dateStr){
-  return new Date(dateStr).toLocaleString('en-US',{
-    year:'numeric',month:'short',day:'numeric',
-    hour:'2-digit',minute:'2-digit',timeZoneName:'short'
-  });
+function fmt(d){
+  return new Date(d).toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
 }
-
-function anchorHtml(s){
-  if(s.btc_anchored&&s.btc_block){
-    return `<span class="anc a-btc">⬡ BTC #${Number(s.btc_block).toLocaleString()}</span>`;
-  }
-  if(s.ots_proof){
-    return `<span class="anc a-anchoring">⏳ Anchoring...</span>`;
-  }
-  return `<span class="anc a-p">Pending</span>`;
+function ancVal(s){
+  if(s.btc_anchored&&s.btc_block)return`<span style="color:var(--green);font-weight:600;">⬡ Bitcoin Block #${Number(s.btc_block).toLocaleString()} — Confirmed</span>`;
+  if(s.ots_proof)return`<span style="color:var(--amber);font-weight:600;">⏳ Submitted — confirming in ~10-20 min</span>`;
+  return`<span style="color:var(--ink-3);">Pending submission</span>`;
 }
-
-function anchorReceiptValue(s){
-  if(s.btc_anchored&&s.btc_block){
-    return `<span class="receipt-value btc">⬡ Bitcoin Block #${Number(s.btc_block).toLocaleString()} — Confirmed</span>`;
-  }
-  if(s.ots_proof){
-    return `<span class="receipt-value anchoring">⏳ Submitted to Bitcoin network — confirmation in ~10-20 minutes</span>`;
-  }
-  return `<span class="receipt-value">Pending submission</span>`;
+function ancBadge(s){
+  if(s.btc_anchored&&s.btc_block)return`<span class="anc a-btc">⬡ #${Number(s.btc_block).toLocaleString()}</span>`;
+  if(s.ots_proof)return`<span class="anc a-anch">⏳ Anchoring</span>`;
+  return`<span class="anc a-p">Pending</span>`;
 }
 
 async function loadPackage(id){
   try{
-    const res=await fetch(`/.netlify/functions/snapshots?package_id=${id}`);
-    const data=await res.json();
-    const snapshots=data.snapshots||[];
-
-    if(!snapshots.length){
-      document.getElementById('pkg-name').textContent='Package not found';
-      document.getElementById('pkg-desc').textContent='No snapshots recorded yet.';
-      document.getElementById('versions-body').innerHTML='<tr><td colspan="5" class="empty">No versions recorded yet.</td></tr>';
-      document.getElementById('receipt-panel').innerHTML='<div class="empty">No receipt available yet.</div>';
+    const r=await fetch(`/.netlify/functions/snapshots?package_id=${id}&limit=200`);
+    const d=await r.json();
+    const snaps=d.snapshots||[];
+    if(!snaps.length){
+      document.getElementById('pkg-name').textContent='Not found';
+      document.getElementById('pkg-desc').textContent='No snapshots yet.';
       return;
     }
-
-    const pkg=snapshots[0].packages||{};
+    const pkg=snaps[0].packages||{};
     const name=pkg.name||'Unknown';
-    const eco=snapshots[0].ecosystem||'npm';
-    const desc=pkg.description||'No description available.';
-    const latest=pkg.latest_version||snapshots[0].version;
-    const totalVersions=pkg.total_versions||snapshots.length;
-    const firstCaptured=pkg.first_captured_at||snapshots[snapshots.length-1]?.captured_at;
-    const lastCaptured=pkg.last_captured_at||snapshots[0]?.captured_at;
-    const btcCount=snapshots.filter(s=>s.btc_anchored).length;
+    const e=snaps[0].ecosystem||'npm';
+    const desc=pkg.description||'No description.';
+    const latest=pkg.latest_version||snaps[0].version;
+    const totalV=pkg.total_versions||snaps.length;
+    const first=pkg.first_captured_at||snaps[snaps.length-1]?.captured_at;
+    const last=pkg.last_captured_at||snaps[0]?.captured_at;
+    const btcCount=snaps.filter(s=>s.btc_anchored).length;
 
     document.title=`Prechained — ${name}`;
     document.getElementById('bc-name').textContent=name;
     document.getElementById('pkg-name').textContent=name;
     document.getElementById('pkg-desc').textContent=desc;
     document.getElementById('pkg-latest').textContent=`v${latest}`;
-    document.getElementById('pkg-versions').textContent=totalVersions;
-    document.getElementById('pkg-first').textContent=formatDate(firstCaptured);
-    document.getElementById('pkg-last').textContent=formatDate(lastCaptured);
-    const ecoEl=document.getElementById('pkg-eco');
-    ecoEl.textContent=eco.toUpperCase();
-    ecoEl.className=`pkg-eco ${ecoClass(eco)}`;
-    document.getElementById('stat-versions').textContent=totalVersions;
-    document.getElementById('stat-snapshots').textContent=snapshots.length;
-    document.getElementById('stat-anchored').textContent=btcCount;
+    document.getElementById('pkg-versions').textContent=totalV;
+    document.getElementById('pkg-first').textContent=fmt(first);
+    document.getElementById('pkg-last').textContent=fmt(last);
+    const eb=document.getElementById('pkg-eco');
+    eb.textContent=e.toUpperCase();eb.className=`eco-badge ${ecoC(e)}`;
+    document.getElementById('stat-v').textContent=totalV;
+    document.getElementById('stat-s').textContent=snaps.length;
+    document.getElementById('stat-b').textContent=btcCount;
 
-    const s=snapshots[0];
-    const receiptId=s.receipt_id||'NGR-PC-'+s.id.substring(0,12).toUpperCase();
-
-    document.getElementById('receipt-panel').innerHTML=`
-      <h3>Receipt ID: <span style="color:var(--accent);font-family:var(--mono);font-size:14px;">${receiptId}</span></h3>
-      <div class="receipt-row">
-        <div class="receipt-label">Package</div>
-        <div class="receipt-value highlight">${name} v${s.version}</div>
-      </div>
-      <div class="receipt-row">
-        <div class="receipt-label">Ecosystem</div>
-        <div class="receipt-value">${eco}</div>
-      </div>
-      <div class="receipt-row">
-        <div class="receipt-label">SHA-384</div>
-        <div class="receipt-value">${s.sha384_fingerprint}</div>
-      </div>
-      <div class="receipt-row">
-        <div class="receipt-label">Captured At</div>
-        <div class="receipt-value">${formatDate(s.captured_at)}</div>
-      </div>
-      <div class="receipt-row">
-        <div class="receipt-label">Bitcoin Anchor</div>
-        ${anchorReceiptValue(s)}
-      </div>
-      <div class="receipt-row">
-        <div class="receipt-label">Verification</div>
-        <div class="receipt-value">Independently verifiable · Zero retention · No account required</div>
-      </div>
-      <div class="receipt-row">
-        <div class="receipt-label">Issued By</div>
-        <div class="receipt-value">Prechained · Built by NextGenRails™ · prechained.com</div>
-      </div>
-      <br/>
-      <button class="copy-btn" onclick="copyReceipt('${receiptId}')">📋 Copy Receipt ID</button>
+    const s=snaps[0];
+    const rid=s.receipt_id||'NGR-PC-'+s.id.substring(0,12).toUpperCase();
+    document.getElementById('receipt').innerHTML=`
+      <h3>Receipt ID: <span style="color:var(--accent);font-family:var(--mono);font-size:14px;">${rid}</span></h3>
+      <div class="rrow"><div class="rlbl">Package</div><div class="rval hi">${name} v${s.version}</div></div>
+      <div class="rrow"><div class="rlbl">Ecosystem</div><div class="rval">${e}</div></div>
+      <div class="rrow"><div class="rlbl">SHA-384</div><div class="rval">${s.sha384_fingerprint}</div></div>
+      <div class="rrow"><div class="rlbl">Captured At</div><div class="rval">${fmt(s.captured_at)}</div></div>
+      <div class="rrow"><div class="rlbl">Bitcoin Anchor</div><div class="rval">${ancVal(s)}</div></div>
+      <div class="rrow"><div class="rlbl">Issued By</div><div class="rval">Prechained · NextGenRails™ · prechained.com</div></div>
+      <br/><button class="copy-btn" onclick="navigator.clipboard.writeText('${rid}').then(()=>alert('Copied!'))">📋 Copy Receipt ID</button>
     `;
 
-    document.getElementById('versions-body').innerHTML=snapshots.map((s,i)=>`
+    document.getElementById('ver-body').innerHTML=snaps.map((s,i)=>`
       <tr class="${i===0?'latest':''}">
-        <td>
-          <span class="ver-badge">v${s.version}</span>
-          ${i===0?'<span class="latest-tag">latest</span>':''}
-        </td>
-        <td><div class="fp-val">${s.sha384_fingerprint.substring(0,12)}...${s.sha384_fingerprint.slice(-8)}</div></td>
-        <td><div class="ts-val">${formatDate(s.captured_at)}</div></td>
+        <td><span class="vbadge">v${s.version}</span>${i===0?'<span class="ltag">latest</span>':''}</td>
+        <td><div class="fp-v">${s.sha384_fingerprint.substring(0,12)}...${s.sha384_fingerprint.slice(-8)}</div></td>
+        <td><div class="ts-v">${fmt(s.captured_at)}</div></td>
         <td><span class="st s-ok">✓ Clean</span></td>
-        <td>${anchorHtml(s)}</td>
+        <td>${ancBadge(s)}</td>
       </tr>
     `).join('');
 
   }catch(e){
-    console.error('Failed to load package',e);
-    document.getElementById('pkg-name').textContent='Error loading package';
-    document.getElementById('pkg-desc').textContent='Please try again.';
+    document.getElementById('pkg-name').textContent='Error loading';
   }
 }
 
-function copyReceipt(id){
-  navigator.clipboard.writeText(id).then(()=>{
-    alert('Receipt ID copied to clipboard');
-  });
-}
-
-const params=new URLSearchParams(window.location.search);
-const id=params.get('id');
-if(id){loadPackage(id);}
-else{
+const id=new URLSearchParams(window.location.search).get('id');
+if(id){
+  loadPackage(id);
+  // Auto-refresh every 15 seconds
+  setInterval(()=>loadPackage(id),15000);
+} else {
   document.getElementById('pkg-name').textContent='No package specified';
-  document.getElementById('pkg-desc').textContent='Return to browse and select a package.';
 }
 </script>
 </body>
