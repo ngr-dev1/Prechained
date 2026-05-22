@@ -28,16 +28,22 @@ nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:s
 
 /* HERO - full width split layout */
 .hero{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  min-height:340px;
+  display:flex;
+  flex-direction:column;
   border-bottom:1px solid var(--border);
   background:var(--white);
 }
+@media(min-width:900px){
+  .hero{flex-direction:row;}
+  .hero-left{flex:1;border-right:1px solid var(--border);border-bottom:none;}
+  .hero-right{width:420px;}
+}
 .hero-left{
-  padding:56px 48px 56px 48px;
-  border-right:1px solid var(--border);
+  padding:40px 24px;
   display:flex;flex-direction:column;justify-content:center;
+}
+@media(min-width:900px){
+  .hero-left{padding:56px 48px;}
 }
 .hero-kicker{
   font-family:var(--mono);font-size:11px;font-weight:500;
@@ -63,9 +69,12 @@ nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:s
 .hstat-lbl{font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;font-weight:600;}
 
 .hero-right{
-  padding:40px 48px;
-  display:flex;flex-direction:column;justify-content:center;gap:12px;
+  padding:24px;
+  display:flex;flex-direction:column;justify-content:center;gap:10px;
   background:var(--off);
+}
+@media(min-width:900px){
+  .hero-right{padding:40px 48px;}
 }
 .hero-right-title{
   font-size:11px;font-weight:600;color:var(--ink-3);
@@ -74,18 +83,22 @@ nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:s
 }
 .eco-btn{
   display:flex;align-items:center;justify-content:space-between;
-  padding:12px 16px;
+  padding:14px 16px;
   background:var(--white);border:1px solid var(--border);
   border-radius:8px;text-decoration:none;
   transition:all .15s;cursor:pointer;
-  group:true;
 }
-.eco-btn:hover{border-color:var(--accent);transform:translateX(4px);box-shadow:0 2px 12px rgba(0,0,0,.08);}
+.eco-btn:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(0,0,0,.08);}
 .eco-btn-left{display:flex;align-items:center;gap:10px;}
 .eco-name{font-size:13px;font-weight:600;color:var(--ink);}
 .eco-count{font-size:11px;color:var(--ink-3);font-family:var(--mono);}
-.eco-arrow{font-size:14px;color:var(--accent);font-weight:700;transition:transform .15s;}
-.eco-btn:hover .eco-arrow{transform:translateX(3px);}
+.eco-arrow{font-size:16px;color:var(--accent);font-weight:700;}
+@media(max-width:600px){
+  .hero-eco-inner{grid-template-columns:repeat(2,1fr);}
+  .hero-eco-bar{padding:20px;}
+  .hero-top{padding:44px 20px 36px;}
+  .eco-count{display:none;}
+}
 .eco-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px;font-family:var(--mono);}
 .eb-npm{background:#fff7ed;color:#c2410c;}
 .eb-pypi{background:#eff6ff;color:#1d4ed8;}
@@ -145,19 +158,28 @@ footer a:hover{color:var(--accent);}
 
 @media(max-width:900px){
   .hero{grid-template-columns:1fr;}
-  .hero-left{border-right:none;border-bottom:1px solid var(--border);padding:40px 24px;}
-  .hero-right{padding:28px 24px;}
+  .hero-left{border-right:none;border-bottom:1px solid var(--border);padding:48px 32px;}
+  .hero-right{padding:32px;}
 }
 @media(max-width:600px){
-  nav{padding:0 12px;}
-  .nav-r{gap:10px;}
+  nav{padding:0 14px;}
+  .nav-r{gap:12px;}
   .nav-r a{font-size:12px;}
-  .wf-bar,.tbl-wrap,.wf-foot{padding-left:12px;padding-right:12px;}
-  .tbl-head{grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) 70px;}
+  .hero{grid-template-columns:1fr;}
+  .hero-left{padding:40px 20px;border-right:none;border-bottom:1px solid var(--border);}
+  .hero-left h1{font-size:clamp(40px,10vw,56px);}
+  .hero-left p{font-size:14px;}
+  .hero-right{padding:24px 20px;}
+  .eco-btn{padding:14px 16px;}
+  .eco-name{font-size:14px;}
+  .hero-stats{gap:20px;}
+  .hstat-val{font-size:24px;}
+  .wf-bar,.tbl-wrap,.wf-foot{padding-left:14px;padding-right:14px;}
+  .tbl-head{grid-template-columns:minmax(0,1.5fr) 75px 80px;}
   .tbl-head>*:nth-child(2),.tbl-head>*:nth-child(5){display:none;}
-  .row{grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) 70px;}
+  .row{grid-template-columns:minmax(0,1.5fr) 75px 80px;}
   .row>*:nth-child(2),.row>*:nth-child(5){display:none;}
-  .feed{height:58vh;}
+  .feed{height:60vh;}
   .bottom{padding:40px 16px;}
   footer{padding:14px 16px;flex-direction:column;gap:6px;}
 }
@@ -176,9 +198,9 @@ footer a:hover{color:var(--accent);}
 </nav>
 
 <section class="hero">
-  <div class="hero-left">
+  <div class="hero-top">
     <div class="hero-kicker">Free · Open Source · AGPL-3.0</div>
-    <h1>Recorded<br/><i>before it<br/>happened.</i></h1>
+    <h1>Recorded <i>before it happened.</i></h1>
     <p>A free, public archive of the software supply chain. Every package. Every version. Cryptographically captured before any attack occurs.</p>
     <div class="hero-stats">
       <div class="hstat"><div class="hstat-val" id="snap-count">—</div><div class="hstat-lbl">Snapshots</div></div>
@@ -187,9 +209,8 @@ footer a:hover{color:var(--accent);}
       <div class="hstat"><div class="hstat-val">$0</div><div class="hstat-lbl">Cost</div></div>
     </div>
   </div>
-
-  <div class="hero-right">
-    <div class="hero-right-title">Browse by ecosystem →</div>
+  <div class="hero-eco-bar">
+    <div class="hero-right-title">Browse by ecosystem →</div><div class="hero-eco-inner">
     <a class="eco-btn" href="/browse.html?eco=npm" onclick="event.stopPropagation()">
       <div class="eco-btn-left"><span class="eco-badge eb-npm">npm</span><div><div class="eco-name">npm Registry</div><div class="eco-count">npmjs.com ↗</div></div></div>
       <span class="eco-arrow">→</span>
@@ -222,7 +243,7 @@ footer a:hover{color:var(--accent);}
       <div class="eco-btn-left"><span class="eco-badge eb-packagist">Packagist</span><div><div class="eco-name">PHP Packages</div><div class="eco-count">packagist.org ↗</div></div></div>
       <span class="eco-arrow">→</span>
     </a>
-  </div>
+  </div></div>
 </section>
 
 <div class="wf-section">
