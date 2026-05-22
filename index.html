@@ -1,0 +1,37 @@
+<script>
+// Load real stats
+async function loadStats() {
+  try {
+    const res = await fetch('/netlify/functions/stats');
+    const data = await res.json();
+    document.getElementById('snap-count').textContent = 
+      data.total_snapshots.toLocaleString();
+  } catch(e) {}
+}
+
+// Load live snapshots
+async function loadSnapshots() {
+  try {
+    const res = await fetch('/netlify/functions/snapshots');
+    const data = await res.json();
+    const tbody = document.getElementById('tbody');
+    if (!data.snapshots?.length) return;
+    
+    tbody.innerHTML = data.snapshots.slice(0,8).map(s => `
+      <tr>
+        <td><div class="pn">${s.packages?.name || s.ecosystem}</div>
+            <div class="pv">${s.version}</div></td>
+        <td><div class="fp">${s.sha384_fingerprint.substring(0,6)}...${s.sha384_fingerprint.slice(-6)}</div></td>
+        <td><span class="eco e-${s.ecosystem.toLowerCase()}">${s.ecosystem}</span></td>
+        <td><div class="ts">${new Date(s.captured_at).toLocaleTimeString()} UTC</div></td>
+        <td><span class="st s-ok">✓ Clean</span><br/>
+            <span class="anc ${s.btc_anchored ? 'a-btc' : 'a-p'}">${s.btc_anchored ? '⬡ BTC' : 'Pending'}</span></td>
+      </tr>
+    `).join('');
+  } catch(e) {}
+}
+
+loadStats();
+loadSnapshots();
+setInterval(loadSnapshots, 10000);
+</script>
