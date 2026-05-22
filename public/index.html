@@ -162,6 +162,18 @@ function ago(d){
   if(s<3600)return Math.floor(s/60)+'m ago';
   return Math.floor(s/3600)+'h ago';
 }
+function ecoUrl(e, name) {
+  const urls = {
+    npm: `https://npmjs.com/package/${name}`,
+    pypi: `https://pypi.org/project/${name}`,
+    maven: `https://mvnrepository.com/artifact/${name}`,
+    cargo: `https://crates.io/crates/${name}`,
+    go: `https://pkg.go.dev/${name}`,
+    nuget: `https://nuget.org/packages/${name}`,
+    github: `https://github.com/${name}`
+  };
+  return urls[(e||'').toLowerCase()] || '#';
+}
 function eco(e){
   const m={npm:'e-npm',pypi:'e-pypi',maven:'e-maven',cargo:'e-cargo',go:'e-go',nuget:'e-nuget',github:'e-gh'};
   return m[(e||'').toLowerCase()]||'e-npm';
@@ -173,9 +185,9 @@ function anc(s){
 }
 function row(s,isNew){
   return`<div class="row${isNew?' new':''}" onclick="location='/package.html?id=${s.package_id}'">
-    <div class="cell"><div class="pname">${s.packages?.name||'—'}</div><div class="pver">v${s.version}</div></div>
+    <div class="cell"><div class="pname">${s.packages?.name||'—'}</div><div class="pver">v${s.version}${s.raw_metadata?.license ? ' · '+s.raw_metadata.license : ''}</div></div>
     <div class="cell"><span class="fp">${s.sha384_fingerprint.slice(0,9)}...${s.sha384_fingerprint.slice(-6)}</span></div>
-    <div class="cell"><span class="eco ${eco(s.ecosystem)}">${s.ecosystem}</span></div>
+    <div class="cell"><a href="${ecoUrl(s.ecosystem, s.packages?.name||'')}" target="_blank" onclick="event.stopPropagation()" class="eco ${eco(s.ecosystem)}" style="text-decoration:none;cursor:pointer;">${s.ecosystem} ↗</a></div>
     <div class="cell"><span class="ts">${ago(s.captured_at)}</span></div>
     <div class="cell">${anc(s)}</div>
   </div>`;
