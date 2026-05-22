@@ -9,12 +9,8 @@ async function getCurrentBtcBlock() {
   try {
     const res = await fetch("https://blockstream.info/api/blocks/tip/height");
     if (!res.ok) return null;
-    const height = await res.text();
-    return parseInt(height.trim());
-  } catch(e) {
-    console.error("Failed to fetch BTC block:", e.message);
-    return null;
-  }
+    return parseInt((await res.text()).trim());
+  } catch(e) { return null; }
 }
 
 export default async function handler(req, context) {
@@ -29,35 +25,20 @@ export default async function handler(req, context) {
 
   console.log("Current BTC block:", currentBlock);
 
-  // Anchor all unanchored snapshots older than 10 minutes to the current block
-  const { data: pending, error } = await supabase
-    .from("snapshots")
-    .select("id")
-    .eq("btc_anchored", false)
-    .limit(100000);
-
-  if (error || !pending?.length) {
-    return new Response(JSON.stringify({
-      ok: true, current_block: currentBlock, anchored: 0
-    }), { headers: { "Content-Type": "application/json" } });
-  }
-
-  console.log("Anchoring", pending.length, "snapshots to block", currentBlock);
-
-  const ids = pending.map(s => s.id);
-
-  const { error: updateError } = await supabase
+  // Update ALL unanchored snapshots directly without fetching IDs first
+  const { error, count } = await supabase
     .from("snapshots")
     .update({ btc_anchored: true, btc_block: currentBlock })
-    .in("id", ids);
+    .eq("btc_anchored", false);
 
-  const anchored = updateError ? 0 : ids.length;
-  console.log("Anchored:", anchored);
+  const anchored = error ? 0 : (count || 0);
+  console.log("Anchored:", anchored, "Error:", error?.message);
 
   return new Response(JSON.stringify({
-    ok: true,
+    ok: !error,
     current_block: currentBlock,
     anchored,
+    error: error?.message || null,
     timestamp: new Date().toISOString()
   }), { headers: { "Content-Type": "application/json" } });
 }
