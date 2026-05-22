@@ -3,107 +3,139 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Prechained — Verify</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<title>Prechained — Verify a Receipt</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#f0ede8;--off:#e8e4de;--white:#ffffff;--border:#d8d3cc;
+  --bg:#f0ede8;--off:#e8e4de;--white:#fff;--border:#d8d3cc;
   --ink:#111;--ink-2:#222;--ink-3:#444;
   --accent:#e8390e;--green:#16a34a;--green-bg:#dcfce7;
+  --amber:#d97706;--amber-bg:#fef3c7;--red:#dc2626;--red-bg:#fee2e2;
   --mono:'JetBrains Mono',monospace;--serif:'Instrument Serif',serif;--sans:'Inter',sans-serif;
 }
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;margin:0;}
-nav{height:52px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:100;}
+nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:100;}
 .logo{font-family:var(--serif);font-size:19px;color:var(--ink);text-decoration:none;}
 .logo b{color:var(--accent);}
-.nav-r{display:flex;align-items:center;gap:16px;}
+.nav-r{display:flex;align-items:center;gap:20px;}
 .nav-r a{font-size:13px;color:#333;text-decoration:none;font-weight:500;}
 .nav-r a:hover{color:var(--accent);}
 .live{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green);font-family:var(--mono);}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
 
-.hero{
-  max-width:560px;margin:0 auto;
-  padding:100px 24px 80px;
-  text-align:center;
-}
-.coming-tag{
-  display:inline-block;
-  font-family:var(--mono);
-  font-size:11px;font-weight:500;
-  letter-spacing:.12em;text-transform:uppercase;
-  color:var(--accent);
-  background:#fdf1ee;
-  padding:5px 14px;border-radius:100px;
-  margin-bottom:28px;
-}
-h1{
-  font-family:var(--serif);
-  font-size:clamp(36px,6vw,58px);
-  font-weight:400;line-height:1.08;
-  letter-spacing:-.02em;
-  margin-bottom:16px;
-}
-h1 i{color:var(--accent);}
-p{
-  font-size:16px;color:var(--ink-2);
-  line-height:1.7;font-weight:300;
-  margin-bottom:32px;
-}
-.what-box{
-  background:var(--white);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:28px;
-  text-align:left;
-  margin-bottom:32px;
-}
-.what-box h3{
-  font-size:13px;font-weight:600;
-  color:var(--ink-3);
-  letter-spacing:.06em;text-transform:uppercase;
-  margin-bottom:16px;
-  font-family:var(--mono);
-}
-.what-item{
-  display:flex;align-items:flex-start;gap:12px;
-  font-size:13px;color:var(--ink-2);
-  line-height:1.6;margin-bottom:12px;
-}
-.what-item:last-child{margin-bottom:0;}
-.what-item::before{
-  content:'→';color:var(--accent);
-  flex-shrink:0;font-weight:600;margin-top:1px;
-}
-.notify-row{
-  display:flex;gap:8px;
-  max-width:420px;margin:0 auto;
-}
-.notify-input{
-  flex:1;font-family:var(--mono);font-size:13px;
-  padding:11px 14px;
-  border:1px solid var(--border);border-radius:6px;
+.page{max-width:680px;margin:0 auto;padding:64px 32px;}
+
+.page-title{font-family:var(--serif);font-size:clamp(32px,5vw,48px);font-weight:400;letter-spacing:-.02em;margin-bottom:8px;}
+.page-title i{color:var(--accent);}
+.page-sub{font-size:14px;color:var(--ink-2);margin-bottom:36px;line-height:1.6;}
+
+.search-wrap{position:relative;margin-bottom:12px;}
+.search-input{
+  width:100%;font-family:var(--mono);font-size:14px;
+  padding:16px 120px 16px 18px;
+  border:2px solid var(--border);border-radius:8px;
   background:var(--white);color:var(--ink);outline:none;
   transition:border-color .15s;
 }
-.notify-input:focus{border-color:var(--ink);}
-.notify-input::placeholder{color:var(--ink-3);}
-.notify-btn{
+.search-input:focus{border-color:var(--ink);}
+.search-input::placeholder{color:var(--ink-3);}
+.verify-btn{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
   font-size:13px;font-weight:600;
-  padding:11px 20px;border-radius:6px;
+  padding:8px 16px;border-radius:6px;
   background:var(--ink);color:#fff;
-  border:none;cursor:pointer;
-  font-family:var(--sans);
-  transition:background .15s;white-space:nowrap;
+  border:none;cursor:pointer;font-family:var(--sans);
+  transition:background .15s;
 }
-.notify-btn:hover{background:var(--accent);}
-.notify-note{font-size:11px;color:var(--ink-3);margin-top:10px;font-family:var(--mono);}
+.verify-btn:hover{background:var(--accent);}
+.search-hint{font-size:11px;color:var(--ink-3);font-family:var(--mono);margin-bottom:32px;}
 
-footer{border-top:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink-3);flex-wrap:wrap;gap:10px;margin-top:40px;}
+/* RESULT */
+.result{display:none;background:var(--white);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:32px;}
+.result.show{display:block;}
+.result-header{
+  padding:16px 20px;
+  display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid var(--border);
+}
+.result-status{
+  font-size:12px;font-weight:700;
+  padding:4px 12px;border-radius:100px;
+  font-family:var(--mono);letter-spacing:.04em;
+}
+.rs-valid{background:var(--green-bg);color:var(--green);}
+.rs-invalid{background:var(--red-bg);color:var(--red);}
+.rs-pending{background:var(--amber-bg);color:var(--amber);}
+.result-title{font-size:15px;font-weight:600;color:var(--ink);}
+
+.result-body{padding:20px;}
+.rrow{display:flex;gap:16px;margin-bottom:12px;align-items:flex-start;}
+.rlbl{font-size:11px;font-weight:600;color:var(--ink-3);font-family:var(--mono);min-width:130px;text-transform:uppercase;letter-spacing:.06em;padding-top:2px;flex-shrink:0;}
+.rval{font-size:12px;color:var(--ink-2);font-family:var(--mono);word-break:break-all;line-height:1.6;}
+.rval.hi{color:var(--accent);font-weight:700;font-size:14px;font-family:var(--sans);}
+.rval.btc{color:var(--green);font-weight:600;}
+.rval.pending{color:var(--amber);font-weight:600;}
+
+.result-actions{
+  padding:16px 20px;
+  border-top:1px solid var(--border);
+  background:var(--off);
+  display:flex;gap:10px;flex-wrap:wrap;
+}
+.action-btn{
+  font-size:12px;font-weight:600;
+  padding:8px 16px;border-radius:6px;
+  border:1px solid var(--border);
+  background:var(--white);color:var(--ink);
+  cursor:pointer;font-family:var(--sans);
+  transition:all .15s;text-decoration:none;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.action-btn:hover{border-color:var(--ink);background:var(--off);}
+.action-btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+.action-btn.primary:hover{background:var(--accent);border-color:var(--accent);}
+
+/* ERROR */
+.error-box{
+  display:none;
+  background:var(--red-bg);border:1px solid #fca5a5;
+  border-radius:8px;padding:16px 20px;
+  font-size:13px;color:var(--red);
+  font-family:var(--mono);margin-bottom:24px;
+}
+.error-box.show{display:block;}
+
+/* LOADING */
+.loading-box{
+  display:none;
+  text-align:center;padding:32px;
+  font-size:13px;color:var(--ink-3);
+  font-family:var(--mono);
+}
+.loading-box.show{display:block;}
+
+/* WHAT IS THIS */
+.info-section{margin-top:48px;padding-top:32px;border-top:1px solid var(--border);}
+.info-title{font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;font-family:var(--mono);margin-bottom:16px;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.info-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:16px;}
+.info-card-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+.info-card-desc{font-size:12px;color:var(--ink-3);line-height:1.6;}
+
+footer{border-top:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink-3);flex-wrap:wrap;gap:10px;margin-top:48px;}
 footer a{color:var(--ink-2);text-decoration:none;font-weight:500;}
 footer a:hover{color:var(--accent);}
+
+@media(max-width:600px){
+  nav{padding:0 16px;}
+  .page{padding:40px 16px;}
+  .info-grid{grid-template-columns:1fr;}
+  .rrow{flex-direction:column;gap:4px;}
+  .rlbl{min-width:unset;}
+  footer{padding:14px 16px;flex-direction:column;}
+}
 </style>
 </head>
 <body>
@@ -113,30 +145,179 @@ footer a:hover{color:var(--accent);}
     <div class="live"><div class="dot"></div>Recording</div>
     <a href="/">Home</a>
     <a href="/browse.html">Browse</a>
+    <a href="/license.html">License</a>
     <a href="https://github.com/ngr-dev1/prechained">GitHub</a>
   </div>
 </nav>
 
-<section class="hero">
-  <div class="coming-tag">Coming Soon</div>
-  <h1>Verify any<br/><i>cryptographic<br/>receipt.</i></h1>
-  <p>Paste any Prechained receipt ID and instantly verify its authenticity — without contacting us, without an account, without trusting anyone.</p>
+<div class="page">
+  <div class="page-title">Verify a <i>receipt.</i></div>
+  <div class="page-sub">Paste any Prechained receipt ID or SHA-384 fingerprint to instantly verify its authenticity. No account required.</div>
 
-  <div class="what-box">
-    <h3>What verification will do</h3>
-    <div class="what-item">Confirm the receipt ID is real and was issued by Prechained</div>
-    <div class="what-item">Show the exact package, version, and fingerprint it covers</div>
-    <div class="what-item">Display the Bitcoin block it was anchored to</div>
-    <div class="what-item">Prove the record predates any date you specify</div>
-    <div class="what-item">Generate a shareable verification link for auditors and legal teams</div>
+  <div class="search-wrap">
+    <input class="search-input" type="text" id="verify-input" placeholder="NGR-PC-... or SHA-384 fingerprint" />
+    <button class="verify-btn" onclick="doVerify()">Verify</button>
+  </div>
+  <div class="search-hint">Example: NGR-PC-M9K2X4ABCD · Press Enter to verify</div>
+
+  <div class="loading-box" id="loading">⏳ Looking up record...</div>
+  <div class="error-box" id="error-box"></div>
+
+  <div class="result" id="result">
+    <div class="result-header">
+      <span class="result-status" id="result-status">✓ VERIFIED</span>
+      <span class="result-title" id="result-title">Receipt found</span>
+    </div>
+    <div class="result-body">
+      <div class="rrow"><div class="rlbl">Receipt ID</div><div class="rval hi" id="r-id">—</div></div>
+      <div class="rrow"><div class="rlbl">Package</div><div class="rval" id="r-pkg">—</div></div>
+      <div class="rrow"><div class="rlbl">Version</div><div class="rval" id="r-ver">—</div></div>
+      <div class="rrow"><div class="rlbl">Ecosystem</div><div class="rval" id="r-eco">—</div></div>
+      <div class="rrow"><div class="rlbl">SHA-384</div><div class="rval" id="r-fp">—</div></div>
+      <div class="rrow"><div class="rlbl">Captured At</div><div class="rval" id="r-date">—</div></div>
+      <div class="rrow"><div class="rlbl">Bitcoin Anchor</div><div class="rval" id="r-btc">—</div></div>
+      <div class="rrow"><div class="rlbl">Issued By</div><div class="rval">Prechained · NextGenRails™ · prechained.com</div></div>
+    </div>
+    <div class="result-actions">
+      <button class="action-btn primary" onclick="copyVerifyLink()">🔗 Copy verification link</button>
+      <button class="action-btn" onclick="copyReceipt()">📋 Copy receipt ID</button>
+      <a class="action-btn" id="pkg-link" href="#" target="_blank">📦 View package →</a>
+      <a class="action-btn" id="btc-link" href="https://blockstream.info" target="_blank">⬡ Verify on Bitcoin →</a>
+    </div>
   </div>
 
-  <p style="font-size:14px;color:var(--ink-3);">Until then — every receipt ID is visible on each package's detail page. Bitcoin anchor hashes are independently verifiable at <a href="https://blockstream.info" target="_blank" style="color:var(--accent);">blockstream.info</a>.</p>
-</section>
+  <div class="info-section">
+    <div class="info-title">What verification proves</div>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-card-title">📅 Pre-incident proof</div>
+        <div class="info-card-desc">The receipt timestamp proves the record existed before any specified incident window. Cryptographically immutable.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">⬡ Bitcoin anchored</div>
+        <div class="info-card-desc">Records are anchored to the Bitcoin blockchain. Independently verifiable at blockstream.info without trusting Prechained.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">🔐 SHA-384 integrity</div>
+        <div class="info-card-desc">Every snapshot is SHA-384 fingerprinted. The fingerprint proves the package state at capture time was not altered.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">⚖️ Legally defensible</div>
+        <div class="info-card-desc">Bitcoin-anchored timestamps constitute evidence of prior state under ESIGN and eIDAS. Shareable with auditors and legal teams.</div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <footer>
-  <span>Prechained · Built by <a href="https://nextgenrails.net">NextGenRails™</a></span>
-  <span><a href="/">Home</a> &nbsp;·&nbsp; <a href="/browse.html">Browse</a> &nbsp;·&nbsp; <a href="https://github.com/ngr-dev1/prechained">GitHub</a></span>
+  <span>Prechained · Built by <a href="https://nextgenrails.net">NextGenRails™</a> · AGPL-3.0</span>
+  <span><a href="/">Home</a> &nbsp;·&nbsp; <a href="/browse.html">Browse</a> &nbsp;·&nbsp; <a href="/license.html">License</a> &nbsp;·&nbsp; <a href="https://github.com/ngr-dev1/prechained">GitHub</a></span>
 </footer>
+
+<script>
+let currentSnap = null;
+
+function fmt(d){
+  return new Date(d).toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
+}
+
+async function doVerify(){
+  const input = document.getElementById('verify-input').value.trim();
+  if(!input) return;
+
+  document.getElementById('result').classList.remove('show');
+  document.getElementById('error-box').classList.remove('show');
+  document.getElementById('loading').classList.add('show');
+
+  try {
+    // Try receipt ID first
+    let snap = null;
+    const res = await fetch(`/.netlify/functions/snapshots?receipt_id=${encodeURIComponent(input)}&t=`+Date.now());
+    if(res.ok){
+      const d = await res.json();
+      if(d && d.receipt_id) snap = d;
+    }
+
+    // If not found try fingerprint search
+    if(!snap){
+      const res2 = await fetch(`/.netlify/functions/snapshots?limit=500&t=`+Date.now());
+      if(res2.ok){
+        const d2 = await res2.json();
+        snap = (d2.snapshots||[]).find(s => s.sha384_fingerprint === input || s.receipt_id === input);
+      }
+    }
+
+    document.getElementById('loading').classList.remove('show');
+
+    if(!snap){
+      const errBox = document.getElementById('error-box');
+      errBox.textContent = `❌ No record found for "${input}". Check the receipt ID and try again.`;
+      errBox.classList.add('show');
+      return;
+    }
+
+    currentSnap = snap;
+    const pkg = snap.packages || {};
+    const name = pkg.name || '—';
+
+    document.getElementById('r-id').textContent = snap.receipt_id || '—';
+    document.getElementById('r-pkg').textContent = name;
+    document.getElementById('r-ver').textContent = `v${snap.version}`;
+    document.getElementById('r-eco').textContent = snap.ecosystem;
+    document.getElementById('r-fp').textContent = snap.sha384_fingerprint;
+    document.getElementById('r-date').textContent = fmt(snap.captured_at);
+
+    if(snap.btc_anchored && snap.btc_block){
+      document.getElementById('r-btc').innerHTML = `<span class="btc">⬡ Bitcoin Block #${Number(snap.btc_block).toLocaleString()} — Confirmed</span>`;
+      document.getElementById('btc-link').href = `https://blockstream.info/block/${snap.btc_block}`;
+    } else if(snap.ots_proof){
+      document.getElementById('r-btc').innerHTML = `<span class="pending">⏳ Submitted to Bitcoin network — confirmation pending</span>`;
+    } else {
+      document.getElementById('r-btc').textContent = 'Pending submission';
+    }
+
+    document.getElementById('result-status').textContent = '✓ VERIFIED';
+    document.getElementById('result-status').className = 'result-status rs-valid';
+    document.getElementById('result-title').textContent = `${name} v${snap.version} · Record authenticated`;
+    document.getElementById('pkg-link').href = `/package.html?id=${snap.package_id}`;
+
+    document.getElementById('result').classList.add('show');
+
+    // Update URL
+    const url = new URL(window.location);
+    url.searchParams.set('receipt', input);
+    window.history.pushState({}, '', url);
+
+  } catch(e) {
+    document.getElementById('loading').classList.remove('show');
+    const errBox = document.getElementById('error-box');
+    errBox.textContent = '❌ Verification failed. Please try again.';
+    errBox.classList.add('show');
+  }
+}
+
+function copyVerifyLink(){
+  const url = new URL(window.location);
+  if(currentSnap) url.searchParams.set('receipt', currentSnap.receipt_id);
+  navigator.clipboard.writeText(url.toString()).then(()=>alert('Verification link copied!'));
+}
+
+function copyReceipt(){
+  if(currentSnap) navigator.clipboard.writeText(currentSnap.receipt_id).then(()=>alert('Receipt ID copied!'));
+}
+
+// Enter key
+document.getElementById('verify-input').addEventListener('keydown', e => {
+  if(e.key==='Enter') doVerify();
+});
+
+// Auto-verify from URL
+const params = new URLSearchParams(window.location.search);
+const receipt = params.get('receipt');
+if(receipt){
+  document.getElementById('verify-input').value = receipt;
+  doVerify();
+}
+</script>
 </body>
 </html>
