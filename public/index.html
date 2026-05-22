@@ -183,7 +183,7 @@ function row(s,isNew){
 
 async function refreshStats(){
   try{
-    const r=await fetch('/.netlify/functions/stats');
+    const r=await fetch('/.netlify/functions/stats?t='+Date.now());
     const d=await r.json();
     document.getElementById('snap-count').textContent=d.total_snapshots.toLocaleString();
     document.getElementById('pkg-count').textContent=d.total_packages.toLocaleString();
@@ -199,7 +199,7 @@ async function refreshStats(){
 
 async function refreshFeed(){
   try{
-    const r=await fetch('/.netlify/functions/snapshots?limit=50&offset=0');
+    const r=await fetch('/.netlify/functions/snapshots?limit=50&offset=0&t='+Date.now());
     const d=await r.json();
     if(!d.snapshots?.length)return;
     const feed=document.getElementById('feed');
@@ -218,7 +218,7 @@ async function loadMore(){
   if(loading)return;
   loading=true;
   try{
-    const r=await fetch(`/.netlify/functions/snapshots?limit=50&offset=${offset}`);
+    const r=await fetch('/.netlify/functions/snapshots?limit=50&offset='+offset+'&t='+Date.now());
     const d=await r.json();
     if(!d.snapshots?.length){loading=false;return;}
     const feed=document.getElementById('feed');
