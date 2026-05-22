@@ -8,3 +8,7 @@
 [[scheduled-functions]]
   name = "crawler-npm"
   cron = "*/5 * * * *"
+
+[[scheduled-functions]]
+  name = "anchor-checker"
+  cron = "*/20 * * * *"
