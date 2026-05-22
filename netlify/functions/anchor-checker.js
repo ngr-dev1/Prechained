@@ -37,7 +37,7 @@ export default async function handler(req, context) {
     .select("id")
     .eq("btc_anchored", false)
     .lt("captured_at", tenMinutesAgo)
-    .limit(500);
+    .limit(100000);
 
   if (error || !pending?.length) {
     return new Response(JSON.stringify({
