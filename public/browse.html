@@ -87,12 +87,22 @@ footer{border-top:1px solid var(--border);padding:18px 32px;display:flex;align-i
 footer a{color:var(--ink-2);text-decoration:none;font-weight:500;}
 footer a:hover{color:var(--accent);}
 @media(max-width:700px){
-  nav{padding:0 16px;}
-  .page-header{padding:24px 16px 18px;}
-  .main{padding:16px;}
-  .pkg-card{grid-template-columns:minmax(0,1fr) 65px 72px;}
-  .pkg-card>*:nth-child(4),.pkg-card>*:nth-child(5){display:none;}
-  footer{padding:14px 16px;}
+  nav{padding:0 10px;}
+  .nav-r{gap:8px;}
+  .nav-r a{font-size:11px;}
+  .live-pill{font-size:10px;}
+  .page-header{padding:18px 12px 14px;}
+  .main{padding:12px;}
+  .pkg-card{grid-template-columns:minmax(0,1fr) 68px;gap:8px;padding:11px 12px;}
+  .pkg-card>*:nth-child(3),.pkg-card>*:nth-child(4),.pkg-card>*:nth-child(5){display:none;}
+  .pc-name{font-size:12px;}
+  .pc-desc{font-size:10px;}
+  .filter-row{gap:4px;}
+  .filt{font-size:10px;padding:3px 8px;}
+  .fl{display:none;}
+  footer{padding:12px;flex-direction:column;gap:6px;}
+  .pagination{gap:4px;flex-wrap:wrap;}
+  .pg-btn{padding:4px 8px;font-size:11px;}
 }
 </style>
 </head>
@@ -133,7 +143,7 @@ footer a:hover{color:var(--accent);}
 <div class="main">
   <div class="meta">
     <div class="meta-count" id="results-count">Loading...</div>
-    <div class="meta-refresh" id="meta-refresh">● live · refreshes every 10s</div>
+    <div class="meta-refresh" id="meta-refresh">● live stats · archive updated every 24 hours</div>
   </div>
   <div class="pkg-list" id="pkg-list"><div class="loading">Loading packages...</div></div>
   <div class="pagination" id="pagination"></div>
@@ -256,7 +266,7 @@ async function triggerCrawler() {
   try { await fetch('/.netlify/functions/crawler-all?t='+Date.now()); } catch(e) {}
 }
 triggerCrawler();
-setInterval(triggerCrawler, 60000);
+// Crawler runs on 24 hour schedule via Netlify
 </script>
 </body>
 </html>
