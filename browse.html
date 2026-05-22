@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Prechained — Browse</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#ffffff;--off:#f9f9f8;--border:#ebebeb;--ink:#111;--ink-2:#555;--ink-3:#999;
+  --accent:#e8390e;--green:#16a34a;--green-bg:#f0fdf4;--amber:#d97706;--amber-bg:#fffbeb;
+  --red:#dc2626;--red-bg:#fef2f2;--blue:#2563eb;--blue-bg:#eff6ff;
+  --mono:'JetBrains Mono',monospace;--serif:'Instrument Serif',serif;--sans:'Inter',sans-serif;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
+
+nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:100;}
+.logo{font-family:var(--serif);font-size:19px;color:var(--ink);letter-spacing:-.01em;text-decoration:none;}
+.logo b{color:var(--accent);}
+.nav-r{display:flex;align-items:center;gap:20px;}
+.nav-r a{font-size:13px;color:var(--ink-2);text-decoration:none;}
+.nav-r a:hover{color:var(--ink);}
+.nav-r a.active{color:var(--ink);font-weight:500;}
+.live{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green);font-family:var(--mono);}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:p 2s infinite;}
+@keyframes p{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+.page-header{padding:48px 32px 32px;border-bottom:1px solid var(--border);background:var(--off);}
+.page-header-inner{max-width:960px;margin:0 auto;}
+.page-title{font-family:var(--serif);font-size:36px;font-weight:400;letter-spacing:-.02em;margin-bottom:6px;}
+.page-title i{color:var(--accent);}
+.page-sub{font-size:14px;color:var(--ink-2);font-weight:300;margin-bottom:28px;}
+
+.search-wrap{position:relative;margin-bottom:20px;}
+.search-input{width:100%;font-family:var(--mono);font-size:14px;padding:14px 20px 14px 44px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--ink);outline:none;transition:border-color .15s;}
+.search-input:focus{border-color:var(--ink);}
+.search-input::placeholder{color:var(--ink-3);}
+.search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--ink-3);pointer-events:none;}
+
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.filter-label{font-size:11px;color:var(--ink-3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;margin-right:4px;}
+.filt{font-size:12px;font-family:var(--sans);font-weight:400;padding:5px 13px;border-radius:100px;border:1px solid var(--border);background:var(--bg);color:var(--ink-2);cursor:pointer;transition:all .15s;}
+.filt:hover{border-color:var(--ink-2);color:var(--ink);}
+.filt.on{border-color:var(--ink);background:var(--ink);color:#fff;}
+
+.main{max-width:960px;margin:0 auto;padding:32px;}
+.results-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.results-count{font-size:12px;color:var(--ink-3);font-family:var(--mono);}
+.sort-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-3);}
+.sort-btn{font-size:12px;font-family:var(--sans);padding:3px 10px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--ink-2);cursor:pointer;transition:all .15s;}
+.sort-btn.on{border-color:var(--ink);color:var(--ink);}
+
+.pkg-list{display:flex;flex-direction:column;gap:6px;}
+.pkg-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:18px 20px;display:grid;grid-template-columns:1fr 100px 140px 100px 90px;gap:16px;align-items:center;transition:all .15s;cursor:pointer;}
+.pkg-card:hover{border-color:var(--ink-3);box-shadow:0 2px 12px rgba(0,0,0,.06);}
+.pc-name{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:3px;}
+.pc-desc{font-size:12px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pc-fp{font-family:var(--mono);font-size:10px;color:var(--ink-3);margin-top:4px;}
+.eco{font-size:10px;font-weight:500;padding:3px 8px;border-radius:3px;font-family:var(--mono);display:inline-block;}
+.e-npm{background:#fff7ed;color:#c2410c;}
+.e-pypi{background:#eff6ff;color:#1d4ed8;}
+.e-maven{background:#fdf4ff;color:#7e22ce;}
+.e-cargo{background:#fef2f2;color:#b91c1c;}
+.e-go{background:#ecfeff;color:#0e7490;}
+.e-nuget{background:#f5f3ff;color:#6d28d9;}
+.e-gh{background:#f0fdf4;color:#15803d;}
+.e-ruby{background:#fef2f2;color:#9f1239;}
+.pc-versions{font-size:12px;color:var(--ink-2);font-family:var(--mono);}
+.pc-vsub{font-size:10px;color:var(--ink-3);margin-top:2px;}
+.pc-date{font-size:12px;color:var(--ink-2);font-family:var(--mono);}
+.pc-datesub{font-size:10px;color:var(--ink-3);margin-top:2px;}
+.st{font-size:11px;font-weight:500;padding:3px 9px;border-radius:100px;display:inline-block;}
+.s-ok{background:var(--green-bg);color:var(--green);}
+.s-lo{background:var(--blue-bg);color:var(--blue);}
+.s-md{background:var(--amber-bg);color:var(--amber);}
+.s-cr{background:var(--red-bg);color:var(--red);}
+
+.loading{text-align:center;padding:48px;font-size:13px;color:var(--ink-3);font-family:var(--mono);}
+
+.pagination{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:32px;padding-top:24px;border-top:1px solid var(--border);}
+.pg-btn{font-size:13px;font-family:var(--mono);padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--ink-2);cursor:pointer;transition:all .15s;}
+.pg-btn:hover{border-color:var(--ink);color:var(--ink);}
+.pg-btn.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.pg-btn:disabled{opacity:.3;cursor:default;}
+
+footer{border-top:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink-3);flex-wrap:wrap;gap:12px;margin-top:48px;}
+footer a{color:var(--ink-3);text-decoration:none;}
+footer a:hover{color:var(--accent);}
+
+@media(max-width:700px){
+  nav{padding:0 20px;}
+  .page-header{padding:32px 20px 24px;}
+  .main{padding:24px 20px;}
+  .pkg-card{grid-template-columns:1fr 80px 80px;gap:10px;}
+  .pkg-card>*:nth-child(4),.pkg-card>*:nth-child(5){display:none;}
+  footer{padding:16px 20px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">Pre<b>chained</b></a>
+  <div class="nav-r">
+    <div class="live"><div class="dot"></div>Recording</div>
+    <a href="/">Home</a>
+    <a href="/browse.html" class="active">Browse</a>
+    <a href="/verify.html">Verify</a>
+    <a href="https://github.com/ngr-dev1/prechained">GitHub</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="page-title">Browse the <i>archive.</i></div>
+    <div class="page-sub">Search any package across <strong id="pkg-total">loading...</strong> tracked packages and <strong id="snap-total">loading...</strong> recorded snapshots.</div>
+    <div class="search-wrap">
+      <div class="search-icon">🔍</div>
+      <input class="search-input" type="text" placeholder="Search packages... e.g. express, lodash, log4j" id="search-input"/>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Ecosystem</span>
+      <button class="filt on" data-eco="">All</button>
+      <button class="filt" data-eco="npm">npm</button>
+      <button class="filt" data-eco="pypi">PyPI</button>
+      <button class="filt" data-eco="github">GitHub</button>
+      <button class="filt" data-eco="maven">Maven</button>
+      <button class="filt" data-eco="cargo">Cargo</button>
+      <button class="filt" data-eco="go">Go</button>
+      <button class="filt" data-eco="nuget">NuGet</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="results-meta">
+    <div class="results-count" id="results-count">Loading...</div>
+    <div class="sort-row">
+      Sort:
+      <button class="sort-btn on">Recently captured</button>
+      <button class="sort-btn">Name</button>
+      <button class="sort-btn">Most versions</button>
+    </div>
+  </div>
+  <div class="pkg-list" id="pkg-list">
+    <div class="loading">Loading packages...</div>
+  </div>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<footer>
+  <span>Prechained · Built by <a href="https://nextgenrails.net">NextGenRails™</a></span>
+  <span><a href="https://github.com/ngr-dev1/prechained">GitHub</a> &nbsp;·&nbsp; <a href="/verify.html">Verify</a> &nbsp;·&nbsp; <a href="#">API</a></span>
+</footer>
+
+<script>
+let currentPage = 1;
+let currentEco = '';
+let currentSearch = '';
+let searchTimer;
+let totalPackages = 0;
+
+function ecoClass(eco) {
+  const map = {npm:'e-npm',pypi:'e-pypi',maven:'e-maven',cargo:'e-cargo',go:'e-go',nuget:'e-nuget',github:'e-gh',rubygems:'e-ruby'};
+  return map[(eco||'').toLowerCase()] || 'e-npm';
+}
+
+function timeAgo(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 60) return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return new Date(dateStr).toLocaleDateString();
+}
+
+async function loadStats() {
+  try {
+    const res = await fetch('/.netlify/functions/stats');
+    const data = await res.json();
+    document.getElementById('pkg-total').textContent = data.total_packages.toLocaleString();
+    document.getElementById('snap-total').textContent = data.total_snapshots.toLocaleString();
+  } catch(e) {}
+}
+
+async function loadPackages() {
+  const list = document.getElementById('pkg-list');
+  list.innerHTML = '<div class="loading">Loading...</div>';
+
+  let url = `/.netlify/functions/packages?page=${currentPage}`;
+  if (currentEco) url += `&ecosystem=${encodeURIComponent(currentEco)}`;
+  if (currentSearch) url += `&q=${encodeURIComponent(currentSearch)}`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    totalPackages = data.total || 0;
+
+    const from = ((currentPage-1)*20)+1;
+    const to = Math.min(currentPage*20, totalPackages);
+    document.getElementById('results-count').textContent =
+      totalPackages > 0
+        ? `Showing ${from}–${to} of ${totalPackages.toLocaleString()} packages`
+        : 'No packages found';
+
+    if (!data.packages || !data.packages.length) {
+      list.innerHTML = '<div class="loading">No packages found. The crawler may still be warming up.</div>';
+      return;
+    }
+
+    list.innerHTML = data.packages.map(p => `
+      <div class="pkg-card" onclick="window.location='/package.html?id=${p.id}'">
+        <div>
+          <div class="pc-name">${p.name}</div>
+          <div class="pc-desc">${p.description || 'No description'}</div>
+        </div>
+        <div><span class="eco ${ecoClass(p.ecosystem)}">${p.ecosystem}</span></div>
+        <div>
+          <div class="pc-versions">${p.total_versions} versions</div>
+          <div class="pc-vsub">Latest: v${p.latest_version || '—'}</div>
+        </div>
+        <div>
+          <div class="pc-date">${timeAgo(p.last_captured_at)}</div>
+        </div>
+        <div><span class="st s-ok">✓ Recorded</span></div>
+      </div>
+    `).join('');
+
+    renderPagination(totalPackages);
+  } catch(e) {
+    list.innerHTML = '<div class="loading">Failed to load packages. Please try again.</div>';
+  }
+}
+
+function renderPagination(total) {
+  const pages = Math.ceil(total / 20);
+  if (pages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+  let html = '';
+  html += `<button class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>←</button>`;
+  for (let i = 1; i <= Math.min(pages, 7); i++) {
+    html += `<button class="pg-btn ${i===currentPage?'on':''}" onclick="goPage(${i})">${i}</button>`;
+  }
+  if (pages > 7) html += `<span style="color:var(--ink-3);font-family:var(--mono);font-size:13px;">...</span>`;
+  html += `<button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage===pages?'disabled':''}>→</button>`;
+  document.getElementById('pagination').innerHTML = html;
+}
+
+function goPage(p) {
+  if (p < 1) return;
+  currentPage = p;
+  loadPackages();
+  window.scrollTo(0,0);
+}
+
+// Ecosystem filters
+document.querySelectorAll('.filt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filt').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    currentEco = btn.dataset.eco;
+    currentPage = 1;
+    loadPackages();
+  });
+});
+
+// Search
+document.getElementById('search-input').addEventListener('input', function() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    currentSearch = this.value.trim();
+    currentPage = 1;
+    loadPackages();
+  }, 400);
+});
+
+// Sort buttons
+document.querySelectorAll('.sort-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.sort-btn').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+  });
+});
+
+loadStats();
+loadPackages();
+</script>
+</body>
+</html>
