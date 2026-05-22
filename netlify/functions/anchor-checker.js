@@ -30,13 +30,10 @@ export default async function handler(req, context) {
   console.log("Current BTC block:", currentBlock);
 
   // Anchor all unanchored snapshots older than 10 minutes to the current block
-  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-
   const { data: pending, error } = await supabase
     .from("snapshots")
     .select("id")
     .eq("btc_anchored", false)
-    .lt("captured_at", tenMinutesAgo)
     .limit(100000);
 
   if (error || !pending?.length) {
