@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import fetch from "node-fetch";
 import { createHash } from "crypto";
 
 const supabase = createClient(
@@ -8,6 +7,24 @@ const supabase = createClient(
 );
 
 const GITHUB_TOKEN = process.env.GITHUB_ARCHIVE_TOKEN;
+
+// ── BITCOIN BLOCK ──────────────────────────────────────────────
+let cachedBtcBlock = null;
+let cachedBtcBlockTime = 0;
+
+async function getCurrentBtcBlock() {
+  // Cache for 5 minutes to avoid hammering blockstream
+  if (cachedBtcBlock && Date.now() - cachedBtcBlockTime < 5 * 60 * 1000) {
+    return cachedBtcBlock;
+  }
+  try {
+    const res = await fetch("https://blockstream.info/api/blocks/tip/height");
+    if (!res.ok) return null;
+    cachedBtcBlock = parseInt((await res.text()).trim());
+    cachedBtcBlockTime = Date.now();
+    return cachedBtcBlock;
+  } catch(e) { return null; }
+}
 const GITHUB_REPO = process.env.GITHUB_ARCHIVE_REPO || "ngr-dev1/prechained-archive";
 
 // ── PACKAGE LISTS ──────────────────────────────────────────────
@@ -415,11 +432,15 @@ async function captureVersion(pkg, version, ecosystem, integrity, shasum, licens
   // Store manifest in GitHub archive
   const manifestPath = await storeManifestInGithub(ecosystem, pkg.name, version, manifest);
 
+  // Get current Bitcoin block at time of capture
+  const btcBlock = await getCurrentBtcBlock();
+
   const { error } = await supabase.from("snapshots").insert({
     package_id: pkg.id, version, ecosystem,
     sha384_fingerprint: fingerprint,
     receipt_id: receiptId,
-    btc_anchored: false,
+    btc_anchored: btcBlock ? true : false,
+    btc_block: btcBlock || null,
     ots_proof: null,
     manifest_path: manifestPath,
     raw_metadata: license ? { license } : null
