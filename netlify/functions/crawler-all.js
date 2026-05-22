@@ -705,11 +705,14 @@ async function crawlGithub(startTime) {
       });
       const fingerprint = sha384(payload);
       const manifestPath = await storeManifestInGithub("github", repo, version, manifest);
+      const btcBlock = await getCurrentBtcBlock();
       const { error } = await supabase.from("snapshots").insert({
         package_id: pkg.id, version, ecosystem: "github",
         sha384_fingerprint: fingerprint,
         receipt_id: generateReceiptId(),
-        btc_anchored: false, ots_proof: null,
+        btc_anchored: btcBlock ? true : false,
+        btc_block: btcBlock || null,
+        ots_proof: null,
         manifest_path: manifestPath,
         raw_metadata: { commit_sha: latestSha, tree_sha: treeSha, branch: defaultBranch, license: repoData.license?.spdx_id || "" }
       });
