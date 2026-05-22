@@ -24,7 +24,7 @@ export default async function handler(req) {
   if (receiptId) {
     const { data, error } = await supabase
       .from("snapshots")
-      .select("*, packages(*)")
+      .select("*, packages(*), manifest_path")
       .eq("receipt_id", receiptId)
       .single();
     if (error) return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: NO_CACHE });
@@ -34,7 +34,7 @@ export default async function handler(req) {
   if (packageId) {
     const { data, error } = await supabase
       .from("snapshots")
-      .select("*, packages(*)")
+      .select("*, packages(*), manifest_path")
       .eq("package_id", packageId)
       .order("captured_at", { ascending: false })
       .limit(limit);
@@ -44,7 +44,7 @@ export default async function handler(req) {
 
   const { data, error } = await supabase
     .from("snapshots")
-    .select("*, packages(name, ecosystem, description)")
+    .select("*, packages(name, ecosystem, description), manifest_path")
     .order("captured_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
