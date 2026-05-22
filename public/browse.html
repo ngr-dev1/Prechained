@@ -161,7 +161,7 @@ function ago(d){
 
 async function loadStats(){
   try{
-    const r=await fetch('/.netlify/functions/stats');
+    const r=await fetch('/.netlify/functions/stats?t='+Date.now());
     const d=await r.json();
     document.getElementById('pkg-total').textContent=d.total_packages.toLocaleString();
     document.getElementById('snap-total').textContent=d.total_snapshots.toLocaleString();
@@ -173,7 +173,7 @@ async function loadPkgs(){
   if(eco)url+=`&ecosystem=${encodeURIComponent(eco)}`;
   if(q)url+=`&q=${encodeURIComponent(q)}`;
   try{
-    const r=await fetch(url);
+    const r=await fetch(url+'&t='+Date.now());
     const d=await r.json();
     const total=d.total||0;
     const from=((page-1)*20)+1;
