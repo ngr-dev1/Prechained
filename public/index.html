@@ -316,6 +316,14 @@ function rowH(s,isNew){
   </div>`;
 }
 
+async function refreshBtcBlock(){
+  try{
+    const r=await fetch('https://blockstream.info/api/blocks/tip/height');
+    const block=await r.text();
+    document.getElementById('btc-block').textContent='#'+parseInt(block.trim()).toLocaleString();
+  }catch(e){}
+}
+
 async function refreshStats(){
   try{
     const r=await fetch('/.netlify/functions/stats?t='+Date.now());
@@ -370,8 +378,15 @@ document.getElementById('feed').addEventListener('scroll',function(){
   if(this.scrollHeight-this.scrollTop-this.clientHeight<250)loadMore();
 });
 
-refreshStats();refreshFeed();
-setInterval(()=>{refreshStats();refreshFeed();},5000);
+refreshStats();refreshFeed();refreshBtcBlock();
+setInterval(()=>{refreshStats();refreshFeed();refreshBtcBlock();},5000);
+
+// Trigger crawler on page load and every 10 minutes
+async function triggerCrawler(){
+  try{ await fetch('/.netlify/functions/crawler-all?t='+Date.now()); }catch(e){}
+}
+triggerCrawler();
+setInterval(triggerCrawler, 10*60*1000);
 </script>
 </body>
 </html>
