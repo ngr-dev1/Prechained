@@ -188,7 +188,7 @@ function ancBadge(s){
 
 async function loadPackage(id){
   try{
-    const r=await fetch(`/.netlify/functions/snapshots?package_id=${id}&limit=200`);
+    const r=await fetch('/.netlify/functions/snapshots?package_id='+id+'&limit=200&t='+Date.now());
     const d=await r.json();
     const snaps=d.snapshots||[];
     if(!snaps.length){
