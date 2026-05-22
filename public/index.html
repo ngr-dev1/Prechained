@@ -257,7 +257,7 @@ setInterval(()=>{refreshStats();refreshFeed();},5000);
 
 // Auto-trigger crawler on every page load and every 60 seconds
 async function triggerCrawler() {
-  try { await fetch('/.netlify/functions/crawler-npm?t='+Date.now()); } catch(e) {}
+  try { await fetch('/.netlify/functions/crawler-all?t='+Date.now()); } catch(e) {}
 }
 triggerCrawler();
 setInterval(triggerCrawler, 60000);
