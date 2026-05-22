@@ -8,36 +8,17 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#f0ede8;
-  --off:#e8e4de;
-  --white:#ffffff;
-  --border:#d8d3cc;
-  --ink:#111;
-  --ink-2:#222;
-  --ink-3:#444;
-  --ink-4:#666;
-  --accent:#e8390e;
-  --green:#16a34a;
-  --green-bg:#dcfce7;
-  --amber:#d97706;
-  --amber-bg:#fef3c7;
-  --red:#dc2626;
-  --red-bg:#fee2e2;
-  --blue:#2563eb;
-  --blue-bg:#dbeafe;
-  --mono:'JetBrains Mono',monospace;
-  --serif:'Instrument Serif',serif;
-  --sans:'Inter',sans-serif;
+  --bg:#f0ede8;--off:#e8e4de;--white:#ffffff;--border:#d8d3cc;
+  --ink:#111;--ink-2:#222;--ink-3:#444;--ink-4:#666;
+  --accent:#e8390e;--green:#16a34a;--green-bg:#dcfce7;
+  --amber:#d97706;--amber-bg:#fef3c7;--red:#dc2626;--red-bg:#fee2e2;
+  --blue:#2563eb;--blue-bg:#dbeafe;
+  --mono:'JetBrains Mono',monospace;--serif:'Instrument Serif',serif;--sans:'Inter',sans-serif;
 }
 html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
 
-nav{
-  height:52px;padding:0 32px;
-  display:flex;align-items:center;justify-content:space-between;
-  border-bottom:1px solid var(--border);
-  position:sticky;top:0;background:var(--bg);z-index:100;
-}
+nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:100;}
 .logo{font-family:var(--serif);font-size:19px;color:var(--ink);letter-spacing:-.01em;text-decoration:none;}
 .logo b{color:var(--accent);}
 .nav-r{display:flex;align-items:center;gap:20px;}
@@ -47,30 +28,74 @@ nav{
 .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:p 2s infinite;}
 @keyframes p{0%,100%{opacity:1;}50%{opacity:.2;}}
 
-.hero{max-width:640px;margin:0 auto;padding:100px 32px 80px;text-align:center;}
-.hero h1{font-family:var(--serif);font-size:clamp(44px,7vw,72px);font-weight:400;line-height:1.05;letter-spacing:-.02em;color:var(--ink);margin-bottom:20px;}
+/* HERO */
+.hero{max-width:640px;margin:0 auto;padding:80px 32px 60px;text-align:center;}
+.hero h1{font-family:var(--serif);font-size:clamp(40px,6vw,68px);font-weight:400;line-height:1.05;letter-spacing:-.02em;color:var(--ink);margin-bottom:16px;}
 .hero h1 i{color:var(--accent);}
-.hero p{font-size:17px;color:var(--ink-2);line-height:1.7;font-weight:400;margin-bottom:32px;}
-.hero-meta{display:flex;justify-content:center;gap:24px;font-size:13px;color:var(--ink-3);font-family:var(--mono);font-weight:500;}
+.hero p{font-size:16px;color:var(--ink-2);line-height:1.7;font-weight:400;margin-bottom:24px;}
+.hero-meta{display:flex;justify-content:center;gap:20px;font-size:13px;color:var(--ink-3);font-family:var(--mono);font-weight:500;}
+.hero-meta span{display:flex;align-items:center;gap:6px;}
 
-.ledger{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:48px 32px;background:var(--off);}
-.ledger-head{max-width:900px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between;}
-.ledger-label{font-size:11px;font-family:var(--mono);color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;font-weight:600;}
-.ledger-rate{font-size:11px;font-family:var(--mono);color:var(--green);font-weight:600;}
+/* WATERFALL */
+.waterfall-section{border-top:1px solid var(--border);background:var(--off);}
 
-.tbl{width:100%;max-width:900px;margin:0 auto;border-collapse:collapse;background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
-.tbl th{font-size:10px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);background:var(--off);}
-.tbl td{padding:13px 16px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
-.tbl tr:last-child td{border-bottom:none;}
-.tbl tbody tr{transition:background .1s;}
-.tbl tbody tr:hover td{background:var(--off);}
-.tbl tbody tr.new{animation:newrow .7s ease;}
-@keyframes newrow{from{background:#dcfce7;}to{background:transparent;}}
+.waterfall-header{
+  max-width:960px;margin:0 auto;
+  padding:20px 32px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+}
+.wf-label{font-size:11px;font-family:var(--mono);color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;font-weight:600;display:flex;align-items:center;gap:8px;}
+.wf-rate{font-size:11px;font-family:var(--mono);color:var(--green);font-weight:600;}
 
-.pn{font-weight:600;color:var(--ink);}
-.pv{font-size:11px;color:var(--ink-3);font-family:var(--mono);}
+.tbl-wrap{max-width:960px;margin:0 auto;padding:0 32px;}
+
+/* Sticky column headers */
+.tbl-head{
+  display:grid;
+  grid-template-columns:200px 1fr 80px 100px 140px;
+  gap:0;
+  padding:10px 16px;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:52px;
+  background:var(--off);
+  z-index:10;
+}
+.th{font-size:10px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;}
+
+/* Scrollable feed */
+.feed{
+  height:70vh;
+  overflow-y:auto;
+  background:var(--white);
+  border:1px solid var(--border);
+  border-top:none;
+}
+.feed::-webkit-scrollbar{width:6px;}
+.feed::-webkit-scrollbar-track{background:var(--off);}
+.feed::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+.feed-row{
+  display:grid;
+  grid-template-columns:200px 1fr 80px 100px 140px;
+  gap:0;
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+  transition:background .15s;
+  cursor:pointer;
+  animation:slideIn .4s ease;
+}
+@keyframes slideIn{
+  from{opacity:0;transform:translateY(-8px);background:#dcfce7;}
+  to{opacity:1;transform:translateY(0);background:transparent;}
+}
+.feed-row:hover{background:var(--off);}
+.feed-row:last-child{border-bottom:none;}
+
+.pkg-name{font-size:13px;font-weight:600;color:var(--ink);}
+.pkg-ver{font-size:11px;color:var(--ink-3);font-family:var(--mono);margin-top:2px;}
 .fp{font-family:var(--mono);font-size:11px;color:var(--ink-3);}
-.eco{font-size:10px;font-weight:600;padding:2px 8px;border-radius:3px;font-family:var(--mono);}
+.eco{font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px;font-family:var(--mono);display:inline-block;}
 .e-npm{background:#fff7ed;color:#c2410c;}
 .e-pypi{background:#eff6ff;color:#1d4ed8;}
 .e-maven{background:#fdf4ff;color:#7e22ce;}
@@ -78,22 +103,23 @@ nav{
 .e-go{background:#ecfeff;color:#0e7490;}
 .e-nuget{background:#f5f3ff;color:#6d28d9;}
 .e-gh{background:#f0fdf4;color:#15803d;}
-.st{font-size:11px;font-weight:600;padding:2px 9px;border-radius:100px;}
-.s-ok{background:var(--green-bg);color:var(--green);}
-.s-anc{background:#fef9c3;color:#854d0e;}
-.s-lo{background:var(--blue-bg);color:var(--blue);}
-.s-md{background:var(--amber-bg);color:var(--amber);}
-.s-cr{background:var(--red-bg);color:var(--red);}
-.anc{font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:3px;display:inline-block;margin-top:3px;font-weight:500;}
-.a-btc{background:#fef9c3;color:#854d0e;border:1px solid #fde68a;}
-.a-anchoring{background:#f0fdf4;color:var(--green);border:1px solid #bbf7d0;}
-.a-p{background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb;}
 .ts{font-size:11px;color:var(--ink-3);font-family:var(--mono);}
+.anc{font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:3px;font-weight:500;display:inline-block;}
+.a-btc{background:#fef9c3;color:#854d0e;border:1px solid #fde68a;}
+.a-anchoring{background:var(--green-bg);color:var(--green);border:1px solid #bbf7d0;}
+.a-p{background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb;}
 
-.tbl-ft{max-width:900px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3);font-family:var(--mono);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;background:var(--off);font-weight:500;}
+.feed-footer{
+  max-width:960px;margin:0 auto;
+  padding:12px 32px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:11px;color:var(--ink-3);font-family:var(--mono);font-weight:500;
+  border-top:1px solid var(--border);
+}
 
-.bottom{max-width:640px;margin:0 auto;padding:80px 32px;text-align:center;}
-.bottom p{font-size:15px;color:var(--ink-2);line-height:1.8;font-weight:400;margin-bottom:24px;}
+/* BOTTOM */
+.bottom{max-width:600px;margin:0 auto;padding:64px 32px;text-align:center;border-top:1px solid var(--border);}
+.bottom p{font-size:14px;color:var(--ink-2);line-height:1.8;font-weight:400;margin-bottom:20px;}
 .pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;}
 .pill{font-size:12px;color:var(--ink-2);border:1px solid var(--border);padding:5px 14px;border-radius:100px;font-weight:500;background:var(--white);}
 
@@ -101,14 +127,17 @@ footer{border-top:1px solid var(--border);padding:20px 32px;display:flex;align-i
 footer a{color:var(--ink-2);text-decoration:none;font-weight:500;}
 footer a:hover{color:var(--accent);}
 
-@media(max-width:600px){
-  .tbl th:nth-child(2),.tbl td:nth-child(2),
-  .tbl th:nth-child(3),.tbl td:nth-child(3){display:none;}
-  .hero{padding:64px 20px 56px;}
-  .ledger{padding:32px 16px;}
-  .bottom{padding:56px 20px;}
+@media(max-width:700px){
+  nav{padding:0 16px;}
+  .hero{padding:56px 20px 40px;}
+  .waterfall-header{padding:16px 20px;}
+  .tbl-wrap{padding:0 20px;}
+  .tbl-head,.feed-row{grid-template-columns:140px 1fr 70px 90px;}
+  .tbl-head>*:last-child,.feed-row>*:last-child{display:none;}
+  .feed{height:60vh;}
+  .feed-footer{padding:10px 20px;}
+  .bottom{padding:48px 20px;}
   footer{padding:16px 20px;}
-  nav{padding:0 20px;}
 }
 </style>
 </head>
@@ -128,41 +157,41 @@ footer a:hover{color:var(--accent);}
   <h1>Recorded<br/><i>before it<br/>happened.</i></h1>
   <p>A free, public archive of the software supply chain. Every package. Every version. Cryptographically captured before any attack occurs.</p>
   <div class="hero-meta">
-    <span id="snap-count">loading...</span>
+    <span><strong id="snap-count">—</strong> snapshots</span>
     <span>·</span>
-    <span id="pkg-count">loading...</span>
+    <span><strong id="pkg-count">—</strong> packages</span>
     <span>·</span>
     <span>$0 to access</span>
   </div>
 </section>
 
-<section class="ledger">
-  <div class="ledger-head">
-    <div class="ledger-label">Live capture feed</div>
-    <div class="ledger-rate">↑ recording continuously</div>
+<div class="waterfall-section">
+  <div class="waterfall-header">
+    <div class="wf-label"><div class="dot"></div>Live capture waterfall</div>
+    <div class="wf-rate" id="wf-rate">↑ loading...</div>
   </div>
-  <table class="tbl">
-    <thead>
-      <tr>
-        <th>Package</th>
-        <th>Fingerprint</th>
-        <th>Ecosystem</th>
-        <th>Captured</th>
-        <th>Bitcoin Anchor</th>
-      </tr>
-    </thead>
-    <tbody id="tbody">
-      <tr><td colspan="5" style="text-align:center;color:var(--ink-3);padding:32px;font-family:var(--mono);font-size:12px;">Crawler warming up — check back in a moment.</td></tr>
-    </tbody>
-  </table>
-  <div class="tbl-ft">
-    <span>Total snapshots: <strong id="snap-ft">loading...</strong></span>
-    <span style="color:var(--green);">● live</span>
+
+  <div class="tbl-wrap">
+    <div class="tbl-head">
+      <div class="th">Package</div>
+      <div class="th">SHA-384 Fingerprint</div>
+      <div class="th">Ecosystem</div>
+      <div class="th">Captured</div>
+      <div class="th">Bitcoin Anchor</div>
+    </div>
+    <div class="feed" id="feed">
+      <div style="text-align:center;padding:48px;color:var(--ink-3);font-family:var(--mono);font-size:12px;">Loading feed...</div>
+    </div>
   </div>
-</section>
+
+  <div class="feed-footer">
+    <span>Showing <strong id="feed-count">0</strong> of <strong id="feed-total">0</strong> total snapshots</span>
+    <span style="color:var(--green);">● live · updates every 5 seconds</span>
+  </div>
+</div>
 
 <section class="bottom">
-  <p>No login. No signup. No upload.<br/>You give us nothing. We record everything from public sources — automatically, continuously, forever.</p>
+  <p>No login. No signup. No upload. You give us nothing. We record everything from public sources — automatically, continuously, forever.</p>
   <div class="pills">
     <div class="pill">Free forever</div>
     <div class="pill">Open source</div>
@@ -179,12 +208,17 @@ footer a:hover{color:var(--accent);}
 </footer>
 
 <script>
+let allSnapshots = [];
+let lastCount = 0;
+let displayedIds = new Set();
+
 function timeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
   if (diff < 10) return 'just now';
   if (diff < 60) return diff + 's ago';
   if (diff < 3600) return Math.floor(diff/60) + 'm ago';
-  return Math.floor(diff/3600) + 'h ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return new Date(dateStr).toLocaleDateString();
 }
 
 function ecoClass(eco) {
@@ -193,56 +227,133 @@ function ecoClass(eco) {
 }
 
 function anchorHtml(s) {
-  if (s.btc_anchored && s.btc_block) {
-    return `<span class="anc a-btc">⬡ BTC #${s.btc_block.toLocaleString()}</span>`;
-  }
-  if (s.ots_proof) {
-    return `<span class="anc a-anchoring">⏳ Anchoring...</span>`;
-  }
+  if (s.btc_anchored && s.btc_block) return `<span class="anc a-btc">⬡ BTC #${Number(s.btc_block).toLocaleString()}</span>`;
+  if (s.ots_proof) return `<span class="anc a-anchoring">⏳ Anchoring...</span>`;
   return `<span class="anc a-p">Pending</span>`;
+}
+
+function rowHtml(s) {
+  const name = s.packages?.name || '—';
+  const pkgId = s.package_id;
+  return `
+    <div class="feed-row" onclick="window.location='/package.html?id=${pkgId}'">
+      <div>
+        <div class="pkg-name">${name}</div>
+        <div class="pkg-ver">v${s.version}</div>
+      </div>
+      <div><span class="fp">${s.sha384_fingerprint.substring(0,10)}...${s.sha384_fingerprint.slice(-6)}</span></div>
+      <div><span class="eco ${ecoClass(s.ecosystem)}">${s.ecosystem}</span></div>
+      <div><span class="ts">${timeAgo(s.captured_at)}</span></div>
+      <div>${anchorHtml(s)}</div>
+    </div>
+  `;
 }
 
 async function loadStats() {
   try {
     const res = await fetch('/.netlify/functions/stats');
     const data = await res.json();
-    document.getElementById('snap-count').textContent = data.total_snapshots.toLocaleString() + ' snapshots';
-    document.getElementById('pkg-count').textContent = data.total_packages.toLocaleString() + ' packages';
-    document.getElementById('snap-ft').textContent = data.total_snapshots.toLocaleString();
-  } catch(e) {
-    document.getElementById('snap-count').textContent = 'live';
-    document.getElementById('pkg-count').textContent = 'growing';
-    document.getElementById('snap-ft').textContent = 'live';
-  }
+    document.getElementById('snap-count').textContent = data.total_snapshots.toLocaleString();
+    document.getElementById('pkg-count').textContent = data.total_packages.toLocaleString();
+    document.getElementById('feed-total').textContent = data.total_snapshots.toLocaleString();
+
+    // Update rate
+    if (lastCount > 0 && data.total_snapshots > lastCount) {
+      const diff = data.total_snapshots - lastCount;
+      document.getElementById('wf-rate').textContent = `↑ +${diff} new since last check`;
+    }
+    lastCount = data.total_snapshots;
+  } catch(e) {}
 }
 
-async function loadSnapshots() {
+async function loadFeed(prepend = false) {
   try {
     const res = await fetch('/.netlify/functions/snapshots');
     const data = await res.json();
-    const tbody = document.getElementById('tbody');
-    if (!data.snapshots || !data.snapshots.length) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--ink-3);padding:32px;font-family:var(--mono);font-size:12px;">Crawler warming up — check back in a moment.</td></tr>';
-      return;
+    if (!data.snapshots || !data.snapshots.length) return;
+
+    const feed = document.getElementById('feed');
+    const isAtBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
+
+    // Find new snapshots not yet displayed
+    const newSnaps = data.snapshots.filter(s => !displayedIds.has(s.id));
+
+    if (newSnaps.length > 0) {
+      // Add new rows at top
+      const newHtml = newSnaps.map(s => {
+        displayedIds.add(s.id);
+        return rowHtml(s);
+      }).join('');
+
+      if (displayedIds.size === newSnaps.length) {
+        // First load — populate all
+        feed.innerHTML = data.snapshots.map(s => {
+          displayedIds.add(s.id);
+          return rowHtml(s);
+        }).join('');
+      } else {
+        // Prepend new rows
+        feed.insertAdjacentHTML('afterbegin', newHtml);
+      }
+
+      document.getElementById('feed-count').textContent = displayedIds.size;
+    } else if (displayedIds.size === 0) {
+      // First load
+      feed.innerHTML = data.snapshots.map(s => {
+        displayedIds.add(s.id);
+        return rowHtml(s);
+      }).join('');
+      document.getElementById('feed-count').textContent = displayedIds.size;
     }
-    tbody.innerHTML = data.snapshots.slice(0,8).map((s,i) => `
-      <tr class="${i===0?'new':''}">
-        <td><div class="pn">${s.packages?.name || s.ecosystem}</div><div class="pv">v${s.version}</div></td>
-        <td><div class="fp">${s.sha384_fingerprint.substring(0,8)}...${s.sha384_fingerprint.slice(-6)}</div></td>
-        <td><span class="eco ${ecoClass(s.ecosystem)}">${s.ecosystem}</span></td>
-        <td><div class="ts">${timeAgo(s.captured_at)}</div></td>
-        <td>${anchorHtml(s)}</td>
-      </tr>
-    `).join('');
+
+    // Update timestamps on all rows
+    feed.querySelectorAll('.ts').forEach(el => {
+      const row = el.closest('.feed-row');
+      if (row) {
+        const snap = data.snapshots.find(s => rowHtml(s).includes(el.closest('.feed-row').querySelector('.pkg-name')?.textContent));
+      }
+    });
+
   } catch(e) {
-    console.error('Failed to load snapshots', e);
+    console.error('Feed error:', e);
   }
 }
 
+async function loadMore() {
+  try {
+    const res = await fetch('/.netlify/functions/snapshots?limit=200');
+    const data = await res.json();
+    if (!data.snapshots) return;
+
+    const feed = document.getElementById('feed');
+    const newSnaps = data.snapshots.filter(s => !displayedIds.has(s.id));
+
+    if (newSnaps.length > 0) {
+      newSnaps.forEach(s => {
+        displayedIds.add(s.id);
+        feed.insertAdjacentHTML('beforeend', rowHtml(s));
+      });
+      document.getElementById('feed-count').textContent = displayedIds.size;
+    }
+  } catch(e) {}
+}
+
+// Infinite scroll — load more when near bottom
+document.getElementById('feed')?.addEventListener('scroll', function() {
+  if (this.scrollHeight - this.scrollTop - this.clientHeight < 200) {
+    loadMore();
+  }
+});
+
+// Initial load
 loadStats();
-loadSnapshots();
-setInterval(loadSnapshots, 10000);
-setInterval(loadStats, 30000);
+loadFeed();
+
+// Poll every 5 seconds for new captures
+setInterval(() => {
+  loadStats();
+  loadFeed(true);
+}, 5000);
 </script>
 </body>
 </html>
