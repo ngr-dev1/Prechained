@@ -132,12 +132,7 @@ async function processPackage(name, startTime) {
         receipt_id: receiptId,
         btc_anchored: false,
         ots_proof: null,
-        raw_metadata: {
-          integrity: versionData.dist?.integrity,
-          shasum: versionData.dist?.shasum,
-          license: versionData.license,
-          dependencies: Object.keys(versionData.dependencies || {})
-        }
+        raw_metadata: null
       });
 
       if (!error) {
