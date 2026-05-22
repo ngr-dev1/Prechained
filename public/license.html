@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Prechained — License</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f0ede8;--off:#e8e4de;--white:#fff;--border:#d8d3cc;
+  --ink:#111;--ink-2:#222;--ink-3:#444;
+  --accent:#e8390e;--green:#16a34a;--green-bg:#dcfce7;
+  --mono:'JetBrains Mono',monospace;--serif:'Instrument Serif',serif;--sans:'Inter',sans-serif;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;margin:0;}
+nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:100;}
+.logo{font-family:var(--serif);font-size:19px;color:var(--ink);text-decoration:none;}
+.logo b{color:var(--accent);}
+.nav-r{display:flex;align-items:center;gap:20px;}
+.nav-r a{font-size:13px;color:#333;text-decoration:none;font-weight:500;}
+.nav-r a:hover{color:var(--accent);}
+
+.page{max-width:760px;margin:0 auto;padding:64px 32px;}
+.page-title{font-family:var(--serif);font-size:clamp(32px,5vw,48px);font-weight:400;letter-spacing:-.02em;margin-bottom:8px;}
+.page-title i{color:var(--accent);}
+.page-sub{font-size:14px;color:var(--ink-2);margin-bottom:48px;line-height:1.6;}
+
+.license-badge{
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:8px;padding:14px 20px;
+  margin-bottom:40px;
+}
+.license-name{font-size:16px;font-weight:700;color:var(--ink);font-family:var(--mono);}
+.license-sub{font-size:12px;color:var(--ink-3);}
+
+.section{margin-bottom:40px;}
+.section-title{font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;font-family:var(--mono);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+
+.perm-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0;}
+.perm-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:16px;}
+.perm-card.allowed{border-left:3px solid var(--green);}
+.perm-card.required{border-left:3px solid var(--accent);}
+.perm-card.forbidden{border-left:3px solid #dc2626;}
+.perm-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.perm-desc{font-size:12px;color:var(--ink-3);line-height:1.6;}
+
+.plain-english{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:0;}
+.pe-item{display:flex;gap:12px;margin-bottom:14px;font-size:13px;color:var(--ink-2);line-height:1.6;}
+.pe-item:last-child{margin-bottom:0;}
+.pe-icon{flex-shrink:0;font-size:16px;margin-top:1px;}
+
+.cta-box{background:var(--ink);border-radius:10px;padding:28px;text-align:center;margin-top:40px;}
+.cta-title{font-family:var(--serif);font-size:24px;font-weight:400;color:#fff;margin-bottom:8px;}
+.cta-sub{font-size:13px;color:#aaa;margin-bottom:20px;line-height:1.6;}
+.cta-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.cta-btn{font-size:13px;font-weight:600;padding:10px 20px;border-radius:6px;text-decoration:none;transition:all .15s;}
+.cta-btn.primary{background:var(--accent);color:#fff;}
+.cta-btn.primary:hover{background:#c02d0a;}
+.cta-btn.secondary{background:transparent;color:#fff;border:1px solid #444;}
+.cta-btn.secondary:hover{border-color:#888;}
+
+footer{border-top:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink-3);flex-wrap:wrap;gap:10px;margin-top:48px;}
+footer a{color:var(--ink-2);text-decoration:none;font-weight:500;}
+footer a:hover{color:var(--accent);}
+
+@media(max-width:600px){
+  nav{padding:0 16px;}
+  .page{padding:40px 16px;}
+  .perm-grid{grid-template-columns:1fr;}
+  footer{padding:14px 16px;flex-direction:column;}
+}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">Pre<b>chained</b></a>
+  <div class="nav-r">
+    <a href="/">Home</a>
+    <a href="/browse.html">Browse</a>
+    <a href="/verify.html">Verify</a>
+    <a href="https://github.com/ngr-dev1/prechained">GitHub</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-title">Open Source <i>License.</i></div>
+  <div class="page-sub">Prechained is free and open source software licensed under the GNU Affero General Public License v3.0. Here's what that means in plain English.</div>
+
+  <div class="license-badge">
+    <span style="font-size:24px;">⚖️</span>
+    <div>
+      <div class="license-name">AGPL-3.0</div>
+      <div class="license-sub">GNU Affero General Public License v3.0 · Free software, copyleft</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">What you can do</div>
+    <div class="perm-grid">
+      <div class="perm-card allowed">
+        <div class="perm-title">✓ Use it freely</div>
+        <div class="perm-desc">Use Prechained for any purpose — personal, research, education, or non-commercial projects. Free forever.</div>
+      </div>
+      <div class="perm-card allowed">
+        <div class="perm-title">✓ View the source</div>
+        <div class="perm-desc">Every line of code is public on GitHub. Read it, audit it, verify it does exactly what we say it does.</div>
+      </div>
+      <div class="perm-card allowed">
+        <div class="perm-title">✓ Fork and modify</div>
+        <div class="perm-desc">Fork the repo, modify the code, run your own instance. Build on top of what we've built.</div>
+      </div>
+      <div class="perm-card allowed">
+        <div class="perm-title">✓ Contribute</div>
+        <div class="perm-desc">Submit pull requests, add new ecosystem crawlers, improve the fingerprinting logic. We welcome contributions.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">What AGPL requires</div>
+    <div class="perm-grid">
+      <div class="perm-card required">
+        <div class="perm-title">→ Share your changes</div>
+        <div class="perm-desc">If you modify Prechained and deploy it as a network service, you must make your modified source code publicly available under AGPL.</div>
+      </div>
+      <div class="perm-card required">
+        <div class="perm-title">→ Keep the license</div>
+        <div class="perm-desc">Any distribution or derivative work must include the AGPL-3.0 license and copyright notice. You cannot relicense this code.</div>
+      </div>
+      <div class="perm-card forbidden">
+        <div class="perm-title">✕ No proprietary forks</div>
+        <div class="perm-desc">You cannot take this code, build a competing commercial product with it, and keep your modifications private. AGPL closes that loophole.</div>
+      </div>
+      <div class="perm-card forbidden">
+        <div class="perm-title">✕ No warranty</div>
+        <div class="perm-desc">Prechained is provided as-is without warranty. Use it at your own risk. The archive is best-effort, not guaranteed complete.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Plain English summary</div>
+    <div class="plain-english">
+      <div class="pe-item"><span class="pe-icon">🆓</span><span>Prechained is free to use for anyone, for any non-commercial purpose. No cost, no account, no license fee.</span></div>
+      <div class="pe-item"><span class="pe-icon">🔍</span><span>The code is fully public. You can read, audit, and verify everything Prechained does with your data (which is nothing).</span></div>
+      <div class="pe-item"><span class="pe-icon">🍴</span><span>You can fork it and run your own instance. But if you do, you must also keep your version open source.</span></div>
+      <div class="pe-item"><span class="pe-icon">🚫</span><span>You cannot take this code, build a closed-source competing product, and profit from it. That's the whole point of AGPL.</span></div>
+      <div class="pe-item"><span class="pe-icon">💼</span><span>If you need a commercial license — to build a proprietary product using Prechained's code — contact NextGenRails™ to discuss terms.</span></div>
+      <div class="pe-item"><span class="pe-icon">📋</span><span>The full legal text is available in the <a href="https://github.com/ngr-dev1/prechained/blob/main/LICENSE" target="_blank" style="color:var(--accent);">GitHub repository</a>.</span></div>
+    </div>
+  </div>
+
+  <div class="cta-box">
+    <div class="cta-title">Want to contribute?</div>
+    <div class="cta-sub">Prechained is built in the open. Add new ecosystem crawlers, improve the verification system, or help build the API. Every contribution makes the archive more complete.</div>
+    <div class="cta-btns">
+      <a href="https://github.com/ngr-dev1/prechained" target="_blank" class="cta-btn primary">View on GitHub →</a>
+      <a href="https://github.com/ngr-dev1/prechained/issues" target="_blank" class="cta-btn secondary">Open an issue</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>Prechained · Built by <a href="https://nextgenrails.net">NextGenRails™</a> · AGPL-3.0</span>
+  <span><a href="/">Home</a> &nbsp;·&nbsp; <a href="/browse.html">Browse</a> &nbsp;·&nbsp; <a href="/verify.html">Verify</a> &nbsp;·&nbsp; <a href="https://github.com/ngr-dev1/prechained">GitHub</a></span>
+</footer>
+</body>
+</html>
