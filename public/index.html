@@ -26,88 +26,70 @@ nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:s
 .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
 
-/* HERO - full width split layout */
+/* HERO - full width centered */
 .hero{
-  display:flex;
-  flex-direction:column;
-  border-bottom:1px solid var(--border);
   background:var(--white);
-}
-@media(min-width:900px){
-  .hero{flex-direction:row;}
-  .hero-left{flex:1;border-right:1px solid var(--border);border-bottom:none;}
-  .hero-right{width:420px;}
-}
-.hero-left{
-  padding:40px 24px;
-  display:flex;flex-direction:column;justify-content:center;
-}
-@media(min-width:900px){
-  .hero-left{padding:56px 48px;}
+  border-bottom:1px solid var(--border);
+  padding:72px 40px 60px;
+  text-align:center;
 }
 .hero-kicker{
   font-family:var(--mono);font-size:11px;font-weight:500;
   letter-spacing:.14em;text-transform:uppercase;
-  color:var(--accent);margin-bottom:16px;
+  color:var(--accent);margin-bottom:20px;
 }
-.hero-left h1{
+.hero h1{
   font-family:var(--serif);
-  font-size:clamp(32px,4vw,52px);
-  font-weight:400;line-height:1.08;
+  font-size:clamp(44px,7vw,80px);
+  font-weight:400;line-height:1.05;
   letter-spacing:-.02em;
-  margin-bottom:16px;
+  margin-bottom:20px;
 }
-.hero-left h1 i{color:var(--accent);}
-.hero-left p{
-  font-size:15px;color:var(--ink-2);
+.hero h1 i{color:var(--accent);}
+.hero p{
+  font-size:17px;color:var(--ink-2);
   line-height:1.7;font-weight:300;
-  margin-bottom:28px;max-width:440px;
+  max-width:580px;margin:0 auto 36px;
 }
-.hero-stats{display:flex;gap:28px;flex-wrap:wrap;}
-.hstat{display:flex;flex-direction:column;gap:2px;}
-.hstat-val{font-size:22px;font-weight:700;color:var(--ink);font-family:var(--mono);letter-spacing:-.02em;}
-.hstat-lbl{font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;font-weight:600;}
+.hero-stats{
+  display:flex;justify-content:center;
+  gap:48px;flex-wrap:wrap;
+}
+.hstat{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.hstat-val{font-size:28px;font-weight:700;color:var(--ink);font-family:var(--mono);letter-spacing:-.02em;}
+.hstat-lbl{font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.1em;font-weight:600;}
 
-.hero-right{
-  padding:24px;
-  display:flex;flex-direction:column;justify-content:center;gap:10px;
+/* ECOSYSTEM BAR */
+.eco-bar{
   background:var(--off);
+  border-bottom:1px solid var(--border);
+  padding:24px 40px;
 }
-@media(min-width:900px){
-  .hero-right{padding:40px 48px;}
-}
-.hero-right-title{
-  font-size:11px;font-weight:600;color:var(--ink-3);
-  letter-spacing:.1em;text-transform:uppercase;
-  font-family:var(--mono);margin-bottom:4px;
+.eco-bar-inner{
+  max-width:1100px;margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  gap:10px;
 }
 .eco-btn{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 16px;
+  display:flex;flex-direction:column;align-items:center;
+  padding:12px 8px;
   background:var(--white);border:1px solid var(--border);
   border-radius:8px;text-decoration:none;
-  transition:all .15s;cursor:pointer;
+  transition:all .15s;gap:6px;
 }
 .eco-btn:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(0,0,0,.08);}
-.eco-btn-left{display:flex;align-items:center;gap:10px;}
-.eco-name{font-size:13px;font-weight:600;color:var(--ink);}
-.eco-count{font-size:11px;color:var(--ink-3);font-family:var(--mono);}
-.eco-arrow{font-size:16px;color:var(--accent);font-weight:700;}
-@media(max-width:600px){
-  .hero-eco-inner{grid-template-columns:repeat(2,1fr);}
-  .hero-eco-bar{padding:20px;}
-  .hero-top{padding:44px 20px 36px;}
-  .eco-count{display:none;}
-}
-.eco-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px;font-family:var(--mono);}
+.eco-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;font-family:var(--mono);}
 .eb-npm{background:#fff7ed;color:#c2410c;}
 .eb-pypi{background:#eff6ff;color:#1d4ed8;}
 .eb-cargo{background:#fef2f2;color:#b91c1c;}
+.eb-github{background:#f0fdf4;color:#15803d;}
 .eb-nuget{background:#f5f3ff;color:#6d28d9;}
 .eb-maven{background:#fdf4ff;color:#7e22ce;}
-.eb-github{background:#f0fdf4;color:#15803d;}
 .eb-rubygems{background:#fef2f2;color:#9f1239;}
 .eb-packagist{background:#f0f9ff;color:#0369a1;}
+.eco-label{font-size:11px;color:var(--ink-2);font-weight:500;text-align:center;line-height:1.3;}
+.eco-source{font-size:10px;color:var(--ink-3);font-family:var(--mono);}
 
 /* WATERFALL */
 .wf-section{border-top:1px solid var(--border);background:var(--off);}
@@ -147,8 +129,8 @@ nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:s
 .wf-foot{max-width:1100px;margin:0 auto;padding:10px 32px;display:flex;justify-content:space-between;font-size:11px;color:var(--ink-3);font-family:var(--mono);}
 
 /* BOTTOM */
-.bottom{max-width:680px;margin:0 auto;padding:56px 32px;text-align:center;border-top:1px solid var(--border);}
-.bottom p{font-size:14px;color:var(--ink-2);line-height:1.8;margin-bottom:20px;}
+.bottom{max-width:640px;margin:0 auto;padding:64px 32px;text-align:center;border-top:1px solid var(--border);}
+.bottom p{font-size:15px;color:var(--ink-2);line-height:1.8;margin-bottom:24px;}
 .pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;}
 .pill{font-size:12px;color:var(--ink-2);border:1px solid var(--border);padding:5px 14px;border-radius:100px;font-weight:500;background:var(--white);}
 
@@ -157,30 +139,26 @@ footer a{color:var(--ink-2);text-decoration:none;font-weight:500;}
 footer a:hover{color:var(--accent);}
 
 @media(max-width:900px){
-  .hero{grid-template-columns:1fr;}
-  .hero-left{border-right:none;border-bottom:1px solid var(--border);padding:48px 32px;}
-  .hero-right{padding:32px;}
+  .eco-bar-inner{grid-template-columns:repeat(4,1fr);}
 }
 @media(max-width:600px){
   nav{padding:0 14px;}
   .nav-r{gap:12px;}
   .nav-r a{font-size:12px;}
-  .hero{grid-template-columns:1fr;}
-  .hero-left{padding:40px 20px;border-right:none;border-bottom:1px solid var(--border);}
-  .hero-left h1{font-size:clamp(40px,10vw,56px);}
-  .hero-left p{font-size:14px;}
-  .hero-right{padding:24px 20px;}
-  .eco-btn{padding:14px 16px;}
-  .eco-name{font-size:14px;}
-  .hero-stats{gap:20px;}
-  .hstat-val{font-size:24px;}
+  .hero{padding:48px 20px 40px;}
+  .hero-stats{gap:24px;}
+  .hstat-val{font-size:22px;}
+  .eco-bar{padding:16px 20px;}
+  .eco-bar-inner{grid-template-columns:repeat(4,1fr);gap:8px;}
+  .eco-label{font-size:10px;}
+  .eco-source{display:none;}
   .wf-bar,.tbl-wrap,.wf-foot{padding-left:14px;padding-right:14px;}
   .tbl-head{grid-template-columns:minmax(0,1.5fr) 75px 80px;}
   .tbl-head>*:nth-child(2),.tbl-head>*:nth-child(5){display:none;}
   .row{grid-template-columns:minmax(0,1.5fr) 75px 80px;}
   .row>*:nth-child(2),.row>*:nth-child(5){display:none;}
   .feed{height:60vh;}
-  .bottom{padding:40px 16px;}
+  .bottom{padding:44px 20px;}
   footer{padding:14px 16px;flex-direction:column;gap:6px;}
 }
 </style>
@@ -197,55 +175,66 @@ footer a:hover{color:var(--accent);}
   </div>
 </nav>
 
+<!-- HERO - full width centered -->
 <section class="hero">
-  <div class="hero-top">
-    <div class="hero-kicker">Free · Open Source · AGPL-3.0</div>
-    <h1>Recorded <i>before it happened.</i></h1>
-    <p>A free, public archive of the software supply chain. Every package. Every version. Cryptographically captured before any attack occurs.</p>
-    <div class="hero-stats">
-      <div class="hstat"><div class="hstat-val" id="snap-count">—</div><div class="hstat-lbl">Snapshots</div></div>
-      <div class="hstat"><div class="hstat-val" id="pkg-count">—</div><div class="hstat-lbl">Packages</div></div>
-      <div class="hstat"><div class="hstat-val">8</div><div class="hstat-lbl">Ecosystems</div></div>
-      <div class="hstat"><div class="hstat-val">$0</div><div class="hstat-lbl">Cost</div></div>
-    </div>
+  <div class="hero-kicker">Free · Open Source · AGPL-3.0</div>
+  <h1>Recorded<br/><i>before it happened.</i></h1>
+  <p>A free, public archive of the software supply chain. Every package. Every version. Cryptographically captured before any attack occurs.</p>
+  <div class="hero-stats">
+    <div class="hstat"><div class="hstat-val" id="snap-count">—</div><div class="hstat-lbl">Snapshots</div></div>
+    <div class="hstat"><div class="hstat-val" id="pkg-count">—</div><div class="hstat-lbl">Packages</div></div>
+    <div class="hstat"><div class="hstat-val">8</div><div class="hstat-lbl">Ecosystems</div></div>
+    <div class="hstat"><div class="hstat-val">$0</div><div class="hstat-lbl">Cost</div></div>
   </div>
-  <div class="hero-eco-bar">
-    <div class="hero-right-title">Browse by ecosystem →</div><div class="hero-eco-inner">
-    <a class="eco-btn" href="/browse.html?eco=npm" onclick="event.stopPropagation()">
-      <div class="eco-btn-left"><span class="eco-badge eb-npm">npm</span><div><div class="eco-name">npm Registry</div><div class="eco-count">npmjs.com ↗</div></div></div>
-      <span class="eco-arrow">→</span>
-    </a>
-    <a class="eco-btn" href="/browse.html?eco=pypi" onclick="event.stopPropagation()">
-      <div class="eco-btn-left"><span class="eco-badge eb-pypi">PyPI</span><div><div class="eco-name">Python Package Index</div><div class="eco-count">pypi.org ↗</div></div></div>
-      <span class="eco-arrow">→</span>
-    </a>
-    <a class="eco-btn" href="/browse.html?eco=cargo" onclick="event.stopPropagation()">
-      <div class="eco-btn-left"><span class="eco-badge eb-cargo">Cargo</span><div><div class="eco-name">Rust Crates</div><div class="eco-count">crates.io ↗</div></div></div>
-      <span class="eco-arrow">→</span>
-    </a>
-    <a class="eco-btn" href="/browse.html?eco=github" onclick="event.stopPropagation()">
-      <div class="eco-btn-left"><span class="eco-badge eb-github">GitHub</span><div><div class="eco-name">GitHub Repositories</div><div class="eco-count">github.com ↗</div></div></div>
-      <span class="eco-arrow">→</span>
-    </a>
-    <a class="eco-btn" href="/browse.html?eco=nuget" onclick="event.stopPropagation()">
-      <div class="eco-btn-left"><span class="eco-badge eb-nuget">NuGet</span><div><div class="eco-name">NuGet (.NET)</div><div class="eco-count">nuget.org ↗</div></div></div>
-      <span class="eco-arrow">→</span>
-    </a>
-    <a class="eco-btn" href="/browse.html?eco=maven" onclick="event.stopPropagation()">
-      <div class="eco-btn-left"><span class="eco-badge eb-maven">Maven</span><div><div class="eco-name">Maven Central</div><div class="eco-count">search.maven.org ↗</div></div></div>
-      <span class="eco-arrow">→</span>
-    </a>
-    <a class="eco-btn" href="/browse.html?eco=rubygems" onclick="event.stopPropagation()">
-      <div class="eco-btn-left"><span class="eco-badge eb-rubygems">RubyGems</span><div><div class="eco-name">Ruby Gems</div><div class="eco-count">rubygems.org ↗</div></div></div>
-      <span class="eco-arrow">→</span>
-    </a>
-    <a class="eco-btn" href="/browse.html?eco=packagist" onclick="event.stopPropagation()">
-      <div class="eco-btn-left"><span class="eco-badge eb-packagist">Packagist</span><div><div class="eco-name">PHP Packages</div><div class="eco-count">packagist.org ↗</div></div></div>
-      <span class="eco-arrow">→</span>
-    </a>
-  </div></div>
 </section>
 
+<!-- ECOSYSTEM BAR -->
+<div class="eco-bar">
+  <div class="eco-bar-inner">
+    <a class="eco-btn" href="/browse.html?eco=npm">
+      <span class="eco-badge eb-npm">npm</span>
+      <span class="eco-label">npm Registry</span>
+      <span class="eco-source">npmjs.com ↗</span>
+    </a>
+    <a class="eco-btn" href="/browse.html?eco=pypi">
+      <span class="eco-badge eb-pypi">PyPI</span>
+      <span class="eco-label">Python</span>
+      <span class="eco-source">pypi.org ↗</span>
+    </a>
+    <a class="eco-btn" href="/browse.html?eco=cargo">
+      <span class="eco-badge eb-cargo">Cargo</span>
+      <span class="eco-label">Rust</span>
+      <span class="eco-source">crates.io ↗</span>
+    </a>
+    <a class="eco-btn" href="/browse.html?eco=github">
+      <span class="eco-badge eb-github">GitHub</span>
+      <span class="eco-label">Repos</span>
+      <span class="eco-source">github.com ↗</span>
+    </a>
+    <a class="eco-btn" href="/browse.html?eco=nuget">
+      <span class="eco-badge eb-nuget">NuGet</span>
+      <span class="eco-label">.NET</span>
+      <span class="eco-source">nuget.org ↗</span>
+    </a>
+    <a class="eco-btn" href="/browse.html?eco=maven">
+      <span class="eco-badge eb-maven">Maven</span>
+      <span class="eco-label">Java</span>
+      <span class="eco-source">maven.org ↗</span>
+    </a>
+    <a class="eco-btn" href="/browse.html?eco=rubygems">
+      <span class="eco-badge eb-rubygems">Ruby</span>
+      <span class="eco-label">RubyGems</span>
+      <span class="eco-source">rubygems.org ↗</span>
+    </a>
+    <a class="eco-btn" href="/browse.html?eco=packagist">
+      <span class="eco-badge eb-packagist">PHP</span>
+      <span class="eco-label">Packagist</span>
+      <span class="eco-source">packagist.org ↗</span>
+    </a>
+  </div>
+</div>
+
+<!-- WATERFALL -->
 <div class="wf-section">
   <div class="wf-bar">
     <div class="wf-label"><div class="dot"></div>Live capture waterfall</div>
@@ -269,6 +258,7 @@ footer a:hover{color:var(--accent);}
   </div>
 </div>
 
+<!-- BOTTOM -->
 <section class="bottom">
   <p>No login. No signup. No upload.<br/>You give us nothing. We record everything — automatically, continuously, forever.</p>
   <div class="pills">
@@ -346,7 +336,7 @@ async function refreshFeed(){
     if(shown.size===0){
       feed.innerHTML=d.snapshots.map(s=>{shown.add(s.id);return rowH(s,false);}).join('');
       offset=d.snapshots.length;
-    } else if(newOnes.length){
+    }else if(newOnes.length){
       feed.insertAdjacentHTML('afterbegin',newOnes.map(s=>{shown.add(s.id);return rowH(s,true);}).join(''));
     }
     document.getElementById('feed-shown').textContent=shown.size;
