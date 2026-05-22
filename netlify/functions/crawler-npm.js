@@ -7,17 +7,14 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// Top npm packages to seed the archive
 const SEED_PACKAGES = [
-  "express","lodash","axios","react","vue","angular",
-  "next","nuxt","webpack","babel","typescript","eslint",
-  "prettier","jest","mocha","chalk","commander","dotenv",
-  "moment","dayjs","uuid","nodemon","cors","helmet",
-  "bcrypt","jsonwebtoken","mongoose","sequelize","prisma",
-  "socket.io","ws","tar","semver","glob","rimraf",
-  "cross-env","concurrently","husky","lint-staged",
-  "log4j-core","spring-core","requests","django","flask",
-  "numpy","pandas","scipy","tensorflow","pytorch"
+  "express","lodash","axios","react","vue","next","nuxt","webpack","babel",
+  "typescript","eslint","prettier","jest","mocha","chalk","commander","dotenv",
+  "moment","dayjs","uuid","nodemon","cors","helmet","bcrypt","jsonwebtoken",
+  "mongoose","sequelize","prisma","socket.io","ws","tar","semver","glob",
+  "rimraf","cross-env","concurrently","husky","lint-staged","node-fetch",
+  "crypto-js","sharp","multer","morgan","body-parser","compression","cookie-parser",
+  "passport","joi","yup","zod"
 ];
 
 function sha384(data) {
@@ -25,8 +22,25 @@ function sha384(data) {
 }
 
 function generateReceiptId() {
-  return "NGR-PC-" + Date.now().toString(36).toUpperCase() + 
+  return "NGR-PC-" + Date.now().toString(36).toUpperCase() +
     Math.random().toString(36).substring(2,8).toUpperCase();
+}
+
+async function submitToOpenTimestamps(fingerprint) {
+  try {
+    const hashBytes = Buffer.from(fingerprint, "hex");
+    const res = await fetch("https://a.pool.opentimestamps.org/digest", {
+      method: "POST",
+      headers: { "Content-Type": "application/octet-stream" },
+      body: hashBytes
+    });
+    if (!res.ok) return null;
+    const otsData = await res.buffer();
+    return otsData.toString("base64");
+  } catch(e) {
+    console.error("OTS submission failed:", e.message);
+    return null;
+  }
 }
 
 async function fetchNpmPackage(name) {
@@ -49,7 +63,6 @@ async function processPackage(name) {
     const description = data.description || "";
     const totalVersions = Object.keys(data.versions || {}).length;
 
-    // Upsert package
     const { data: pkg, error: pkgError } = await supabase
       .from("packages")
       .upsert({
@@ -65,7 +78,6 @@ async function processPackage(name) {
 
     if (pkgError || !pkg) return;
 
-    // Check if this version already snapshotted
     const { data: existing } = await supabase
       .from("snapshots")
       .select("id")
@@ -73,9 +85,8 @@ async function processPackage(name) {
       .eq("version", latest)
       .single();
 
-    if (existing) return; // Already have it
+    if (existing) return;
 
-    // Fingerprint the version metadata
     const payload = JSON.stringify({
       name,
       version: latest,
@@ -89,7 +100,9 @@ async function processPackage(name) {
     const fingerprint = sha384(payload);
     const receiptId = generateReceiptId();
 
-    // Insert snapshot
+    // Submit to OpenTimestamps for Bitcoin anchoring
+    const otsProof = await submitToOpenTimestamps(fingerprint);
+
     await supabase.from("snapshots").insert({
       package_id: pkg.id,
       version: latest,
@@ -97,23 +110,30 @@ async function processPackage(name) {
       sha384_fingerprint: fingerprint,
       receipt_id: receiptId,
       btc_anchored: false,
-      raw_metadata: versionData
+      ots_proof: otsProof,
+      raw_metadata: {
+        integrity: versionData.dist?.integrity,
+        shasum: versionData.dist?.shasum,
+        dependencies: versionData.dependencies || {}
+      }
     });
 
-  } catch (err) {
+    console.log(`Captured: ${name}@${latest} | ${fingerprint.substring(0,16)}... | OTS: ${otsProof ? 'submitted' : 'failed'}`);
+
+  } catch(err) {
     console.error(`Error processing ${name}:`, err.message);
   }
 }
 
 export default async function handler(req, context) {
   console.log("Crawler running at", new Date().toISOString());
-  
+
   for (const pkg of SEED_PACKAGES) {
     await processPackage(pkg);
   }
 
-  return new Response(JSON.stringify({ 
-    ok: true, 
+  return new Response(JSON.stringify({
+    ok: true,
     processed: SEED_PACKAGES.length,
     timestamp: new Date().toISOString()
   }), {
