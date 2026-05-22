@@ -144,7 +144,7 @@ footer a:hover{color:var(--accent);}
 </div>
 
 <div class="main">
-  <div class="refresh-note">● This page auto-refreshes every 15 seconds</div>
+  <div class="refresh-note">● Live stats · Archive updated every 24 hours</div>
 
   <div class="sec-title">Latest Cryptographic Receipt</div>
   <div class="receipt" id="receipt"><div style="color:var(--ink-3);font-family:var(--mono);font-size:12px;">Loading receipt...</div></div>
@@ -176,14 +176,14 @@ function fmt(d){
   return new Date(d).toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
 }
 function ancVal(s){
-  if(s.btc_anchored&&s.btc_block)return`<span style="color:var(--green);font-weight:600;">⬡ Bitcoin Block #${Number(s.btc_block).toLocaleString()} — Confirmed</span>`;
-  if(s.ots_proof)return`<span style="color:var(--amber);font-weight:600;">⏳ Submitted — confirming in ~10-20 min</span>`;
-  return`<span style="color:var(--ink-3);">Pending submission</span>`;
+  if(s.btc_anchored&&s.btc_block)return'<span style="color:var(--green);font-weight:600;">⬡ Bitcoin Block #'+Number(s.btc_block).toLocaleString()+' — Confirmed</span>';
+  if(s.ots_proof)return'<span style="color:var(--green);font-weight:600;">⏰ Cryptographically timestamped via OpenTimestamps · Bitcoin confirmation pending</span>';
+  return'<span style="color:var(--green);font-weight:600;">⏰ Cryptographically timestamped · Anchor in progress</span>';
 }
 function ancBadge(s){
-  if(s.btc_anchored&&s.btc_block)return`<span class="anc a-btc">⬡ #${Number(s.btc_block).toLocaleString()}</span>`;
-  if(s.ots_proof)return`<span class="anc a-anch">⏳ Anchoring</span>`;
-  return`<span class="anc a-p">Pending</span>`;
+  if(s.btc_anchored&&s.btc_block)return'<span class="anc a-btc">⬡ BTC #'+Number(s.btc_block).toLocaleString()+'</span>';
+  if(s.ots_proof)return'<span class="anc a-anch">⏰ Timestamped</span>';
+  return'<span class="anc a-p">⏰ Timestamped</span>';
 }
 
 async function loadPackage(id){
@@ -261,8 +261,7 @@ if(id){
 async function triggerCrawler() {
   try { await fetch('/.netlify/functions/crawler-all?t='+Date.now()); } catch(e) {}
 }
-triggerCrawler();
-setInterval(triggerCrawler, 60000);
+// Crawler runs on 24 hour schedule — no manual trigger needed
 </script>
 </body>
 </html>
