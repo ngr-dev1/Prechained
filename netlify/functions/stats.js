@@ -19,8 +19,10 @@ export default async function handler(req) {
     headers: {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
-      "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
-      "Pragma": "no-cache"
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+      "Pragma": "no-cache",
+      "Surrogate-Control": "no-store",
+      "CDN-Cache-Control": "no-store"
     }
   });
 }
