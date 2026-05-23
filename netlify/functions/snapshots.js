@@ -8,10 +8,13 @@ const supabase = createClient(
 const NO_CACHE = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
-  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
-  "Pragma": "no-cache",
-  "Surrogate-Control": "no-store",
-  "CDN-Cache-Control": "no-store"
+  "Cache-Control": "no-store, no-cache, must-revalidate",
+};
+
+const CACHE_60 = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+  "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30",
 };
 
 export default async function handler(req) {
@@ -65,5 +68,5 @@ export default async function handler(req) {
     snapshots: feedResult.data,
     total_snapshots: snapCountResult.count ?? null,
     total_packages: pkgCountResult.count ?? null
-  }), { headers: NO_CACHE });
+  }), { headers: CACHE_60 });
 }
