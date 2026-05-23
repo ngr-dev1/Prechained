@@ -269,8 +269,6 @@ if(id){
   document.getElementById('pkg-name').textContent='No package specified';
 }
 
-}
-
 // Trigger crawler on page load and every 10 minutes
 async function triggerCrawler(){
   try{ await fetch('/.netlify/functions/crawler-all?t='+Date.now()); }catch(e){}
