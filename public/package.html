@@ -176,7 +176,7 @@ function fmt(d){
   return new Date(d).toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
 }
 function ancVal(s){
-  if(s.btc_anchored&&s.btc_block)return'<span style="color:var(--green);font-weight:600;">⬡ Bitcoin Block #'+Number(s.btc_block).toLocaleString()+' — Confirmed</span>';
+  if(s.btc_anchored&&s.btc_block)return'<span style="color:var(--green);font-weight:600;">⬡ <a href="https://blockstream.info/block-height/'+s.btc_block+'" target="_blank" style="color:var(--green);font-weight:600;">Bitcoin Block #'+Number(s.btc_block).toLocaleString()+' — Confirmed</a></span>';
   if(s.ots_proof)return'<span style="color:var(--green);font-weight:600;">⏰ Cryptographically timestamped via OpenTimestamps · Bitcoin confirmation pending</span>';
   return'<span style="color:var(--green);font-weight:600;">⏰ Cryptographically timestamped · Anchor in progress</span>';
 }
