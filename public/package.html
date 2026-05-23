@@ -269,11 +269,7 @@ if(id){
   document.getElementById('pkg-name').textContent='No package specified';
 }
 
-// Auto-trigger crawler every 60 seconds
-async function triggerCrawler() {
-  try { await fetch('/.netlify/functions/crawler-all?t='+Date.now()); } catch(e) {}
 }
-// Crawler runs on 24 hour schedule — no manual trigger needed
 
 // Trigger crawler on page load and every 10 minutes
 async function triggerCrawler(){
