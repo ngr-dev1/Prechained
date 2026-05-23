@@ -381,8 +381,12 @@ document.getElementById('feed').addEventListener('scroll',function(){
 refreshStats();refreshFeed();refreshBtcBlock();
 setInterval(()=>{refreshStats();refreshFeed();refreshBtcBlock();},5000);
 
-// Trigger crawler on page load and every 10 minutes
+// Trigger crawler on page load — throttled to once per 10 minutes
 async function triggerCrawler(){
+  const INTERVAL = 10 * 60 * 1000;
+  const last = parseInt(localStorage.getItem('crawler_last') || '0');
+  if (Date.now() - last < INTERVAL) return;
+  localStorage.setItem('crawler_last', Date.now().toString());
   try{ await fetch('/.netlify/functions/crawler-all?t='+Date.now()); }catch(e){}
 }
 triggerCrawler();
