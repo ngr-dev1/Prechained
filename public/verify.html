@@ -269,7 +269,7 @@ async function doVerify(){
 
     if(snap.btc_anchored && snap.btc_block){
       document.getElementById('r-btc').innerHTML = `<span class="btc">⬡ Bitcoin Block #${Number(snap.btc_block).toLocaleString()} — Confirmed</span>`;
-      document.getElementById('btc-link').href = `https://blockstream.info/block/${snap.btc_block}`;
+      document.getElementById('btc-link').href = `https://blockstream.info/block-height/${snap.btc_block}`;
     } else if(snap.ots_proof){
       document.getElementById('r-btc').innerHTML = `<span class="pending">⏳ Submitted to Bitcoin network — confirmation pending</span>`;
     } else {
