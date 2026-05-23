@@ -279,7 +279,14 @@ async function doVerify(){
     document.getElementById('result-status').textContent = '✓ VERIFIED';
     document.getElementById('result-status').className = 'result-status rs-valid';
     document.getElementById('result-title').textContent = `${name} v${snap.version} · Record authenticated`;
-    document.getElementById('pkg-link').href = `/package.html?id=${snap.package_id}`;
+    // Only set View Package link if package_id is valid
+    const pkgLink = document.getElementById('pkg-link');
+    if(snap.package_id && snap.package_id !== 'null' && snap.package_id !== 'undefined'){
+      pkgLink.href = `/package.html?id=${snap.package_id}`;
+      pkgLink.style.display = 'inline-flex';
+    } else {
+      pkgLink.style.display = 'none';
+    }
 
     document.getElementById('result').classList.add('show');
 
