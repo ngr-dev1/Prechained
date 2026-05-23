@@ -308,7 +308,7 @@ function ecoUrl(e,name){
 function rowH(s,isNew){
   const name=s.packages?.name||'—';
   const pid=s.package_id||'';
-  return`<a class="row${isNew?' new':''}" href="/package.html?id=${pid}" style="text-decoration:none;color:inherit;">
+  return`<a class="row${isNew?' new':''}" href="/package.html?id=${pid}" style="text-decoration:none;color:inherit;display:grid;grid-template-columns:180px 200px 80px 100px 120px;">
     <div class="cell"><div class="pname">${name}</div><div class="pver">v${s.version}${s.raw_metadata?.license?' · '+s.raw_metadata.license:''}</div></div>
     <div class="cell"><span class="fp">${s.sha384_fingerprint.slice(0,9)}...${s.sha384_fingerprint.slice(-6)}</span></div>
     <div class="cell"><a href="${ecoUrl(s.ecosystem,name)}" target="_blank" onclick="event.stopPropagation()" class="eco ${ecoC(s.ecosystem)}" style="text-decoration:none;">${s.ecosystem} ↗</a></div>
