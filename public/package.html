@@ -110,7 +110,7 @@ footer a:hover{color:var(--accent);}
     <a href="/">Home</a>
     <a href="/browse.html">Browse</a>
     <a href="/verify.html">Verify</a>
-    <a href="https://github.com/ngr-dev1/prechained">GitHub</a>
+    <a href="https://github.com/ngr-dev1/prechained">GitHub</a> &nbsp;·&nbsp; <a href="https://github.com/ngr-dev1/prechained-archive">Archive</a>
   </div>
 </nav>
 
@@ -164,7 +164,7 @@ footer a:hover{color:var(--accent);}
 
 <footer>
   <span>Prechained · Built by <a href="https://nextgenrails.net">NextGenRails™</a></span>
-  <span><a href="https://github.com/ngr-dev1/prechained">GitHub</a> &nbsp;·&nbsp; <a href="/verify.html">Verify</a> &nbsp;·&nbsp; <a href="#">API</a></span>
+  <span><a href="https://github.com/ngr-dev1/prechained">GitHub</a> &nbsp;·&nbsp; <a href="https://github.com/ngr-dev1/prechained-archive">Archive</a> &nbsp;·&nbsp; <a href="/verify.html">Verify</a> &nbsp;·&nbsp; <a href="#">API</a></span>
 </footer>
 
 <script>
@@ -236,6 +236,7 @@ async function loadPackage(id){
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
         <button class="copy-btn" onclick="navigator.clipboard.writeText('${rid}').then(()=>alert('Copied!'))">📋 Copy Receipt ID</button>
         ${s.manifest_path ? '<a class="copy-btn" href="https://raw.githubusercontent.com/ngr-dev1/prechained-archive/main/'+s.manifest_path+'" target="_blank" style="text-decoration:none;">📦 Download Manifest</a>' : ''}
+        ${s.manifest_path ? '<a class="copy-btn" href="https://github.com/ngr-dev1/prechained-archive/blob/main/'+s.manifest_path+'" target="_blank" style="text-decoration:none;">View in Archive →</a>' : ''}
         <a class="copy-btn" href="/.netlify/functions/source" target="_blank" style="text-decoration:none;background:var(--off);color:var(--ink);border:1px solid var(--border);">🔍 Inspect Crawler Source</a>
       </div>
       <div style="margin-top:20px;padding:16px;background:var(--green-bg);border:1px solid #bbf7d0;border-radius:8px;">
