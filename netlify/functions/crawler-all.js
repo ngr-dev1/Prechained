@@ -227,13 +227,43 @@ export async function crawlerGithub(req, context) {
         const manifest = {
           repo, commit_sha: latestSha, tree_sha: commit.commit?.tree?.sha || "",
           branch: repoData.default_branch || "main", ecosystem: "github",
-          description: repoData.description, license: repoData.license?.spdx_id,
-          stars: repoData.stargazers_count, forks: repoData.forks_count,
-          language: repoData.language, topics: repoData.topics || [],
-          commit_message: commit.commit?.message?.substring(0, 200),
-          commit_author: commit.commit?.author?.name,
-          commit_date: commit.commit?.author?.date,
-          archived: repoData.archived, visibility: repoData.visibility,
+          description: repoData.description,
+          license: repoData.license?.spdx_id || null,
+          license_name: repoData.license?.name || null,
+          stars: repoData.stargazers_count,
+          watchers: repoData.watchers_count,
+          forks: repoData.forks_count,
+          open_issues: repoData.open_issues_count,
+          language: repoData.language,
+          topics: repoData.topics || [],
+          commit_message: commit.commit?.message?.substring(0, 500),
+          commit_author: {
+            name: commit.commit?.author?.name,
+            email: commit.commit?.author?.email || null,
+            date: commit.commit?.author?.date
+          },
+          commit_committer: {
+            name: commit.commit?.committer?.name,
+            email: commit.commit?.committer?.email || null,
+            date: commit.commit?.committer?.date
+          },
+          commit_verified: commit.commit?.verification?.verified || false,
+          commit_verification_reason: commit.commit?.verification?.reason || null,
+          commit_parents: (commit.parents || []).map(p => p.sha),
+          github_author_login: commit.author?.login || null,
+          github_committer_login: commit.committer?.login || null,
+          archived: repoData.archived,
+          disabled: repoData.disabled || false,
+          visibility: repoData.visibility,
+          default_branch: repoData.default_branch,
+          pushed_at: repoData.pushed_at,
+          created_at: repoData.created_at,
+          homepage: repoData.homepage || null,
+          size_kb: repoData.size,
+          has_wiki: repoData.has_wiki,
+          has_issues: repoData.has_issues,
+          is_fork: repoData.fork,
+          parent_repo: repoData.parent?.full_name || null,
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
         const payload = JSON.stringify({ repo, commit_sha: latestSha, ecosystem: "github", timestamp: manifest.captured_at });
@@ -282,14 +312,44 @@ export async function crawlerNuget(req, context) {
       for (const version of allVersions.filter(v => !seen.has(v))) {
         if (Date.now() - startTime > TIMEOUT) break;
         const entry = items.flatMap(i => i.items || []).find(p => p.catalogEntry?.version === version)?.catalogEntry;
+        // Fetch owners for this package (who can publish)
+        let nugetOwners = [];
+        try {
+          const ownersRes = await fetch(`https://api.nuget.org/v3/owners/${name.toLowerCase()}/owners.json`);
+          if (ownersRes.ok) {
+            const ownersData = await ownersRes.json();
+            nugetOwners = Array.isArray(ownersData) ? ownersData : [];
+          }
+        } catch(e) {}
+        // Extract all deps flat
+        const nugetDeps = (entry?.dependencyGroups || []).flatMap(g =>
+          (g.dependencies || []).map(d => ({ id: d.id, range: d.range, targetFramework: g.targetFramework || null }))
+        );
         const manifest = {
           name, version, ecosystem: "nuget",
-          description: entry?.description, license: entry?.licenseExpression || entry?.licenseUrl,
-          authors: entry?.authors, tags: entry?.tags, projectUrl: entry?.projectUrl,
-          dependencies: entry?.dependencyGroups || [], published: entry?.published,
+          description: entry?.description,
+          license: entry?.licenseExpression || entry?.licenseUrl || null,
+          licenseExpression: entry?.licenseExpression || null,
+          authors: entry?.authors ? (typeof entry.authors === "string" ? entry.authors.split(",").map(a => a.trim()) : entry.authors) : [],
+          owners: nugetOwners,
+          tags: entry?.tags ? (typeof entry.tags === "string" ? entry.tags.split(" ").filter(Boolean) : entry.tags) : [],
+          projectUrl: entry?.projectUrl || null,
+          repositoryUrl: entry?.repository?.url || null,
+          repositoryType: entry?.repository?.type || null,
+          repositoryCommit: entry?.repository?.commit || null,
+          dependencies: nugetDeps,
+          dependencyGroups: entry?.dependencyGroups || [],
+          publishedAt: entry?.published || null,
+          listed: entry?.listed !== false,
+          requireLicenseAcceptance: entry?.requireLicenseAcceptance || false,
+          minClientVersion: entry?.minClientVersion || null,
+          packageHash: entry?.packageHash || null,
+          packageHashAlgorithm: entry?.packageHashAlgorithm || null,
+          iconUrl: entry?.iconUrl || null,
+          readmeUrl: entry?.readmeUrl || null,
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
-        const ok = await captureVersion(pkg, version, "nuget", "", "", entry?.licenseExpression || "", [], manifest, CRAWLER_SHA384);
+        const ok = await captureVersion(pkg, version, "nuget", entry?.packageHash || "", "", entry?.licenseExpression || "", nugetDeps.map(d => d.id), manifest, CRAWLER_SHA384);
         ok ? captured++ : skipped++;
       }
     } catch(e) { console.error(`[nuget] ${name}:`, e.message); }
@@ -326,12 +386,62 @@ export async function crawlerMaven(req, context) {
       for (const version of allVersions.filter(v => !seen.has(v))) {
         if (Date.now() - startTime > TIMEOUT) break;
         const doc = docs.find(d => d.v === version) || {};
+        // Fetch POM for full metadata — developers, scm, dependencies, licenses
+        let pomData = {};
+        try {
+          const groupPath = groupId.replace(/\./g, "/");
+          const pomRes = await fetch(`https://repo1.maven.org/maven2/${groupPath}/${artifactId}/${version}/${artifactId}-${version}.pom`);
+          if (pomRes.ok) {
+            const pomText = await pomRes.text();
+            // Parse key POM fields from XML
+            const extractTag = (xml, tag) => { const m = xml.match(new RegExp(`<${tag}[^>]*>([\s\S]*?)<\/${tag}>`, "i")); return m ? m[1].trim() : null; };
+            const extractAll = (xml, tag) => { const r = []; const re = new RegExp(`<${tag}[^>]*>([\s\S]*?)<\/${tag}>`, "gi"); let m; while ((m = re.exec(xml)) !== null) r.push(m[1].trim()); return r; };
+            const devSection = extractTag(pomText, "developers");
+            const licSection = extractTag(pomText, "licenses");
+            const depsSection = extractTag(pomText, "dependencies");
+            const scmSection = extractTag(pomText, "scm");
+            pomData = {
+              description: extractTag(pomText, "description"),
+              url: extractTag(pomText, "url"),
+              inceptionYear: extractTag(pomText, "inceptionYear"),
+              licenses: licSection ? extractAll(licSection, "license").map(l => ({
+                name: extractTag(l, "name"), url: extractTag(l, "url"), distribution: extractTag(l, "distribution")
+              })) : [],
+              developers: devSection ? extractAll(devSection, "developer").map(d => ({
+                id: extractTag(d, "id"), name: extractTag(d, "name"), email: extractTag(d, "email"),
+                organization: extractTag(d, "organization"), roles: extractAll(extractTag(d, "roles") || "", "role")
+              })) : [],
+              scm: scmSection ? {
+                connection: extractTag(scmSection, "connection"),
+                developerConnection: extractTag(scmSection, "developerConnection"),
+                url: extractTag(scmSection, "url"),
+                tag: extractTag(scmSection, "tag")
+              } : null,
+              dependencies: depsSection ? extractAll(depsSection, "dependency").map(d => ({
+                groupId: extractTag(d, "groupId"), artifactId: extractTag(d, "artifactId"),
+                version: extractTag(d, "version"), scope: extractTag(d, "scope") || "compile",
+                optional: extractTag(d, "optional") === "true"
+              })) : []
+            };
+          }
+        } catch(e) {}
         const manifest = {
           groupId, artifactId, version, ecosystem: "maven",
-          id: doc.id, timestamp: doc.timestamp, packaging: doc.p, ec: doc.ec || [],
+          id: doc.id,
+          publishedAt: doc.timestamp ? new Date(doc.timestamp).toISOString() : null,
+          packaging: doc.p || "jar",
+          availableFiles: doc.ec || [],
+          description: pomData.description || null,
+          url: pomData.url || null,
+          inceptionYear: pomData.inceptionYear || null,
+          licenses: pomData.licenses || [],
+          developers: pomData.developers || [],
+          scm: pomData.scm || null,
+          dependencies: pomData.dependencies || [],
+          centralUrl: `https://repo1.maven.org/maven2/${groupId.replace(/\./g,"/")}/${artifactId}/${version}/`,
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
-        const ok = await captureVersion(pkg, version, "maven", "", "", "", [], manifest, CRAWLER_SHA384);
+        const ok = await captureVersion(pkg, version, "maven", "", "", pomData.licenses?.[0]?.name || "", (pomData.dependencies || []).map(d => `${d.groupId}:${d.artifactId}`), manifest, CRAWLER_SHA384);
         ok ? captured++ : skipped++;
       }
     } catch(e) { console.error(`[maven] ${artifact}:`, e.message); }
@@ -369,14 +479,39 @@ export async function crawlerRubygems(req, context) {
       for (const version of allVersions.filter(v => !seen.has(v))) {
         if (Date.now() - startTime > TIMEOUT) break;
         const vData = versions.find(v => v.number === version);
+        // Fetch owners — who has push rights to this gem
+        let gemOwners = [];
+        try {
+          const ownersRes = await fetch(`https://rubygems.org/api/v1/gems/${name}/owners.json`);
+          if (ownersRes.ok) gemOwners = await ownersRes.json();
+        } catch(e) {}
         const manifest = {
           name, version, ecosystem: "rubygems",
-          description: gemData.info, licenses: vData?.licenses || [],
-          sha: vData?.sha, created_at: vData?.created_at,
-          prerelease: vData?.prerelease || false, platform: vData?.platform,
-          dependencies: vData?.dependencies || {},
-          authors: gemData.authors, homepage_uri: gemData.homepage_uri,
-          source_code_uri: gemData.source_code_uri, downloads: gemData.downloads,
+          description: gemData.info,
+          licenses: vData?.licenses || [],
+          sha: vData?.sha,
+          gem_uri: vData?.gem_uri || `https://rubygems.org/gems/${name}-${version}.gem`,
+          spec_sha: vData?.spec_sha || null,
+          created_at: vData?.created_at,
+          publishedAt: vData?.created_at || null,
+          prerelease: vData?.prerelease || false,
+          platform: vData?.platform || "ruby",
+          yanked: vData?.yanked || false,
+          dependencies: {
+            runtime: (vData?.dependencies?.runtime || []).map(d => ({ name: d.name, requirements: d.requirements })),
+            development: (vData?.dependencies?.development || []).map(d => ({ name: d.name, requirements: d.requirements }))
+          },
+          authors: gemData.authors,
+          owners: gemOwners.map(o => ({ id: o.id, handle: o.handle, email: o.email || null, mfa_level: o.mfa_level || null })),
+          homepage_uri: gemData.homepage_uri,
+          source_code_uri: gemData.source_code_uri,
+          changelog_uri: gemData.changelog_uri || null,
+          funding_uri: gemData.funding_uri || null,
+          bug_tracker_uri: gemData.bug_tracker_uri || null,
+          mailing_list_uri: gemData.mailing_list_uri || null,
+          documentation_uri: gemData.documentation_uri || null,
+          downloads: gemData.downloads,
+          version_downloads: vData?.downloads_count || null,
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
         const ok = await captureVersion(pkg, version, "rubygems", vData?.sha ? "sha256:" + vData.sha : "", "", vData?.licenses?.[0] || "", [], manifest, CRAWLER_SHA384);
