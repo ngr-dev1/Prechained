@@ -580,10 +580,14 @@ export async function crawlerPackagist(req, context) {
 
 // ── DEFAULT EXPORT (manual trigger / legacy) ───────────────────
 export default async function handler(req, context) {
-  const [npm, pypi, cargo, github, nuget, maven, rubygems, packagist] = await Promise.allSettled([
-    crawlerNpm(req, context), crawlerPypi(req, context), crawlerCargo(req, context),
-    crawlerGithub(req, context), crawlerNuget(req, context), crawlerMaven(req, context),
-    crawlerRubygems(req, context), crawlerPackagist(req, context)
-  ]);
-  return new Response(JSON.stringify({ ok: true, crawler_sha384: CRAWLER_SHA384, timestamp: new Date().toISOString() }), { headers: { "Content-Type": "application/json" } });
+  // Return immediately — run all crawlers in background via waitUntil
+  // This prevents the 10-second HTTP timeout when triggered manually
+  context.waitUntil(
+    Promise.allSettled([
+      crawlerNpm(req, context), crawlerPypi(req, context), crawlerCargo(req, context),
+      crawlerGithub(req, context), crawlerNuget(req, context), crawlerMaven(req, context),
+      crawlerRubygems(req, context), crawlerPackagist(req, context)
+    ])
+  );
+  return new Response(JSON.stringify({ ok: true, started: true, crawler_sha384: CRAWLER_SHA384, timestamp: new Date().toISOString() }), { headers: { "Content-Type": "application/json" } });
 }
