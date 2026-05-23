@@ -6,10 +6,7 @@
 
 import { createHash } from "crypto";
 import { readFileSync, existsSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import { join } from "path";
 
 const CORS = {
   "Content-Type": "application/json",
