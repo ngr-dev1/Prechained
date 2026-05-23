@@ -42,12 +42,28 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ snapshots: data }), { headers: NO_CACHE });
   }
 
-  const { data, error } = await supabase
-    .from("snapshots")
-    .select("*, packages(name, ecosystem, description), manifest_path")
-    .order("captured_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+  // Main feed — also fetch counts in parallel using the same working select pattern
+  const [feedResult, snapCountResult, pkgCountResult] = await Promise.all([
+    supabase
+      .from("snapshots")
+      .select("*, packages(name, ecosystem, description), manifest_path")
+      .order("captured_at", { ascending: false })
+      .range(offset, offset + limit - 1),
+    supabase
+      .from("snapshots")
+      .select("id", { count: "exact", head: false })
+      .limit(1),
+    supabase
+      .from("packages")
+      .select("id", { count: "exact", head: false })
+      .limit(1)
+  ]);
 
-  if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: NO_CACHE });
-  return new Response(JSON.stringify({ snapshots: data }), { headers: NO_CACHE });
+  if (feedResult.error) return new Response(JSON.stringify({ error: feedResult.error.message }), { status: 500, headers: NO_CACHE });
+
+  return new Response(JSON.stringify({
+    snapshots: feedResult.data,
+    total_snapshots: snapCountResult.count ?? null,
+    total_packages: pkgCountResult.count ?? null
+  }), { headers: NO_CACHE });
 }
