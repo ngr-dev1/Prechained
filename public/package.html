@@ -124,7 +124,7 @@ footer a:hover{color:var(--accent);}
   <div class="pkg-header-inner">
     <div class="pkg-top">
       <div>
-        <div class="eco-badge" id="pkg-eco">npm</div>
+        <div class="eco-badge" id="pkg-eco"></div>
         <div class="pkg-name" id="pkg-name">Loading...</div>
         <div class="pkg-desc" id="pkg-desc">Fetching package details...</div>
         <div class="pkg-meta">
@@ -270,8 +270,12 @@ if(id){
   document.getElementById('pkg-name').textContent='No package specified';
 }
 
-// Trigger crawler on page load and every 10 minutes
+// Trigger crawler — throttled to once per 10 minutes across all page loads
 async function triggerCrawler(){
+  const INTERVAL = 10 * 60 * 1000;
+  const last = parseInt(localStorage.getItem('crawler_last') || '0');
+  if (Date.now() - last < INTERVAL) return;
+  localStorage.setItem('crawler_last', Date.now().toString());
   try{ await fetch('/.netlify/functions/crawler-all?t='+Date.now()); }catch(e){}
 }
 triggerCrawler();
