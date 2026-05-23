@@ -5,9 +5,40 @@
 [functions]
   node_bundler = "esbuild"
 
+# 8 independent ecosystem crawlers — each gets its own timeout budget
+# Staggered 1 minute apart to avoid Supabase spikes
+
 [[scheduled-functions]]
-  name = "crawler-all"
+  name = "crawler-npm"
   cron = "*/10 * * * *"
+
+[[scheduled-functions]]
+  name = "crawler-pypi"
+  cron = "1-59/10 * * * *"
+
+[[scheduled-functions]]
+  name = "crawler-cargo"
+  cron = "2-59/10 * * * *"
+
+[[scheduled-functions]]
+  name = "crawler-github"
+  cron = "3-59/10 * * * *"
+
+[[scheduled-functions]]
+  name = "crawler-nuget"
+  cron = "4-59/10 * * * *"
+
+[[scheduled-functions]]
+  name = "crawler-maven"
+  cron = "5-59/10 * * * *"
+
+[[scheduled-functions]]
+  name = "crawler-rubygems"
+  cron = "6-59/10 * * * *"
+
+[[scheduled-functions]]
+  name = "crawler-packagist"
+  cron = "7-59/10 * * * *"
 
 [[scheduled-functions]]
   name = "anchor-checker"
