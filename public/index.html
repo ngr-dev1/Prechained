@@ -324,27 +324,27 @@ async function refreshBtcBlock(){
   }catch(e){}
 }
 
-async function refreshStats(){
-  try{
-    const r=await fetch('/.netlify/functions/stats?t='+Date.now());
-    const d=await r.json();
-    document.getElementById('snap-count').textContent=d.total_snapshots.toLocaleString();
-    document.getElementById('pkg-count').textContent=d.total_packages.toLocaleString();
-    document.getElementById('feed-total').textContent=d.total_snapshots.toLocaleString();
-    if(lastTotal>0&&d.total_snapshots>lastTotal){
-      const diff=d.total_snapshots-lastTotal;
-      document.getElementById('wf-info').textContent=`↑ +${diff} new`;
-      setTimeout(()=>document.getElementById('wf-info').textContent='● live',3000);
-    }
-    lastTotal=d.total_snapshots;
-  }catch(e){}
-}
+async function refreshStats(){}
 
 async function refreshFeed(){
   try{
     const r=await fetch('/.netlify/functions/snapshots?limit=50&offset=0&t='+Date.now());
     const d=await r.json();
     if(!d.snapshots?.length)return;
+    // Update counts from the same response — no separate stats call needed
+    if(d.total_snapshots!=null){
+      document.getElementById('snap-count').textContent=d.total_snapshots.toLocaleString();
+      document.getElementById('feed-total').textContent=d.total_snapshots.toLocaleString();
+      if(lastTotal>0&&d.total_snapshots>lastTotal){
+        const diff=d.total_snapshots-lastTotal;
+        document.getElementById('wf-info').textContent=`↑ +${diff} new`;
+        setTimeout(()=>document.getElementById('wf-info').textContent='● live',3000);
+      }
+      lastTotal=d.total_snapshots;
+    }
+    if(d.total_packages!=null){
+      document.getElementById('pkg-count').textContent=d.total_packages.toLocaleString();
+    }
     const feed=document.getElementById('feed');
     const newOnes=d.snapshots.filter(s=>!shown.has(s.id));
     if(shown.size===0){
