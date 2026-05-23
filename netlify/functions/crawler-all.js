@@ -48,8 +48,28 @@ export async function crawlerNpm(req, context) {
           description: data.description, license: vd.license,
           dependencies: vd.dependencies || {}, devDependencies: vd.devDependencies || {},
           peerDependencies: vd.peerDependencies || {}, engines: vd.engines || {},
-          dist: { integrity: vd.dist?.integrity, shasum: vd.dist?.shasum, tarball: vd.dist?.tarball },
+          scripts: {
+            install: vd.scripts?.install || null,
+            preinstall: vd.scripts?.preinstall || null,
+            postinstall: vd.scripts?.postinstall || null,
+            prepare: vd.scripts?.prepare || null,
+            prepublish: vd.scripts?.prepublish || null,
+            prepublishOnly: vd.scripts?.prepublishOnly || null
+          },
+          maintainers: (vd.maintainers || data.maintainers || []).map(m => ({ name: m.name, email: m.email || null })),
+          author: vd.author || data.author || null,
+          publishedAt: data.time?.[version] || null,
+          dist: {
+            integrity: vd.dist?.integrity,
+            shasum: vd.dist?.shasum,
+            tarball: vd.dist?.tarball,
+            fileCount: vd.dist?.fileCount || null,
+            unpackedSize: vd.dist?.unpackedSize || null
+          },
           repository: vd.repository || null, homepage: vd.homepage || null,
+          bugs: vd.bugs || null,
+          keywords: vd.keywords || [],
+          _npmUser: vd._npmUser ? { name: vd._npmUser.name, email: vd._npmUser.email || null } : null,
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
         const ok = await captureVersion(pkg, version, "npm", vd.dist?.integrity, vd.dist?.shasum, vd.license, Object.keys(vd.dependencies || {}), manifest, CRAWLER_SHA384);
@@ -89,10 +109,20 @@ export async function crawlerPypi(req, context) {
         const manifest = {
           name, version, ecosystem: "pypi",
           summary: data.info?.summary, license: data.info?.license,
-          author: data.info?.author, requires_python: data.info?.requires_python,
+          author: data.info?.author,
+          author_email: data.info?.author_email || null,
+          maintainer: data.info?.maintainer || null,
+          maintainer_email: data.info?.maintainer_email || null,
+          requires_python: data.info?.requires_python,
           requires_dist: data.info?.requires_dist || [],
+          keywords: data.info?.keywords || null,
+          classifiers: data.info?.classifiers || [],
+          project_urls: data.info?.project_urls || {},
+          yanked: data.info?.yanked || false,
+          yanked_reason: data.info?.yanked_reason || null,
+          publishedAt: wheel?.upload_time || files[0]?.upload_time || null,
           dist: { url: wheel?.url, sha256: wheel?.digests?.sha256, size: wheel?.size, filename: wheel?.filename },
-          all_files: files.map(f => ({ filename: f.filename, packagetype: f.packagetype, sha256: f.digests?.sha256, size: f.size })),
+          all_files: files.map(f => ({ filename: f.filename, packagetype: f.packagetype, sha256: f.digests?.sha256, size: f.size, upload_time: f.upload_time, yanked: f.yanked || false })),
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
         const ok = await captureVersion(pkg, version, "pypi", wheel?.digests?.sha256 ? "sha256:" + wheel.digests.sha256 : "", wheel?.digests?.md5 || "", data.info?.license || [], manifest, CRAWLER_SHA384);
@@ -128,6 +158,17 @@ export async function crawlerCargo(req, context) {
       for (const version of allVersions.filter(v => !seen.has(v))) {
         if (Date.now() - startTime > TIMEOUT) break;
         const vData = (data.versions || []).find(v => v.num === version);
+        // Fetch dependencies for this specific version
+        let cargoDeps = [];
+        try {
+          const depsRes = await fetch(`https://crates.io/api/v1/crates/${name}/${version}/dependencies`, { headers: { "User-Agent": "prechained.com/1.0" } });
+          if (depsRes.ok) {
+            const depsData = await depsRes.json();
+            cargoDeps = (depsData.dependencies || []).map(d => ({
+              name: d.crate_id, requirement: d.req, kind: d.kind, optional: d.optional, default_features: d.default_features
+            }));
+          }
+        } catch(e) {}
         const manifest = {
           name, version, ecosystem: "cargo",
           description: krate.description, license: vData?.license,
@@ -136,9 +177,13 @@ export async function crawlerCargo(req, context) {
           repository: krate.repository, homepage: krate.homepage,
           keywords: (data.keywords || []).map(k => k.keyword),
           categories: (data.categories || []).map(c => c.category),
+          dependencies: cargoDeps,
+          authors: krate.exact_match ? [] : (data.crate?.authors || []),
+          published_by: vData?.published_by ? { id: vData.published_by.id, login: vData.published_by.login, name: vData.published_by.name || null } : null,
+          publishedAt: vData?.created_at || null,
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
-        const ok = await captureVersion(pkg, version, "cargo", vData?.checksum ? "sha256:" + vData.checksum : "", "", vData?.license || "", [], manifest, CRAWLER_SHA384);
+        const ok = await captureVersion(pkg, version, "cargo", vData?.checksum ? "sha256:" + vData.checksum : "", "", vData?.license || "", cargoDeps.map(d => d.name), manifest, CRAWLER_SHA384);
         ok ? captured++ : skipped++;
       }
     } catch(e) { console.error(`[cargo] ${name}:`, e.message); }
@@ -377,8 +422,15 @@ export async function crawlerPackagist(req, context) {
           licenses: vData?.license || [], type: vData?.type,
           require: vData?.require || {}, require_dev: vData?.require_dev || {},
           dist: vData?.dist || {}, source: vData?.source || {},
-          authors: vData?.authors || [], homepage: vData?.homepage,
-          keywords: vData?.keywords || [], time: vData?.time,
+          authors: vData?.authors || [],
+          maintainers: pkg_data.maintainers || [],
+          homepage: vData?.homepage,
+          keywords: vData?.keywords || [],
+          publishedAt: vData?.time || null,
+          github_stars: pkg_data.github_stars || null,
+          github_watchers: pkg_data.github_watchers || null,
+          github_forks: pkg_data.github_forks || null,
+          abandoned: pkg_data.abandoned || false,
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
         const ok = await captureVersion(pkg, cleanVersion, "packagist", vData?.dist?.shasum ? "sha1:" + vData.dist.shasum : "", "", vData?.license?.[0] || "", Object.keys(vData?.require || {}), manifest, CRAWLER_SHA384);
