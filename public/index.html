@@ -307,13 +307,14 @@ function ecoUrl(e,name){
 }
 function rowH(s,isNew){
   const name=s.packages?.name||'—';
-  return`<div class="row${isNew?' new':''}" onclick="if(s.package_id)location='/package.html?id=${s.package_id}'">
+  const pid=s.package_id||'';
+  return`<a class="row${isNew?' new':''}" href="/package.html?id=${pid}" style="text-decoration:none;color:inherit;">
     <div class="cell"><div class="pname">${name}</div><div class="pver">v${s.version}${s.raw_metadata?.license?' · '+s.raw_metadata.license:''}</div></div>
     <div class="cell"><span class="fp">${s.sha384_fingerprint.slice(0,9)}...${s.sha384_fingerprint.slice(-6)}</span></div>
     <div class="cell"><a href="${ecoUrl(s.ecosystem,name)}" target="_blank" onclick="event.stopPropagation()" class="eco ${ecoC(s.ecosystem)}" style="text-decoration:none;">${s.ecosystem} ↗</a></div>
     <div class="cell"><span class="ts">${ago(s.captured_at)}</span></div>
     <div class="cell">${ancH(s)}</div>
-  </div>`;
+  </a>`;
 }
 
 async function refreshBtcBlock(){
