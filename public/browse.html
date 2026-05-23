@@ -183,10 +183,10 @@ function ago(d){
 
 async function loadStats(){
   try{
-    const r=await fetch('/.netlify/functions/stats?t='+Date.now());
+    const r=await fetch('/.netlify/functions/snapshots?limit=1&t='+Date.now());
     const d=await r.json();
-    document.getElementById('pkg-total').textContent=d.total_packages.toLocaleString();
-    document.getElementById('snap-total').textContent=d.total_snapshots.toLocaleString();
+    if(d.total_packages!=null) document.getElementById('pkg-total').textContent=d.total_packages.toLocaleString();
+    if(d.total_snapshots!=null) document.getElementById('snap-total').textContent=d.total_snapshots.toLocaleString();
   }catch(e){}
 }
 
@@ -261,15 +261,12 @@ setInterval(()=>{
   if(!q&&!eco&&page===1)loadPkgs();
 },10000);
 
-// Auto-trigger crawler every 60 seconds
-async function triggerCrawler() {
-  try { await fetch('/.netlify/functions/crawler-all?t='+Date.now()); } catch(e) {}
-}
-triggerCrawler();
-// Crawler runs on 24 hour schedule via Netlify
-
-// Trigger crawler on page load and every 10 minutes
+// Trigger crawler — throttled to once per 10 minutes across all page loads
 async function triggerCrawler(){
+  const INTERVAL = 10 * 60 * 1000;
+  const last = parseInt(localStorage.getItem('crawler_last') || '0');
+  if (Date.now() - last < INTERVAL) return;
+  localStorage.setItem('crawler_last', Date.now().toString());
   try{ await fetch('/.netlify/functions/crawler-all?t='+Date.now()); }catch(e){}
 }
 triggerCrawler();
