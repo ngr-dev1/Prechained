@@ -6,14 +6,21 @@ const supabase = createClient(
 );
 
 export default async function handler(req) {
-  const [pkgResult, snapResult] = await Promise.all([
-    supabase.from("packages").select("*", { count: "exact", head: true }),
-    supabase.from("snapshots").select("*", { count: "exact", head: true })
-  ]);
+  let total_packages = 0;
+  let total_snapshots = 0;
+
+  try {
+    const [pkgResult, snapResult] = await Promise.all([
+      supabase.from("packages").select("*", { count: "exact", head: true }),
+      supabase.from("snapshots").select("*", { count: "exact", head: true })
+    ]);
+    total_packages = pkgResult.count ?? 0;
+    total_snapshots = snapResult.count ?? 0;
+  } catch(e) {}
 
   return new Response(JSON.stringify({
-    total_packages: pkgResult.count || 0,
-    total_snapshots: snapResult.count || 0,
+    total_packages,
+    total_snapshots,
     timestamp: new Date().toISOString()
   }), {
     headers: {
