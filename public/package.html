@@ -232,7 +232,7 @@ async function loadPackage(id){
       <div class="rrow"><div class="rlbl">Bitcoin Anchor</div><div class="rval">${ancVal(s)}</div></div>
       <div class="rrow"><div class="rlbl">Issued By</div><div class="rval">Prechained · NextGenRails™ · prechained.com</div></div>
       <br/>
-      ${crawlerSha ? `<div class="rrow"><div class="rlbl">Crawler SHA-384</div><div class="rval" style="font-size:10px;">${crawlerSha} <a href="/.netlify/functions/source?file=crawler-${e}.js" target="_blank" style="color:var(--accent);font-weight:600;margin-left:8px;">View Source →</a></div></div>` : ''}
+      ${crawlerSha ? `<div class="rrow"><div class="rlbl">Crawler SHA-384</div><div class="rval" style="font-size:10px;">${crawlerSha} <a href="/.netlify/functions/source?file=crawler-all.js" target="_blank" style="color:var(--accent);font-weight:600;margin-left:8px;">View Source →</a></div></div>` : ''}
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
         <button class="copy-btn" onclick="navigator.clipboard.writeText('${rid}').then(()=>alert('Copied!'))">📋 Copy Receipt ID</button>
         ${s.manifest_path ? '<a class="copy-btn" href="https://raw.githubusercontent.com/ngr-dev1/prechained-archive/main/'+s.manifest_path+'" target="_blank" style="text-decoration:none;">📦 Download Manifest</a>' : ''}
