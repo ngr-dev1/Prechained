@@ -44,7 +44,7 @@ export default async function handler(req) {
 
   const { data, error } = await supabase
     .from("snapshots")
-    .select("id, package_id, version, ecosystem, sha384_fingerprint, receipt_id, btc_anchored, btc_block, captured_at, raw_metadata, manifest_path, packages(id, name, ecosystem, description)")
+    .select("*, packages(name, ecosystem, description), manifest_path")
     .order("captured_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
