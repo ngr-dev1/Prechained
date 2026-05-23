@@ -207,7 +207,7 @@ async function loadPkgs(){
       return;
     }
     document.getElementById('pkg-list').innerHTML=d.packages.map(p=>`
-      <div class="pkg-card" onclick="location='/package.html?id=${p.id}'">
+      <a class="pkg-card" href="/package.html?id=${p.id}" style="text-decoration:none;color:inherit;display:grid;grid-template-columns:inherit;">
         <div class="pc-cell">
           <div class="pc-name">${p.name}</div>
           <div class="pc-desc">${(p.description||'No description').substring(0,55)}${p.raw_metadata?.license ? ' · '+p.raw_metadata.license : ''}</div>
@@ -219,7 +219,7 @@ async function loadPkgs(){
         </div>
         <div class="pc-cell"><div class="pc-date">${ago(p.last_captured_at)}</div></div>
         <div class="pc-cell"><span class="st s-ok">✓ Recorded</span></div>
-      </div>
+      </a>
     `).join('');
     renderPages(total);
   }catch(e){
