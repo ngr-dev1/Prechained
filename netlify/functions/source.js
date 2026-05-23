@@ -18,14 +18,7 @@ const CORS = {
 };
 
 const CRAWLERS = [
-  "crawler-npm",
-  "crawler-pypi",
-  "crawler-cargo",
-  "crawler-github",
-  "crawler-nuget",
-  "crawler-maven",
-  "crawler-rubygems",
-  "crawler-packagist",
+  "crawler-all",
   "_shared",
 ];
 
