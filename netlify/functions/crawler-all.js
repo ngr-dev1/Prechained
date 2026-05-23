@@ -7,8 +7,8 @@ import {
   supabase, upsertPackage, captureVersion, sha384, generateReceiptId,
   storeManifestInGithub, getCurrentBtcBlock,
   GITHUB_TOKEN,
-  NPM_PACKAGES, PYPI_PACKAGES, CARGO_PACKAGES, GITHUB_REPOS,
-  NUGET_PACKAGES, MAVEN_PACKAGES, RUBYGEMS_PACKAGES, PACKAGIST_PACKAGES
+  fetchNpmPackages, fetchPypiPackages, fetchCargoPackages, fetchGithubRepos,
+  fetchNugetPackages, fetchMavenPackages, fetchRubygemsPackages, fetchPackagistPackages
 } from "./_shared.js";
 import { readFileSync } from "fs";
 
@@ -25,6 +25,7 @@ export async function crawlerNpm(req, context) {
   let captured = 0, skipped = 0;
   console.log(`[npm] starting ${new Date().toISOString()}`);
 
+  const NPM_PACKAGES = await fetchNpmPackages();
   for (const name of [...NPM_PACKAGES].sort(() => Math.random() - 0.5)) {
     if (Date.now() - startTime > TIMEOUT) break;
     try {
@@ -67,6 +68,7 @@ export async function crawlerPypi(req, context) {
   let captured = 0, skipped = 0;
   console.log(`[pypi] starting ${new Date().toISOString()}`);
 
+  const PYPI_PACKAGES = await fetchPypiPackages();
   for (const name of [...PYPI_PACKAGES].sort(() => Math.random() - 0.5)) {
     if (Date.now() - startTime > TIMEOUT) break;
     try {
@@ -109,6 +111,7 @@ export async function crawlerCargo(req, context) {
   let captured = 0, skipped = 0;
   console.log(`[cargo] starting ${new Date().toISOString()}`);
 
+  const CARGO_PACKAGES = await fetchCargoPackages();
   for (const name of [...CARGO_PACKAGES].sort(() => Math.random() - 0.5)) {
     if (Date.now() - startTime > TIMEOUT) break;
     try {
@@ -155,6 +158,7 @@ export async function crawlerGithub(req, context) {
   const headers = { "Accept": "application/vnd.github.v3+json", "User-Agent": "prechained.com/1.0" };
   if (GITHUB_TOKEN) headers["Authorization"] = "token " + GITHUB_TOKEN;
 
+  const GITHUB_REPOS = await fetchGithubRepos();
   for (const repo of [...GITHUB_REPOS].sort(() => Math.random() - 0.5)) {
     if (Date.now() - startTime > TIMEOUT) break;
     try {
@@ -213,6 +217,7 @@ export async function crawlerNuget(req, context) {
   let captured = 0, skipped = 0;
   console.log(`[nuget] starting ${new Date().toISOString()}`);
 
+  const NUGET_PACKAGES = await fetchNugetPackages();
   for (const name of [...NUGET_PACKAGES].sort(() => Math.random() - 0.5)) {
     if (Date.now() - startTime > TIMEOUT) break;
     try {
@@ -255,6 +260,7 @@ export async function crawlerMaven(req, context) {
   let captured = 0, skipped = 0;
   console.log(`[maven] starting ${new Date().toISOString()}`);
 
+  const MAVEN_PACKAGES = await fetchMavenPackages();
   for (const artifact of [...MAVEN_PACKAGES].sort(() => Math.random() - 0.5)) {
     if (Date.now() - startTime > TIMEOUT) break;
     try {
@@ -296,6 +302,7 @@ export async function crawlerRubygems(req, context) {
   let captured = 0, skipped = 0;
   console.log(`[rubygems] starting ${new Date().toISOString()}`);
 
+  const RUBYGEMS_PACKAGES = await fetchRubygemsPackages();
   for (const name of [...RUBYGEMS_PACKAGES].sort(() => Math.random() - 0.5)) {
     if (Date.now() - startTime > TIMEOUT) break;
     try {
@@ -343,6 +350,7 @@ export async function crawlerPackagist(req, context) {
   let captured = 0, skipped = 0;
   console.log(`[packagist] starting ${new Date().toISOString()}`);
 
+  const PACKAGIST_PACKAGES = await fetchPackagistPackages();
   for (const name of [...PACKAGIST_PACKAGES].sort(() => Math.random() - 0.5)) {
     if (Date.now() - startTime > TIMEOUT) break;
     try {
