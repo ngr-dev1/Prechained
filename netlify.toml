@@ -12,3 +12,33 @@
 [[scheduled-functions]]
   name = "anchor-checker"
   cron = "*/10 * * * *"
+
+[[redirects]]
+  from = "/capture"
+  to = "/capture.html"
+  status = 200
+
+[[redirects]]
+  from = "/browse"
+  to = "/browse.html"
+  status = 200
+
+[[redirects]]
+  from = "/verify"
+  to = "/verify.html"
+  status = 200
+
+[[redirects]]
+  from = "/package"
+  to = "/package.html"
+  status = 200
+
+[[redirects]]
+  from = "/license"
+  to = "/license.html"
+  status = 200
+
+[[redirects]]
+  from = "/terms"
+  to = "/terms.html"
+  status = 200
