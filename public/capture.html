@@ -202,7 +202,7 @@ async function capture() {
             <div class="result-row"><span class="result-label">Captured At</span><span class="result-val">${data.captured_at ? new Date(data.captured_at).toLocaleString() : '—'}</span></div>
             <div class="result-actions">
               <a class="action-btn primary" href="/verify?r=${data.receipt_id || ''}" target="_blank">🔍 Verify Receipt</a>
-              <a class="action-btn" href="${data.archive_url || '/browse'}" target="_blank">📦 View Package</a>
+              <a class="action-btn" href="/browse.html?search=${encodeURIComponent(data.package)}" target="_blank">📦 View Package</a>
               <button class="action-btn" onclick="navigator.clipboard.writeText('${data.receipt_id || ''}').then(()=>this.textContent='✓ Copied!')">📋 Copy Receipt ID</button>
             </div>
           </div>
