@@ -393,5 +393,52 @@ async function triggerCrawler(){
 triggerCrawler();
 setInterval(triggerCrawler, 10*60*1000);
 </script>
+
+<script>
+// NGR Geo — fetches approximate location from IP, stores in window._ngr_geo
+// IP never stored — only country, city, region derived from it
+(function(){
+  fetch('https://ipapi.co/json/')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d && d.country_name){
+        window._ngr_geo = {
+          country: d.country_name || null,
+          city: d.city || null,
+          region: d.region || null
+        };
+      }
+    })
+    .catch(function(){});
+})();
+</script>
+<script>
+(function() {
+  var SUPABASE_URL = "https://lchwaheggemowdzpbwkh.supabase.co";
+  var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjaHdhaGVnZ2Vtb3dkenBid2toIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5OTk3OTMsImV4cCI6MjA5MzU3NTc5M30.XwGTtknJ4GpZT08LTXkoxvPeESjxeiYunFYeHU__t7U";
+  var payload = {
+    domain: window.location.hostname,
+    page: window.location.pathname,
+    referrer: document.referrer || "direct",
+    user_agent: navigator.userAgent
+  };
+  function record(data) {
+    fetch(SUPABASE_URL + "/rest/v1/page_views", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": SUPABASE_KEY, "Authorization": "Bearer " + SUPABASE_KEY },
+      body: JSON.stringify(data)
+    }).catch(function(){});
+  }
+  // Wait up to 1s for geo then record
+  var recorded = false;
+  function tryRecord() {
+    if (recorded) return;
+    recorded = true;
+    record(Object.assign(payload, window._ngr_geo || {}));
+  }
+  setTimeout(tryRecord, 1000);
+  document.addEventListener('ngr_geo_ready', tryRecord);
+})();
+</script>
 </body>
 </html>
