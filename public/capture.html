@@ -1,1 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Prechained — Capture a Package</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f0ede8;--off:#e8e4de;--white:#fff;--border:#d8d3cc;
+  --ink:#111;--ink-2:#222;--ink-3:#444;--ink-4:#666;
+  --accent:#e8390e;--green:#1a7a4a;--red:#c0392b;
+  --mono:'JetBrains Mono',monospace;--serif:'Instrument Serif',serif;--sans:'Inter',sans-serif;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;min-height:100vh;}
+nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:100;}
+.logo{font-family:var(--serif);font-size:19px;color:var(--ink);text-decoration:none;}
+.logo b{color:var(--accent);}
+.nav-r{display:flex;gap:20px;}
+.nav-r a{font-size:13px;color:var(--ink-3);text-decoration:none;font-weight:500;}
+.nav-r a:hover{color:var(--accent);}
+.page{max-width:680px;margin:0 auto;padding:64px 32px 80px;}
+h1{font-family:var(--serif);font-size:clamp(32px,5vw,48px);font-weight:400;letter-spacing:-.02em;margin-bottom:8px;}
+h1 i{color:var(--accent);}
+.sub{font-size:14px;color:var(--ink-3);margin-bottom:40px;line-height:1.6;}
+.form-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:28px;}
+.field{margin-bottom:20px;}
+label{display:block;font-size:12px;font-weight:600;color:var(--ink-3);margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase;font-family:var(--mono);}
+input,select{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:var(--mono);background:var(--bg);color:var(--ink);outline:none;transition:border-color .15s;}
+input:focus,select:focus{border-color:var(--accent);}
+.eco-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px;}
+@media(max-width:500px){.eco-grid{grid-template-columns:repeat(2,1fr);}}
+.eco-btn{padding:10px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-family:var(--mono);font-size:11px;cursor:pointer;text-align:center;transition:all .15s;color:var(--ink-3);}
+.eco-btn:hover{border-color:var(--accent);color:var(--accent);}
+.eco-btn.selected{border-color:var(--accent);background:rgba(232,57,14,0.06);color:var(--accent);font-weight:600;}
+.submit-btn{width:100%;padding:14px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:opacity .15s;margin-top:8px;}
+.submit-btn:hover{opacity:.9;}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed;}
+.result{margin-top:24px;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+.result-head{padding:14px 20px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;}
+.result-head.success{background:#e8f5ee;color:var(--green);border-bottom:1px solid #c3e6d0;}
+.result-head.error{background:#fdecea;color:var(--red);border-bottom:1px solid #f5c6c2;}
+.result-head.loading{background:#f5f0ea;color:var(--ink-3);border-bottom:1px solid var(--border);}
+.result-body{padding:20px;background:var(--white);}
+.result-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);}
+.result-row:last-child{border-bottom:none;}
+.result-label{font-family:var(--mono);font-size:10px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.1em;}
+.result-val{font-family:var(--mono);font-size:12px;color:var(--ink);text-align:right;max-width:60%;overflow:hidden;text-overflow:ellipsis;}
+.result-val.receipt{color:var(--accent);font-weight:600;font-size:13px;}
+.result-val.btc{color:#f7931a;font-weight:600;}
+.result-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+.action-btn{padding:8px 16px;border-radius:5px;font-family:var(--mono);font-size:11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all .15s;border:1px solid var(--border);background:var(--bg);color:var(--ink-3);}
+.action-btn:hover{border-color:var(--accent);color:var(--accent);}
+.action-btn.primary{background:var(--accent);color:white;border-color:var(--accent);}
+.action-btn.primary:hover{opacity:.9;color:white;}
+.note{margin-top:20px;font-size:12px;color:var(--ink-4);line-height:1.6;}
+.note a{color:var(--accent);}
+.rate{font-family:var(--mono);font-size:10px;color:var(--ink-4);margin-top:8px;}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.15);border-top-color:var(--ink-3);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.examples{margin-top:32px;}
+.examples h3{font-size:13px;font-weight:600;color:var(--ink-3);margin-bottom:12px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;}
+.example-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{padding:6px 12px;border:1px solid var(--border);border-radius:20px;font-family:var(--mono);font-size:11px;cursor:pointer;color:var(--ink-3);background:var(--white);transition:all .15s;}
+.chip:hover{border-color:var(--accent);color:var(--accent);}
+footer{border-top:1px solid var(--border);padding:24px 32px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--ink-4);}
+footer a{color:var(--ink-3);text-decoration:none;}
+</style>
+</head>
+<body>
+<nav>
+  <a class="logo" href="/"><b>Pre</b>chained</a>
+  <div class="nav-r">
+    <a href="/">Home</a>
+    <a href="/browse">Browse</a>
+    <a href="/verify">Verify</a>
+    <a href="https://github.com/ngr-dev1/prechained">GitHub</a>
+  </div>
+</nav>
 
+<div class="page">
+  <h1>Capture a <i>package.</i></h1>
+  <div class="sub">Submit any public package for immediate cryptographic capture. SHA-384 fingerprinted and Bitcoin anchored within seconds. Free. No login required. Max 10 requests per hour.</div>
+
+  <div class="form-card">
+    <div class="field">
+      <label>Package Name</label>
+      <input type="text" id="pkg-input" placeholder="e.g. token-usage-tracker, requests, serde" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+    </div>
+    <div class="field">
+      <label>Ecosystem</label>
+      <div class="eco-grid" id="eco-grid">
+        <div class="eco-btn selected" data-eco="npm">npm</div>
+        <div class="eco-btn" data-eco="pypi">PyPI</div>
+        <div class="eco-btn" data-eco="cargo">Cargo</div>
+        <div class="eco-btn" data-eco="rubygems">RubyGems</div>
+        <div class="eco-btn" data-eco="packagist">Packagist</div>
+        <div class="eco-btn" data-eco="nuget">NuGet</div>
+        <div class="eco-btn" data-eco="github">GitHub</div>
+      </div>
+      <div class="rate" id="eco-hint">Enter package name exactly as it appears in the registry</div>
+    </div>
+    <button class="submit-btn" id="submit-btn" onclick="capture()">Capture Package →</button>
+    <div id="result"></div>
+  </div>
+
+  <div class="examples">
+    <h3>Recent Incident Packages</h3>
+    <div class="example-chips" id="chips">
+      <div class="chip" onclick="setExample('token-usage-tracker','npm')">token-usage-tracker (npm)</div>
+      <div class="chip" onclick="setExample('cryptowallet-safety','pypi')">cryptowallet-safety (PyPI)</div>
+      <div class="chip" onclick="setExample('move-analyzer-build','cargo')">move-analyzer-build (Cargo)</div>
+      <div class="chip" onclick="setExample('laravel-lang/lang','packagist')">laravel-lang/lang (Packagist)</div>
+      <div class="chip" onclick="setExample('semgrep/semgrep','github')">semgrep/semgrep (GitHub)</div>
+    </div>
+  </div>
+
+  <div class="note">
+    Captures are permanent and publicly archived at <a href="https://github.com/ngr-dev1/prechained-archive">github.com/ngr-dev1/prechained-archive</a>. Every receipt is independently verifiable at <a href="/verify">prechained.com/verify</a>. Bitcoin anchoring confirms the capture predates any future attack disclosure.
+  </div>
+</div>
+
+<footer>
+  Prechained · Built by <a href="https://nextgenrails.net">NextGenRails™</a> · AGPL-3.0 · <a href="/terms.html">Terms</a> · <a href="https://nextgenrails.net/legal">Legal</a>
+</footer>
+
+<script>
+let selectedEco = 'npm';
+
+document.querySelectorAll('.eco-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.eco-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedEco = btn.dataset.eco;
+    const hints = {
+      npm: 'Enter package name exactly as on npmjs.com',
+      pypi: 'Enter package name exactly as on pypi.org',
+      cargo: 'Enter crate name exactly as on crates.io',
+      rubygems: 'Enter gem name exactly as on rubygems.org',
+      packagist: 'Enter as vendor/package (e.g. laravel-lang/lang)',
+      nuget: 'Enter package ID exactly as on nuget.org',
+      github: 'Enter as owner/repo (e.g. semgrep/semgrep)'
+    };
+    document.getElementById('eco-hint').textContent = hints[selectedEco] || '';
+  });
+});
+
+document.getElementById('pkg-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') capture();
+});
+
+function setExample(pkg, eco) {
+  document.getElementById('pkg-input').value = pkg;
+  document.querySelectorAll('.eco-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.eco === eco);
+  });
+  selectedEco = eco;
+}
+
+async function capture() {
+  const pkg = document.getElementById('pkg-input').value.trim();
+  if (!pkg) { document.getElementById('pkg-input').focus(); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Capturing...';
+
+  document.getElementById('result').innerHTML = `
+    <div class="result">
+      <div class="result-head loading"><span class="spinner"></span>Fetching from ${selectedEco} registry and computing SHA-384...</div>
+    </div>`;
+
+  try {
+    const res = await fetch('/.netlify/functions/capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ package: pkg, ecosystem: selectedEco })
+    });
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      document.getElementById('result').innerHTML = `
+        <div class="result">
+          <div class="result-head error">✗ Capture Failed</div>
+          <div class="result-body">
+            <div class="result-row"><span class="result-label">Error</span><span class="result-val">${data.error || 'Unknown error'}</span></div>
+          </div>
+        </div>`;
+    } else {
+      const alreadyMsg = data.versions_already_archived > 0 ? ` (${data.versions_already_archived} already in archive)` : '';
+      document.getElementById('result').innerHTML = `
+        <div class="result">
+          <div class="result-head success">✓ Captured & Bitcoin Anchored</div>
+          <div class="result-body">
+            <div class="result-row"><span class="result-label">Receipt ID</span><span class="result-val receipt">${data.receipt_id || '—'}</span></div>
+            <div class="result-row"><span class="result-label">Package</span><span class="result-val">${data.package} (${data.ecosystem})</span></div>
+            <div class="result-row"><span class="result-label">Versions Captured</span><span class="result-val">${data.versions_captured} new${alreadyMsg}</span></div>
+            <div class="result-row"><span class="result-label">Bitcoin Anchor</span><span class="result-val btc">${data.btc_block ? '⬡ Block #' + data.btc_block.toLocaleString() + ' — Confirmed' : 'Pending'}</span></div>
+            <div class="result-row"><span class="result-label">SHA-384</span><span class="result-val">${data.sha384 ? data.sha384.substring(0,32) + '...' : '—'}</span></div>
+            <div class="result-row"><span class="result-label">Captured At</span><span class="result-val">${data.captured_at ? new Date(data.captured_at).toLocaleString() : '—'}</span></div>
+            <div class="result-actions">
+              <a class="action-btn primary" href="/verify?r=${data.receipt_id || ''}" target="_blank">🔍 Verify Receipt</a>
+              <a class="action-btn" href="${data.archive_url || '/browse'}" target="_blank">📦 View Package</a>
+              <button class="action-btn" onclick="navigator.clipboard.writeText('${data.receipt_id || ''}').then(()=>this.textContent='✓ Copied!')">📋 Copy Receipt ID</button>
+            </div>
+          </div>
+        </div>`;
+    }
+  } catch(e) {
+    document.getElementById('result').innerHTML = `
+      <div class="result">
+        <div class="result-head error">✗ Network Error</div>
+        <div class="result-body"><div class="result-row"><span class="result-label">Error</span><span class="result-val">${e.message}</span></div></div>
+      </div>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Capture Package →';
+}
+</script>
+</body>
+</html>
