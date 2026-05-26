@@ -23,6 +23,15 @@ export default async function handler(req) {
   const receiptId = url.searchParams.get("receipt_id");
   const limit = Math.min(parseInt(url.searchParams.get("limit") || "50"), 500);
   const offset = parseInt(url.searchParams.get("offset") || "0");
+  const captureCountOnly = url.searchParams.get("capture_count") === "1";
+
+  // On-demand capture count shortcut
+  if(captureCountOnly) {
+    const { count } = await supabase
+      .from("capture_requests")
+      .select("*", { count: "exact", head: true });
+    return new Response(JSON.stringify({ capture_count: count || 0 }), { headers: CACHE_60 });
+  }
 
   if (receiptId) {
     const { data, error } = await supabase
