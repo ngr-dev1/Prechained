@@ -185,6 +185,7 @@ footer a:hover{color:var(--accent);}
   <div class="hero-stats">
     <div class="hstat"><div class="hstat-val" id="snap-count">—</div><div class="hstat-lbl">Snapshots</div></div>
     <div class="hstat"><div class="hstat-val" id="pkg-count">—</div><div class="hstat-lbl">Packages</div></div>
+    <div class="hstat"><div class="hstat-val" id="capture-count">—</div><div class="hstat-lbl">On-Demand Captures</div></div>
     <div class="hstat"><div class="hstat-val">8</div><div class="hstat-lbl">Ecosystems</div></div>
     <div class="hstat"><div class="hstat-val">$0</div><div class="hstat-lbl">Cost</div></div>
   </div>
@@ -346,6 +347,12 @@ async function refreshFeed(){
     if(d.total_packages!=null){
       document.getElementById('pkg-count').textContent=d.total_packages.toLocaleString();
     }
+    // Fetch on-demand capture count
+    fetch('/.netlify/functions/snapshots?capture_count=1')
+      .then(r=>r.json()).then(d=>{
+        if(d.capture_count!=null)
+          document.getElementById('capture-count').textContent=d.capture_count.toLocaleString();
+      }).catch(()=>{});
     const feed=document.getElementById('feed');
     const newOnes=d.snapshots.filter(s=>!shown.has(s.id));
     if(shown.size===0){
