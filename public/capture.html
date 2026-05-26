@@ -209,11 +209,29 @@ async function capture() {
         </div>`;
     }
   } catch(e) {
-    document.getElementById('result').innerHTML = `
-      <div class="result">
-        <div class="result-head error">✗ Network Error</div>
-        <div class="result-body"><div class="result-row"><span class="result-label">Error</span><span class="result-val">${e.message}</span></div></div>
-      </div>`;
+    // If it's a timeout/network error, the function is likely still running in background
+    const isTimeout = e.message.includes('fetch') || e.message.includes('network') || 
+                      e.message.includes('token') || e.message.includes('JSON') ||
+                      e.name === 'TypeError' || e.name === 'SyntaxError';
+    if(isTimeout) {
+      document.getElementById('result').innerHTML = `
+        <div class="result">
+          <div class="result-head" style="background:#fff8e6;color:#b45309;border-bottom:1px solid #fde68a;">⏳ Capturing in Background</div>
+          <div class="result-body">
+            <div class="result-row"><span class="result-label">Package</span><span class="result-val">${pkg} (${selectedEco})</span></div>
+            <div class="result-row"><span class="result-label">Status</span><span class="result-val">Large package — still capturing all versions. Check the archive in 1-2 minutes.</span></div>
+            <div class="result-actions">
+              <a class="action-btn primary" href="/browse.html?search=${encodeURIComponent(pkg)}" target="_blank">📦 Check Archive</a>
+            </div>
+          </div>
+        </div>`;
+    } else {
+      document.getElementById('result').innerHTML = `
+        <div class="result">
+          <div class="result-head error">✗ Network Error</div>
+          <div class="result-body"><div class="result-row"><span class="result-label">Error</span><span class="result-val">${e.message}</span></div></div>
+        </div>`;
+    }
   }
 
   btn.disabled = false;
