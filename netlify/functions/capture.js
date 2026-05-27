@@ -20,8 +20,6 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type"
 };
 
-// ── RATE LIMITING ─────────────────────────────────────────────
-// Max 10 requests per IP per hour using Supabase
 async function checkRateLimit(ip) {
   const windowStart = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const { count } = await supabase
@@ -42,8 +40,6 @@ async function logRequest(ip, packageName, ecosystem) {
     });
   } catch(e) {}
 }
-
-// ── ECOSYSTEM CAPTURE FUNCTIONS ───────────────────────────────
 
 async function captureNpm(name) {
   const res = await fetch(`https://registry.npmjs.org/${encodeURIComponent(name)}`, {
@@ -87,6 +83,16 @@ async function captureNpm(name) {
     if (ok) captured++;
     if (ok) lastManifest = manifest;
   }
+  // Always index from latest manifest even if no new versions captured
+  if (!lastManifest && latest && data.versions[latest]) {
+    const vd = data.versions[latest];
+    lastManifest = {
+      name, version: latest, ecosystem: "npm",
+      maintainers: (vd.maintainers || data.maintainers || []).map(m => ({ name: m.name, email: m.email || null })),
+      _npmUser: vd._npmUser ? { name: vd._npmUser.name, email: vd._npmUser.email || null } : null,
+      author: vd.author || data.author || null,
+    };
+  }
   return { pkg, captured, total: allVersions.length, already: seen.size, lastManifest };
 }
 
@@ -103,6 +109,7 @@ async function capturePypi(name) {
   const seen = new Set((existing || []).map(s => s.version));
   const toCapture = allVersions.filter(v => !seen.has(v));
   let captured = 0;
+  let lastManifest = null;
   for (const version of toCapture) {
     const files = data.releases[version] || [];
     const wheel = files.find(f => f.packagetype === "bdist_wheel") || files[0];
@@ -120,8 +127,15 @@ async function capturePypi(name) {
     };
     const ok = await captureVersion(pkg, version, "pypi", wheel?.digests?.sha256, null, data.info?.license, (data.info?.requires_dist || []).map(d => d.split(" ")[0].split(";")[0].trim()), manifest, CRAWLER_SHA384);
     if (ok) captured++;
+    if (ok) lastManifest = manifest;
   }
-  return { pkg, captured, total: allVersions.length, already: seen.size };
+  if (!lastManifest) {
+    lastManifest = {
+      name, version: latest, ecosystem: "pypi",
+      author: data.info?.author, author_email: data.info?.author_email || null,
+    };
+  }
+  return { pkg, captured, total: allVersions.length, already: seen.size, lastManifest };
 }
 
 async function captureCargo(name) {
@@ -140,6 +154,7 @@ async function captureCargo(name) {
   const seen = new Set((existing || []).map(s => s.version));
   const toCapture = (data.versions || []).filter(v => !seen.has(v.num));
   let captured = 0;
+  let lastManifest = null;
   for (const vdata of toCapture) {
     const version = vdata.num;
     let cargoDeps = [];
@@ -161,8 +176,18 @@ async function captureCargo(name) {
     };
     const ok = await captureVersion(pkg, version, "cargo", `sha256:${vdata.checksum}`, null, vdata.license, cargoDeps.map(d => d.name), manifest, CRAWLER_SHA384);
     if (ok) captured++;
+    if (ok) lastManifest = manifest;
   }
-  return { pkg, captured, total: allVersions.length, already: seen.size };
+  if (!lastManifest) {
+    const latestVdata = (data.versions || []).find(v => v.num === latest);
+    if (latestVdata) {
+      lastManifest = {
+        name, version: latest, ecosystem: "cargo",
+        published_by: latestVdata.published_by ? { login: latestVdata.published_by.login, name: latestVdata.published_by.name } : null,
+      };
+    }
+  }
+  return { pkg, captured, total: allVersions.length, already: seen.size, lastManifest };
 }
 
 async function captureRubygems(name) {
@@ -179,6 +204,7 @@ async function captureRubygems(name) {
   const { data: existing } = await supabase.from("snapshots").select("version").eq("package_id", pkg.id);
   const seen = new Set((existing || []).map(s => s.version));
   let captured = 0;
+  let lastManifest = null;
   for (const vdata of versions.filter(v => !seen.has(v.number))) {
     const manifest = {
       name, version: vdata.number, ecosystem: "rubygems",
@@ -193,8 +219,12 @@ async function captureRubygems(name) {
     };
     const ok = await captureVersion(pkg, vdata.number, "rubygems", vdata.sha, null, vdata.licenses?.join(", "), [], manifest, CRAWLER_SHA384);
     if (ok) captured++;
+    if (ok) lastManifest = manifest;
   }
-  return { pkg, captured, total: allVersions.length, already: seen.size };
+  if (!lastManifest) {
+    lastManifest = { name, version: latest, ecosystem: "rubygems", authors: data.authors };
+  }
+  return { pkg, captured, total: allVersions.length, already: seen.size, lastManifest };
 }
 
 async function capturePackagist(name) {
@@ -210,6 +240,7 @@ async function capturePackagist(name) {
   const { data: existing } = await supabase.from("snapshots").select("version").eq("package_id", pkg.id);
   const seen = new Set((existing || []).map(s => s.version));
   let captured = 0;
+  let lastManifest = null;
   for (const version of allVersions.filter(v => !seen.has(v))) {
     const vData = pkgData.versions[version] || {};
     const cleanVersion = version.replace(/^v/, "");
@@ -225,8 +256,13 @@ async function capturePackagist(name) {
     };
     const ok = await captureVersion(pkg, cleanVersion, "packagist", vData.dist?.shasum, null, vData.license?.[0], Object.keys(vData.require || {}), manifest, CRAWLER_SHA384);
     if (ok) captured++;
+    if (ok) lastManifest = manifest;
   }
-  return { pkg, captured, total: allVersions.length, already: seen.size };
+  if (!lastManifest) {
+    const latestVData = pkgData.versions?.[allVersions[0]] || {};
+    lastManifest = { name, ecosystem: "packagist", authors: latestVData.authors || [] };
+  }
+  return { pkg, captured, total: allVersions.length, already: seen.size, lastManifest };
 }
 
 async function captureNuget(name) {
@@ -242,6 +278,7 @@ async function captureNuget(name) {
   const { data: existing } = await supabase.from("snapshots").select("version").eq("package_id", pkg.id);
   const seen = new Set((existing || []).map(s => s.version));
   let captured = 0;
+  let lastManifest = null;
   for (const version of allVersions.filter(v => !seen.has(v))) {
     const manifest = {
       name: entry.id, version, ecosystem: "nuget",
@@ -255,8 +292,12 @@ async function captureNuget(name) {
     };
     const ok = await captureVersion(pkg, version, "nuget", null, null, null, [], manifest, CRAWLER_SHA384);
     if (ok) captured++;
+    if (ok) lastManifest = manifest;
   }
-  return { pkg, captured, total: allVersions.length, already: seen.size };
+  if (!lastManifest) {
+    lastManifest = { name: entry.id, ecosystem: "nuget", authors: entry.authors || [] };
+  }
+  return { pkg, captured, total: allVersions.length, already: seen.size, lastManifest };
 }
 
 async function captureGithub(repoFullName) {
@@ -275,6 +316,7 @@ async function captureGithub(repoFullName) {
   const { data: existing } = await supabase.from("snapshots").select("version").eq("package_id", pkg.id);
   const seen = new Set((existing || []).map(s => s.version));
   let captured = 0;
+  let lastManifest = null;
   for (const commit of commits.slice(0, 5)) {
     const sha = commit.sha?.substring(0, 12);
     if (!sha || seen.has(sha)) continue;
@@ -297,8 +339,19 @@ async function captureGithub(repoFullName) {
     };
     const ok = await captureVersion(pkg, sha, "github", commit.sha, null, repoData.license?.spdx_id, [], manifest, CRAWLER_SHA384);
     if (ok) captured++;
+    if (ok) lastManifest = manifest;
   }
-  return { pkg, captured, total: commits.length, already: seen.size };
+  // Always index from latest commit even if already captured
+  if (!lastManifest && commits[0]) {
+    const commit = commits[0];
+    lastManifest = {
+      name: repoFullName, ecosystem: "github",
+      commit_author: commit.commit?.author?.name,
+      commit_author_email: commit.commit?.author?.email,
+      commit_committer: commit.commit?.committer?.name,
+    };
+  }
+  return { pkg, captured, total: commits.length, already: seen.size, lastManifest };
 }
 
 // ── MAIN HANDLER ──────────────────────────────────────────────
@@ -317,7 +370,6 @@ export default async function handler(req, context) {
     return new Response(JSON.stringify({ error: `Invalid ecosystem. Valid: ${validEcosystems.join(", ")}` }), { status: 400, headers: CORS });
   }
 
-  // Rate limit
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
   const allowed = await checkRateLimit(ip);
   if (!allowed) return new Response(JSON.stringify({ error: "Rate limit exceeded. Max 10 requests per hour." }), { status: 429, headers: CORS });
@@ -334,7 +386,6 @@ export default async function handler(req, context) {
     else if (eco === "nuget") result = await captureNuget(packageName);
     else if (eco === "github") result = await captureGithub(packageName);
 
-    // Get the latest receipt for this package
     const { data: latestSnap } = await supabase
       .from("snapshots")
       .select("receipt_id, btc_block, sha384_fingerprint, captured_at, manifest_path")
@@ -343,18 +394,13 @@ export default async function handler(req, context) {
       .limit(1).single();
 
     // ── ACTOR INTELLIGENCE ─────────────────────────────────────
-    // Index actors from the latest manifest and run attribution
     let actorIntel = null;
     try {
-      // Index actors from the captured manifest (result.manifest is the last captured manifest)
       if (result.lastManifest) {
-        await indexActors(result.pkg, ecosystem, result.lastManifest);
+        await indexActors(result.pkg, eco, result.lastManifest);
       }
+      await updateVelocity(result.pkg, eco, result.captured);
 
-      // Update velocity tracking
-      await updateVelocity(result.pkg, ecosystem, result.captured);
-
-      // Extract actor identifiers from the manifest for attribution query
       const manifest = result.lastManifest || {};
       const maintainers = manifest.maintainers || [];
       const primaryEmail = maintainers[0]?.email || manifest._npmUser?.email ||
@@ -368,12 +414,11 @@ export default async function handler(req, context) {
           email:     primaryEmail,
           username:  primaryUsername,
           pkg:       packageName,
-          ecosystem,
+          ecosystem: eco,
         });
       }
     } catch (e) {
       console.error("Actor intelligence error:", e.message);
-      // Non-fatal — don't block the capture response
     }
 
     return new Response(JSON.stringify({
@@ -389,7 +434,6 @@ export default async function handler(req, context) {
       captured_at: latestSnap?.captured_at || null,
       verify_url: `https://prechained.com/verify?r=${latestSnap?.receipt_id || ""}`,
       archive_url: `https://prechained.com/package.html?name=${encodeURIComponent(packageName)}&ecosystem=${ecosystem}`,
-      // Actor intelligence — null if no actor data found
       actor_intelligence: actorIntel,
     }), { headers: CORS });
 
