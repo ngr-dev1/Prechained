@@ -1,8 +1,13 @@
-// threat-feed.js — Returns all flagged actors for the public threat feed
-// GET /.netlify/functions/threat-feed
+// threat-actors.js — Returns all flagged actors for the public threat feed
+// GET /.netlify/functions/threat-actors
 // prechained.com · Built by NextGenRails™
 
-import { supabase } from "./_shared.js";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 const CORS = {
   "Content-Type": "application/json",
@@ -15,7 +20,6 @@ export default async function handler(req) {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
 
   try {
-    // Get all actors from actor_index, most recent first
     const { data: actors, error } = await supabase
       .from("actor_index")
       .select("email, username, package_name, ecosystem, first_seen_at")
@@ -24,7 +28,6 @@ export default async function handler(req) {
 
     if (error) throw error;
 
-    // Get velocity flags
     const { data: flagged } = await supabase
       .from("publish_velocity")
       .select("package_name, ecosystem, version_count, window_minutes, flagged")
@@ -35,7 +38,6 @@ export default async function handler(req) {
       flaggedMap.set(`${f.package_name}:${f.ecosystem}`, f);
     }
 
-    // Deduplicate by package — show one row per unique package
     const seen = new Set();
     const result = [];
 
@@ -46,7 +48,7 @@ export default async function handler(req) {
 
       const vel = flaggedMap.get(key);
       const flags = [];
-      let threat_level = "MEDIUM"; // New actor is always medium
+      let threat_level = "MEDIUM";
 
       if (vel?.flagged) {
         flags.push(`HIGH_VELOCITY: ${vel.version_count} versions in ${vel.window_minutes}m`);
