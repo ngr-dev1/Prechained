@@ -229,8 +229,7 @@ export async function indexActors(pkg, ecosystem, manifest) {
 
   if (rows.length === 0) return;
 
-  // Insert each row — ignore duplicate key errors (unique constraint)
-  // Can't use upsert onConflict reliably with NULLS NOT DISTINCT
+  // Insert each row — ignore duplicate key errors (unique constraint 23505)
   for (const row of rows) {
     try {
       const { error } = await supabase.from("actor_index").insert(row);
@@ -238,7 +237,7 @@ export async function indexActors(pkg, ecosystem, manifest) {
         console.error("actor_index insert error:", error.message, error.code);
       }
     } catch(e) {
-      // ignore
+      console.error("actor_index insert exception:", e.message);
     }
   }
 }
