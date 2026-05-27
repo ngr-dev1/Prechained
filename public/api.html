@@ -35,15 +35,12 @@ nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:s
 .hero-base{font-family:var(--mono);font-size:13px;background:var(--off);border:1px solid var(--border);display:inline-block;padding:10px 20px;color:var(--accent);letter-spacing:.02em;}
 
 /* LAYOUT */
-.page{max-width:880px;margin:0 auto;padding:56px 24px 80px;}
-.two-col{display:grid;grid-template-columns:200px 1fr;gap:48px;align-items:start;}
-@media(max-width:700px){.two-col{grid-template-columns:1fr;}}
+.page{max-width:760px;margin:0 auto;padding:48px 24px 80px;}
 
-/* SIDEBAR NAV */
-.sidebar{position:sticky;top:68px;}
-.sidebar-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:12px;}
-.sidebar a{display:block;font-size:13px;color:var(--ink-3);text-decoration:none;padding:5px 0;border-left:2px solid var(--border);padding-left:12px;margin-bottom:4px;transition:color .15s,border-color .15s;}
-.sidebar a:hover,.sidebar a.active{color:var(--accent);border-color:var(--accent);}
+/* ENDPOINT NAV — horizontal pill bar */
+.endpoint-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:40px;}
+.endpoint-nav a{font-family:var(--mono);font-size:11px;color:var(--muted);text-decoration:none;padding:5px 14px;border:1px solid var(--border);background:var(--white);transition:all .15s;letter-spacing:.04em;}
+.endpoint-nav a:hover,.endpoint-nav a.active{color:var(--accent);border-color:var(--accent);background:rgba(232,57,14,.04);}
 
 /* SECTIONS */
 .section{margin-bottom:56px;}
@@ -128,25 +125,19 @@ footer a:hover{color:var(--accent);}
 </div>
 
 <div class="page">
-  <div class="two-col">
+  <!-- Horizontal endpoint nav -->
+  <div class="endpoint-nav">
+    <a href="#fingerprint">fingerprint</a>
+    <a href="#receipt">receipt</a>
+    <a href="#package">package</a>
+    <a href="#actor">actor</a>
+    <a href="#diff">diff</a>
+    <a href="#health">health</a>
+    <a href="https://github.com/ngr-dev1/prechained">Source Code ↗</a>
+    <a href="https://github.com/ngr-dev1/prechained-archive">Archive ↗</a>
+  </div>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="sidebar-label">Endpoints</div>
-      <a href="#fingerprint">fingerprint</a>
-      <a href="#receipt">receipt</a>
-      <a href="#package">package</a>
-      <a href="#actor">actor</a>
-      <a href="#diff">diff</a>
-      <a href="#health">health</a>
-      <div class="sidebar-label" style="margin-top:24px">Resources</div>
-      <a href="https://github.com/ngr-dev1/prechained">Source Code</a>
-      <a href="https://github.com/ngr-dev1/prechained-archive">Archive</a>
-      <a href="/verify.html">Verify a Receipt</a>
-    </div>
-
-    <!-- Main content -->
-    <div>
+  <div>
 
       <div class="info-box">
         <p><strong>No authentication required.</strong> All endpoints are free and open. Rate limiting is applied per IP. For high-volume use, contact <a href="mailto:ngr.admin@proton.me" style="color:var(--accent)">ngr.admin@proton.me</a> for an enterprise arrangement.</p>
@@ -449,8 +440,7 @@ if data['found']:
         </div>
       </div>
 
-    </div><!-- end main -->
-  </div><!-- end two-col -->
+  </div><!-- end main -->
 </div><!-- end page -->
 
 <footer>
