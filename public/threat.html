@@ -673,7 +673,7 @@ function escHtml(str) {
 // ── LIVE THREAT FEED ─────────────────────────────────────────
 async function loadThreatFeed() {
   try {
-    const res = await fetch('/.netlify/functions/threat-feed');
+    const res = await fetch('/.netlify/functions/threat-actors');
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     renderFeed(data.actors || []);
