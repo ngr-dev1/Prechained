@@ -229,24 +229,16 @@ export async function indexActors(pkg, ecosystem, manifest) {
 
   if (rows.length === 0) return;
 
-  // Insert each row individually — upsert onConflict doesn't handle NULLS NOT DISTINCT correctly
-  // so we check for existence first then insert if missing
+  // Insert each row — ignore duplicate key errors (unique constraint)
+  // Can't use upsert onConflict reliably with NULLS NOT DISTINCT
   for (const row of rows) {
     try {
-      let query = supabase.from("actor_index").select("id", { count: "exact", head: true })
-        .eq("package_name", row.package_name)
-        .eq("ecosystem", row.ecosystem);
-      if (row.email)    query = query.eq("email", row.email);
-      else              query = query.is("email", null);
-      if (row.username) query = query.eq("username", row.username);
-      else              query = query.is("username", null);
-
-      const { count } = await query;
-      if ((count || 0) === 0) {
-        await supabase.from("actor_index").insert(row);
+      const { error } = await supabase.from("actor_index").insert(row);
+      if (error && error.code !== "23505") {
+        console.error("actor_index insert error:", error.message, error.code);
       }
     } catch(e) {
-      // ignore individual row errors
+      // ignore
     }
   }
 }
