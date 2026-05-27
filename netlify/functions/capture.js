@@ -7,6 +7,7 @@ import {
   storeManifestInGithub, getCurrentBtcBlock, GITHUB_TOKEN
 } from "./_shared.js";
 import { readFileSync } from "fs";
+import { indexActors, updateVelocity, queryActorIntelligence } from "./actor-intelligence.js";
 
 const CRAWLER_SHA384 = (() => {
   try { return sha384(readFileSync(new URL(import.meta.url).pathname, "utf8")); } catch(e) { return null; }
@@ -59,6 +60,7 @@ async function captureNpm(name) {
   const seen = new Set((existing || []).map(s => s.version));
   const toCapture = allVersions.filter(v => !seen.has(v));
   let captured = 0;
+  let lastManifest = null;
   for (const version of toCapture) {
     const vd = data.versions[version];
     if (!vd) continue;
@@ -83,8 +85,9 @@ async function captureNpm(name) {
     };
     const ok = await captureVersion(pkg, version, "npm", vd.dist?.integrity, vd.dist?.shasum, vd.license, Object.keys(vd.dependencies || {}), manifest, CRAWLER_SHA384);
     if (ok) captured++;
+    if (ok) lastManifest = manifest;
   }
-  return { pkg, captured, total: allVersions.length, already: seen.size };
+  return { pkg, captured, total: allVersions.length, already: seen.size, lastManifest };
 }
 
 async function capturePypi(name) {
@@ -334,10 +337,44 @@ export default async function handler(req, context) {
     // Get the latest receipt for this package
     const { data: latestSnap } = await supabase
       .from("snapshots")
-      .select("receipt_id, btc_block, sha384_fingerprint, captured_at")
+      .select("receipt_id, btc_block, sha384_fingerprint, captured_at, manifest_path")
       .eq("package_id", result.pkg.id)
       .order("captured_at", { ascending: false })
       .limit(1).single();
+
+    // ── ACTOR INTELLIGENCE ─────────────────────────────────────
+    // Index actors from the latest manifest and run attribution
+    let actorIntel = null;
+    try {
+      // Index actors from the captured manifest (result.manifest is the last captured manifest)
+      if (result.lastManifest) {
+        await indexActors(result.pkg, ecosystem, result.lastManifest);
+      }
+
+      // Update velocity tracking
+      await updateVelocity(result.pkg, ecosystem, result.captured);
+
+      // Extract actor identifiers from the manifest for attribution query
+      const manifest = result.lastManifest || {};
+      const maintainers = manifest.maintainers || [];
+      const primaryEmail = maintainers[0]?.email || manifest._npmUser?.email ||
+                           manifest.author_email || manifest.commit_author_email || null;
+      const primaryUsername = maintainers[0]?.name || manifest._npmUser?.name ||
+                              manifest.author || manifest.published_by?.login ||
+                              manifest.commit_author || null;
+
+      if (primaryEmail || primaryUsername) {
+        actorIntel = await queryActorIntelligence({
+          email:     primaryEmail,
+          username:  primaryUsername,
+          pkg:       packageName,
+          ecosystem,
+        });
+      }
+    } catch (e) {
+      console.error("Actor intelligence error:", e.message);
+      // Non-fatal — don't block the capture response
+    }
 
     return new Response(JSON.stringify({
       ok: true,
@@ -351,7 +388,9 @@ export default async function handler(req, context) {
       sha384: latestSnap?.sha384_fingerprint || null,
       captured_at: latestSnap?.captured_at || null,
       verify_url: `https://prechained.com/verify?r=${latestSnap?.receipt_id || ""}`,
-      archive_url: `https://prechained.com/package.html?name=${encodeURIComponent(packageName)}&ecosystem=${ecosystem}`
+      archive_url: `https://prechained.com/package.html?name=${encodeURIComponent(packageName)}&ecosystem=${ecosystem}`,
+      // Actor intelligence — null if no actor data found
+      actor_intelligence: actorIntel,
     }), { headers: CORS });
 
   } catch(e) {
