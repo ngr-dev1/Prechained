@@ -110,11 +110,7 @@ footer a{color:var(--ink-3);text-decoration:none;}
   <div class="examples">
     <h3>Recent Incident Packages</h3>
     <div class="example-chips" id="chips">
-      <div class="chip" onclick="setExample('token-usage-tracker','npm')">token-usage-tracker (npm)</div>
-      <div class="chip" onclick="setExample('cryptowallet-safety','pypi')">cryptowallet-safety (PyPI)</div>
-      <div class="chip" onclick="setExample('move-analyzer-build','cargo')">move-analyzer-build (Cargo)</div>
-      <div class="chip" onclick="setExample('laravel-lang/lang','packagist')">laravel-lang/lang (Packagist)</div>
-      <div class="chip" onclick="setExample('semgrep/semgrep','github')">semgrep/semgrep (GitHub)</div>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--ink-4);">Loading...</span>
     </div>
   </div>
 
@@ -129,6 +125,21 @@ footer a{color:var(--ink-3);text-decoration:none;}
 
 <script>
 let selectedEco = 'npm';
+
+async function loadRecentCaptures() {
+  try {
+    const res = await fetch('/.netlify/functions/recent-captures');
+    const data = await res.json();
+    const chips = document.getElementById('chips');
+    if (!data.length) { chips.innerHTML = '<span style="font-family:var(--mono);font-size:11px;color:var(--ink-4);">No captures yet</span>'; return; }
+    chips.innerHTML = data.map(c =>
+      `<div class="chip" onclick="setExample(${JSON.stringify(c.package_name)},${JSON.stringify(c.ecosystem)})">${c.package_name} (${c.ecosystem})</div>`
+    ).join('');
+  } catch(e) {
+    document.getElementById('chips').innerHTML = '';
+  }
+}
+loadRecentCaptures();
 
 document.querySelectorAll('.eco-btn').forEach(btn => {
   btn.addEventListener('click', () => {
