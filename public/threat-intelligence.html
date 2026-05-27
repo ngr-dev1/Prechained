@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Threat Intelligence · Prechained</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg:        #0a0a0b;
+    --bg2:       #111114;
+    --bg3:       #18181c;
+    --border:    #242428;
+    --border2:   #2e2e34;
+    --text:      #e8e8ec;
+    --muted:     #666670;
+    --accent:    #e84040;
+    --accent2:   #ff6b6b;
+    --green:     #2ecc71;
+    --yellow:    #f1c40f;
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+  .nav-brand {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+    letter-spacing: -0.5px;
+  }
+  .nav-brand span { color: var(--accent); }
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.15s;
+  }
+  nav a:hover { color: var(--text); }
+  .nav-badge {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 2px 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── LAYOUT ── */
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 24px;
+  }
+
+  .page-header {
+    margin-bottom: 40px;
+  }
+  .page-header h1 {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+  .page-header p {
+    color: var(--muted);
+    font-size: 13px;
+    max-width: 560px;
+    line-height: 1.7;
+  }
+
+  /* ── SEARCH FORM ── */
+  .search-panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 32px;
+  }
+  .search-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+  .field label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .field input, .field select {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+  }
+  .field input::placeholder { color: var(--muted); }
+
+  .btn-search {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 11px 24px;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn-search:hover { background: var(--accent2); }
+  .btn-search:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── THREAT LEVEL BANNER ── */
+  .threat-banner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    border-left: 3px solid;
+  }
+  .threat-banner.HIGH   { background: rgba(232,64,64,0.08);  border-color: var(--accent); }
+  .threat-banner.MEDIUM { background: rgba(241,196,15,0.08); border-color: var(--yellow); }
+  .threat-banner.LOW    { background: rgba(46,204,113,0.08); border-color: var(--green);  }
+  .threat-banner.NONE   { background: var(--bg2);            border-color: var(--border); }
+
+  .threat-level {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+  .HIGH   .threat-level { color: var(--accent); }
+  .MEDIUM .threat-level { color: var(--yellow); }
+  .LOW    .threat-level { color: var(--green);  }
+  .NONE   .threat-level { color: var(--muted);  }
+
+  .threat-meta { font-size: 12px; color: var(--muted); }
+
+  /* ── SECTIONS ── */
+  .section {
+    margin-bottom: 28px;
+  }
+  .section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── FLAGS ── */
+  .flag {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .flag-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .flag-badge.HIGH   { background: rgba(232,64,64,0.2);  color: var(--accent); border: 1px solid rgba(232,64,64,0.3); }
+  .flag-badge.MEDIUM { background: rgba(241,196,15,0.2); color: var(--yellow); border: 1px solid rgba(241,196,15,0.3); }
+  .flag-badge.LOW    { background: rgba(46,204,113,0.2); color: var(--green);  border: 1px solid rgba(46,204,113,0.3); }
+  .flag-type  { font-family: var(--mono); font-size: 12px; color: var(--text); }
+  .flag-detail { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* ── ACTOR CARD ── */
+  .actor-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .actor-row {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .actor-field { }
+  .actor-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .actor-value {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+  }
+  .actor-value.highlight { color: var(--accent); }
+
+  /* ── CONNECTED PACKAGES TABLE ── */
+  .pkg-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .pkg-table th {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .pkg-table td {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .pkg-table tr:hover td { background: var(--bg2); }
+  .pkg-table .pkg-name { color: var(--accent2); }
+  .pkg-table .pkg-eco  {
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--bg3);
+    padding: 2px 6px;
+    display: inline-block;
+  }
+  .pkg-table .pkg-via  { color: var(--muted); font-size: 11px; }
+  .pkg-link { color: inherit; text-decoration: none; }
+  .pkg-link:hover { text-decoration: underline; }
+
+  /* ── VELOCITY ── */
+  .velocity-bar-wrap {
+    background: var(--bg3);
+    height: 6px;
+    margin-top: 6px;
+    width: 100%;
+    max-width: 200px;
+  }
+  .velocity-bar {
+    height: 6px;
+    background: var(--accent);
+    transition: width 0.5s ease;
+  }
+
+  /* ── EMPTY / LOADING ── */
+  .state-empty {
+    text-align: center;
+    padding: 64px 24px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .state-empty .icon { font-size: 32px; margin-bottom: 16px; }
+
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── INLINE CAPTURE ── */
+  .capture-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+  .capture-hint a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 640px) {
+    .search-grid { grid-template-columns: 1fr; }
+    nav { padding: 12px 16px; }
+    .container { padding: 24px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/"><span>Pre</span>chained</a>
+  <a href="/browse.html">Browse</a>
+  <a href="/capture.html">Capture</a>
+  <a href="/verify.html">Verify</a>
+  <span class="nav-badge">Threat Intel</span>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Actor Intelligence</h1>
+    <p>Cross-package threat attribution. Search by maintainer email, npm username, or package name to discover connected packages, velocity anomalies, and cross-ecosystem activity.</p>
+  </div>
+
+  <!-- Search Panel -->
+  <div class="search-panel">
+    <div class="search-grid">
+      <div class="field">
+        <label>Email</label>
+        <input type="text" id="inp-email" placeholder="maintainer@example.com">
+      </div>
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="inp-username" placeholder="npm-username">
+      </div>
+      <div class="field">
+        <label>Package</label>
+        <input type="text" id="inp-package" placeholder="package-name">
+      </div>
+      <button class="btn-search" id="btn-search" onclick="runSearch()">Investigate →</button>
+    </div>
+    <div class="capture-hint">
+      Don't see a package? <a href="/capture.html">Capture it first</a> — actor data is indexed at capture time.
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <div class="state-empty">
+      <div class="icon">🔍</div>
+      Enter an email, username, or package name to investigate
+    </div>
+  </div>
+</div>
+
+<script>
+// Pre-fill from URL params (so capture.html can link here)
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get("email"))    document.getElementById("inp-email").value    = urlParams.get("email");
+if (urlParams.get("username")) document.getElementById("inp-username").value = urlParams.get("username");
+if (urlParams.get("package"))  document.getElementById("inp-package").value  = urlParams.get("package");
+if (urlParams.get("ecosystem")) { /* store for future use */ }
+
+if (urlParams.get("email") || urlParams.get("username") || urlParams.get("package")) {
+  runSearch();
+}
+
+async function runSearch() {
+  const email    = document.getElementById("inp-email").value.trim();
+  const username = document.getElementById("inp-username").value.trim();
+  const pkg      = document.getElementById("inp-package").value.trim();
+
+  if (!email && !username && !pkg) {
+    alert("Enter at least one field to search.");
+    return;
+  }
+
+  const btn = document.getElementById("btn-search");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Searching...';
+  document.getElementById("results").innerHTML = `
+    <div class="state-empty">
+      <span class="spinner"></span> Querying actor index...
+    </div>`;
+
+  const params = new URLSearchParams();
+  if (email)    params.set("email", email);
+  if (username) params.set("username", username);
+  if (pkg)      params.set("package", pkg);
+
+  try {
+    const res = await fetch(`/.netlify/functions/actor-intelligence?${params}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    renderResults(data, { email, username, pkg });
+  } catch (e) {
+    document.getElementById("results").innerHTML = `
+      <div class="state-empty">
+        <div class="icon">⚠️</div>
+        ${e.message}
+      </div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Investigate →";
+  }
+}
+
+function renderResults(data, query) {
+  const level = data.threat_level || "NONE";
+  const flags = data.flags || [];
+  const actor = data.actor || {};
+  const connected = data.connected_packages || [];
+  const velocity = data.velocity;
+
+  let html = "";
+
+  // ── Threat Level Banner ──
+  const levelLabels = {
+    HIGH: "HIGH THREAT",
+    MEDIUM: "MEDIUM THREAT",
+    LOW: "LOW RISK",
+    NONE: "NO THREATS FOUND"
+  };
+  html += `
+    <div class="threat-banner ${level}">
+      <div>
+        <div class="threat-level">${levelLabels[level]}</div>
+        <div class="threat-meta">
+          ${connected.length} connected package${connected.length !== 1 ? "s" : ""} ·
+          ${flags.length} flag${flags.length !== 1 ? "s" : ""} ·
+          ${data.is_new_actor ? "New actor" : "Known actor"}
+        </div>
+      </div>
+    </div>`;
+
+  // ── Flags ──
+  if (flags.length > 0) {
+    html += `<div class="section">
+      <div class="section-title">Threat Flags</div>`;
+    for (const flag of flags) {
+      html += `
+        <div class="flag">
+          <span class="flag-badge ${flag.severity}">${flag.severity}</span>
+          <div>
+            <div class="flag-type">${flag.type.replace(/_/g, " ")}</div>
+            <div class="flag-detail">${flag.detail}</div>
+          </div>
+        </div>`;
+    }
+    html += `</div>`;
+  }
+
+  // ── Actor Identity ──
+  html += `<div class="section">
+    <div class="section-title">Actor Identity</div>
+    <div class="actor-card">
+      <div class="actor-row">`;
+
+  if (actor.email) html += `
+        <div class="actor-field">
+          <div class="actor-label">Email</div>
+          <div class="actor-value highlight">${escHtml(actor.email)}</div>
+        </div>`;
+
+  if (actor.username) html += `
+        <div class="actor-field">
+          <div class="actor-label">Username</div>
+          <div class="actor-value highlight">${escHtml(actor.username)}</div>
+        </div>`;
+
+  if (actor.known_identities && actor.known_identities.length > 0) {
+    html += `
+        <div class="actor-field">
+          <div class="actor-label">Also Known As</div>
+          <div class="actor-value">${actor.known_identities.map(escHtml).join(", ")}</div>
+        </div>`;
+  }
+
+  html += `
+        <div class="actor-field">
+          <div class="actor-label">Status</div>
+          <div class="actor-value">${data.is_new_actor ? "⚠ New actor — no prior history" : "Known — seen before"}</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // ── Velocity ──
+  if (velocity) {
+    const pct = Math.min(100, (velocity.version_count / 10) * 100);
+    html += `<div class="section">
+      <div class="section-title">Publish Velocity</div>
+      <div class="actor-card">
+        <div class="actor-row">
+          <div class="actor-field">
+            <div class="actor-label">Versions</div>
+            <div class="actor-value ${velocity.flagged ? "highlight" : ""}">${velocity.version_count}</div>
+          </div>
+          <div class="actor-field">
+            <div class="actor-label">Window</div>
+            <div class="actor-value">${velocity.window_minutes} min</div>
+          </div>
+          <div class="actor-field">
+            <div class="actor-label">Flagged</div>
+            <div class="actor-value ${velocity.flagged ? "highlight" : ""}">${velocity.flagged ? "YES — malware pattern" : "No"}</div>
+          </div>
+          <div class="actor-field" style="flex:1">
+            <div class="actor-label">Intensity</div>
+            <div class="velocity-bar-wrap">
+              <div class="velocity-bar" style="width:${pct}%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ── Connected Packages ──
+  if (connected.length > 0) {
+    html += `<div class="section">
+      <div class="section-title">Connected Packages (${connected.length})</div>
+      <table class="pkg-table">
+        <thead>
+          <tr>
+            <th>Package</th>
+            <th>Ecosystem</th>
+            <th>Linked Via</th>
+            <th>Identity</th>
+            <th>First Seen</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+    for (const pkg of connected) {
+      const firstSeen = pkg.first_seen ? new Date(pkg.first_seen).toLocaleString() : "—";
+      const pkgUrl = `/package.html?name=${encodeURIComponent(pkg.package)}&ecosystem=${pkg.ecosystem}`;
+      html += `
+          <tr>
+            <td><a class="pkg-name pkg-link" href="${pkgUrl}">${escHtml(pkg.package)}</a></td>
+            <td><span class="pkg-eco">${escHtml(pkg.ecosystem)}</span></td>
+            <td><span class="pkg-via">${pkg.via}</span></td>
+            <td><span class="pkg-via">${escHtml(pkg.identity || "")}</span></td>
+            <td>${firstSeen}</td>
+          </tr>`;
+    }
+    html += `</tbody></table></div>`;
+  } else if (level === "NONE") {
+    html += `<div class="section">
+      <div class="section-title">Connected Packages</div>
+      <div class="state-empty" style="padding:32px">
+        No connected packages found. This actor has only been seen in one package.
+      </div>
+    </div>`;
+  }
+
+  document.getElementById("results").innerHTML = html;
+}
+
+function escHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// Allow Enter key to trigger search
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter") runSearch();
+});
+</script>
+</body>
+</html>
