@@ -5,22 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Threat Intelligence · Prechained</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
   :root {
-    --bg:        #0a0a0b;
-    --bg2:       #111114;
-    --bg3:       #18181c;
-    --border:    #242428;
-    --border2:   #2e2e34;
-    --text:      #e8e8ec;
-    --muted:     #666670;
-    --accent:    #e84040;
-    --accent2:   #ff6b6b;
-    --green:     #2ecc71;
-    --yellow:    #f1c40f;
-    --mono:      'IBM Plex Mono', monospace;
-    --sans:      'IBM Plex Sans', sans-serif;
+    --bg:        #f0ede8;
+    --bg2:       #e8e4de;
+    --bg3:       #fff;
+    --border:    #d8d3cc;
+    --border2:   #ccc8c0;
+    --text:      #111;
+    --muted:     #666;
+    --accent:    #e8390e;
+    --accent2:   #c8300c;
+    --green:     #16a34a;
+    --yellow:    #854d0e;
+    --mono:      'JetBrains Mono', monospace;
+    --sans:      'Inter', sans-serif;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,6 +35,9 @@
   }
 
   /* ── NAV ── */
+  .nav-r{display:flex;align-items:center;gap:20px;}
+  .nav-r a{font-size:13px;color:#333;text-decoration:none;font-weight:500;}
+  .nav-r a:hover{color:var(--accent);}
   nav {
     display: flex;
     align-items: center;
@@ -47,12 +50,10 @@
     z-index: 100;
   }
   .nav-brand {
-    font-family: var(--mono);
-    font-size: 15px;
-    font-weight: 600;
+    font-family: 'Instrument Serif', serif;
+    font-size: 19px;
     color: var(--text);
     text-decoration: none;
-    letter-spacing: -0.5px;
   }
   .nav-brand span { color: var(--accent); }
   nav a {
@@ -162,10 +163,10 @@
     margin-bottom: 24px;
     border-left: 3px solid;
   }
-  .threat-banner.HIGH   { background: rgba(232,64,64,0.08);  border-color: var(--accent); }
-  .threat-banner.MEDIUM { background: rgba(241,196,15,0.08); border-color: var(--yellow); }
-  .threat-banner.LOW    { background: rgba(46,204,113,0.08); border-color: var(--green);  }
-  .threat-banner.NONE   { background: var(--bg2);            border-color: var(--border); }
+  .threat-banner.HIGH   { background: #fee2e2; border-color: var(--accent); }
+  .threat-banner.MEDIUM { background: #fef9c3; border-color: #854d0e; }
+  .threat-banner.LOW    { background: #dcfce7; border-color: var(--green); }
+  .threat-banner.NONE   { background: var(--bg2); border-color: var(--border); }
 
   .threat-level {
     font-family: var(--mono);
@@ -174,7 +175,7 @@
     letter-spacing: -0.5px;
   }
   .HIGH   .threat-level { color: var(--accent); }
-  .MEDIUM .threat-level { color: var(--yellow); }
+  .MEDIUM .threat-level { color: #854d0e; }
   .LOW    .threat-level { color: var(--green);  }
   .NONE   .threat-level { color: var(--muted);  }
 
@@ -223,9 +224,9 @@
     flex-shrink: 0;
     margin-top: 1px;
   }
-  .flag-badge.HIGH   { background: rgba(232,64,64,0.2);  color: var(--accent); border: 1px solid rgba(232,64,64,0.3); }
-  .flag-badge.MEDIUM { background: rgba(241,196,15,0.2); color: var(--yellow); border: 1px solid rgba(241,196,15,0.3); }
-  .flag-badge.LOW    { background: rgba(46,204,113,0.2); color: var(--green);  border: 1px solid rgba(46,204,113,0.3); }
+  .flag-badge.HIGH   { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+  .flag-badge.MEDIUM { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
+  .flag-badge.LOW    { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
   .flag-type  { font-family: var(--mono); font-size: 12px; color: var(--text); }
   .flag-detail { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
@@ -346,11 +347,15 @@
 <body>
 
 <nav>
-  <a class="nav-brand" href="/"><span>Pre</span>chained</a>
-  <a href="/browse.html">Browse</a>
-  <a href="/capture.html">Capture</a>
-  <a href="/verify.html">Verify</a>
-  <span class="nav-badge">Threat Intel</span>
+  <a href="/" class="nav-brand">Pre<span>chained</span></a>
+  <div class="nav-r">
+    <a href="/browse.html">Browse</a>
+    <a href="/verify.html">Verify</a>
+    <a href="/capture.html">Capture</a>
+    <a href="/threat.html" style="color:var(--accent);font-weight:600;">Threat Intel ↗</a>
+    <a href="/license.html">License</a>
+    <a href="https://github.com/ngr-dev1/prechained">GitHub</a>
+  </div>
 </nav>
 
 <div class="container">
