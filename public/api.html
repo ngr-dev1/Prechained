@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>API · Prechained</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f0ede8;--off:#e8e4de;--white:#fff;--border:#d8d3cc;
+  --ink:#111;--ink-2:#222;--ink-3:#444;--muted:#666;
+  --accent:#e8390e;--accent2:#c8300c;--green:#16a34a;--green-bg:#dcfce7;
+  --mono:'JetBrains Mono',monospace;--serif:'Instrument Serif',serif;--sans:'Inter',sans-serif;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;margin:0;}
+
+/* NAV */
+nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:100;}
+.logo{font-family:var(--serif);font-size:19px;color:var(--ink);text-decoration:none;}
+.logo b{color:var(--accent);}
+.nav-r{display:flex;align-items:center;gap:20px;}
+.nav-r a{font-size:13px;color:#333;text-decoration:none;font-weight:500;}
+.nav-r a:hover{color:var(--accent);}
+.live{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green);font-family:var(--mono);}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+/* HERO */
+.hero{background:var(--white);border-bottom:1px solid var(--border);padding:64px 40px 52px;text-align:center;}
+.hero-kicker{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;}
+.hero h1{font-family:var(--serif);font-size:clamp(36px,5vw,60px);font-weight:400;line-height:1.05;letter-spacing:-.02em;margin-bottom:16px;}
+.hero h1 i{color:var(--accent);}
+.hero p{font-size:16px;color:var(--ink-2);max-width:560px;margin:0 auto 28px;line-height:1.65;}
+.hero-base{font-family:var(--mono);font-size:13px;background:var(--off);border:1px solid var(--border);display:inline-block;padding:10px 20px;color:var(--accent);letter-spacing:.02em;}
+
+/* LAYOUT */
+.page{max-width:880px;margin:0 auto;padding:56px 24px 80px;}
+.two-col{display:grid;grid-template-columns:200px 1fr;gap:48px;align-items:start;}
+@media(max-width:700px){.two-col{grid-template-columns:1fr;}}
+
+/* SIDEBAR NAV */
+.sidebar{position:sticky;top:68px;}
+.sidebar-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:12px;}
+.sidebar a{display:block;font-size:13px;color:var(--ink-3);text-decoration:none;padding:5px 0;border-left:2px solid var(--border);padding-left:12px;margin-bottom:4px;transition:color .15s,border-color .15s;}
+.sidebar a:hover,.sidebar a.active{color:var(--accent);border-color:var(--accent);}
+
+/* SECTIONS */
+.section{margin-bottom:56px;}
+.section-title{font-family:var(--serif);font-size:24px;font-weight:400;margin-bottom:8px;}
+.section-desc{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:24px;max-width:620px;}
+
+/* ENDPOINT CARD */
+.endpoint{background:var(--white);border:1px solid var(--border);margin-bottom:24px;overflow:hidden;}
+.endpoint-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.method{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;padding:3px 8px;background:var(--accent);color:#fff;}
+.endpoint-path{font-family:var(--mono);font-size:13px;color:var(--ink);}
+.endpoint-body{padding:20px;}
+.endpoint-desc{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;}
+
+/* PARAMS */
+.param-table{width:100%;border-collapse:collapse;margin-bottom:20px;}
+.param-table th{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);text-align:left;padding:6px 12px;border-bottom:1px solid var(--border);}
+.param-table td{font-size:12px;padding:8px 12px;border-bottom:1px solid var(--off);vertical-align:top;}
+.param-name{font-family:var(--mono);color:var(--accent);}
+.param-req{font-family:var(--mono);font-size:10px;color:var(--accent);border:1px solid var(--accent);padding:1px 5px;}
+.param-opt{font-family:var(--mono);font-size:10px;color:var(--muted);border:1px solid var(--border);padding:1px 5px;}
+.param-desc{color:var(--ink-3);}
+
+/* CODE BLOCK */
+.code-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:6px;}
+pre{background:var(--ink);color:#e8e4de;font-family:var(--mono);font-size:12px;line-height:1.6;padding:20px;overflow-x:auto;position:relative;}
+pre .comment{color:#666;}
+pre .key{color:#9ecbff;}
+pre .str{color:#9be}
+pre .num{color:#f8c555;}
+pre .bool{color:#c084fc;}
+pre .null{color:#666;}
+
+.try-btn{font-family:var(--mono);font-size:11px;background:none;border:1px solid var(--border);color:var(--muted);padding:6px 14px;cursor:pointer;transition:all .15s;letter-spacing:.05em;}
+.try-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+.copy-btn{position:absolute;top:12px;right:12px;font-family:var(--mono);font-size:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.5);padding:4px 10px;cursor:pointer;transition:all .15s;letter-spacing:.05em;}
+.copy-btn:hover{background:rgba(255,255,255,.15);color:#fff;}
+
+/* RESPONSE AREA */
+.response-area{margin-top:12px;}
+.response-out{background:var(--ink);color:#e8e4de;font-family:var(--mono);font-size:11px;line-height:1.6;padding:16px;min-height:60px;white-space:pre-wrap;word-break:break-all;display:none;}
+.response-out.visible{display:block;}
+.response-loading{color:#666;font-style:italic;}
+
+/* RATE LIMIT BOX */
+.info-box{background:var(--off);border:1px solid var(--border);border-left:3px solid var(--accent);padding:16px 20px;margin-bottom:32px;}
+.info-box p{font-size:13px;color:var(--ink-3);line-height:1.65;}
+.info-box strong{color:var(--ink);}
+
+/* BADGE */
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;letter-spacing:.08em;border:1px solid var(--border);color:var(--muted);margin-left:8px;vertical-align:middle;}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:28px 32px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);}
+footer a{color:var(--muted);text-decoration:none;}
+footer a:hover{color:var(--accent);}
+
+@media(max-width:640px){nav{padding:0 16px;}.hero{padding:40px 20px 36px;}.page{padding:32px 16px 60px;}footer{flex-direction:column;gap:8px;text-align:center;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><b>Pre</b>chained</a>
+  <div class="nav-r">
+    <div class="live"><span class="dot"></span>Recording live</div>
+    <a href="/browse.html">Browse</a>
+    <a href="/capture.html">Capture</a>
+    <a href="/verify.html">Verify</a>
+    <a href="/threat.html">Threat</a>
+    <a href="https://github.com/ngr-dev1/prechained">GitHub</a>
+    <a href="https://github.com/ngr-dev1/prechained-archive">Archive</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-kicker">Free · Open · No Auth Required</div>
+  <h1>The Prechained <i>Public API</i></h1>
+  <p>Programmatic access to the world's pre-compromise software archive. Check fingerprints, look up receipts, investigate actors, compare versions — all free, no API key required.</p>
+  <div class="hero-base">https://prechained.com/.netlify/functions/api</div>
+</div>
+
+<div class="page">
+  <div class="two-col">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-label">Endpoints</div>
+      <a href="#fingerprint">fingerprint</a>
+      <a href="#receipt">receipt</a>
+      <a href="#package">package</a>
+      <a href="#actor">actor</a>
+      <a href="#diff">diff</a>
+      <a href="#health">health</a>
+      <div class="sidebar-label" style="margin-top:24px">Resources</div>
+      <a href="https://github.com/ngr-dev1/prechained">Source Code</a>
+      <a href="https://github.com/ngr-dev1/prechained-archive">Archive</a>
+      <a href="/verify.html">Verify a Receipt</a>
+    </div>
+
+    <!-- Main content -->
+    <div>
+
+      <div class="info-box">
+        <p><strong>No authentication required.</strong> All endpoints are free and open. Rate limiting is applied per IP. For high-volume use, contact <a href="mailto:ngr.admin@proton.me" style="color:var(--accent)">ngr.admin@proton.me</a> for an enterprise arrangement.</p>
+      </div>
+
+      <!-- FINGERPRINT -->
+      <div class="section" id="fingerprint">
+        <div class="section-title">Fingerprint Lookup</div>
+        <div class="section-desc">Check if a package version has a pre-compromise fingerprint in the Prechained archive. Returns the SHA-384 fingerprint, Bitcoin anchor block, and manifest URL.</div>
+
+        <div class="endpoint">
+          <div class="endpoint-head">
+            <span class="method">GET</span>
+            <span class="endpoint-path">?action=fingerprint</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-desc">Look up the cryptographic fingerprint for a specific package version. If no version is specified, returns the 10 most recently captured versions.</div>
+            <table class="param-table">
+              <thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td class="param-name">package</td><td><span class="param-req">required</span></td><td class="param-desc">Package name (e.g. <code>express</code>, <code>laravel-lang/lang</code>)</td></tr>
+                <tr><td class="param-name">version</td><td><span class="param-opt">optional</span></td><td class="param-desc">Specific version to look up. Omit to get latest 10 captures.</td></tr>
+                <tr><td class="param-name">ecosystem</td><td><span class="param-opt">optional</span></td><td class="param-desc">npm, pypi, cargo, rubygems, packagist, nuget, maven, github</td></tr>
+              </tbody>
+            </table>
+            <div class="code-label">Example Request</div>
+            <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>GET https://prechained.com/.netlify/functions/api
+  ?action=fingerprint
+  &package=express
+  &version=4.18.2
+  &ecosystem=npm</pre>
+            <div class="code-label" style="margin-top:16px">Example Response</div>
+            <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>{
+  <span class="key">"found"</span>: <span class="bool">true</span>,
+  <span class="key">"package"</span>: <span class="str">"express"</span>,
+  <span class="key">"version"</span>: <span class="str">"4.18.2"</span>,
+  <span class="key">"ecosystem"</span>: <span class="str">"npm"</span>,
+  <span class="key">"sha384"</span>: <span class="str">"4d3e15a8b85090c8c1d4cefa91f90ed6a25c8d91b3b80ec493cb3208788c6b194..."</span>,
+  <span class="key">"receipt_id"</span>: <span class="str">"NGR-PC-MPHQEG6PZ9GYW2"</span>,
+  <span class="key">"btc_anchored"</span>: <span class="bool">true</span>,
+  <span class="key">"btc_block"</span>: <span class="num">950603</span>,
+  <span class="key">"captured_at"</span>: <span class="str">"2026-05-22T19:12:00.000Z"</span>,
+  <span class="key">"manifest_url"</span>: <span class="str">"https://raw.githubusercontent.com/ngr-dev1/prechained-archive/main/npm/express/4.18.2/manifest.json"</span>,
+  <span class="key">"archive_url"</span>: <span class="str">"https://github.com/ngr-dev1/prechained-archive/blob/main/npm/express/4.18.2/manifest.json"</span>,
+  <span class="key">"verify_url"</span>: <span class="str">"https://prechained.com/verify.html?receipt=NGR-PC-MPHQEG6PZ9GYW2"</span>
+}</pre>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="try-btn" onclick="tryIt('fingerprint','?action=fingerprint&package=express&ecosystem=npm','resp-fingerprint')">Try it →</button>
+            </div>
+            <div class="response-area"><div id="resp-fingerprint" class="response-out"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECEIPT -->
+      <div class="section" id="receipt">
+        <div class="section-title">Receipt Lookup</div>
+        <div class="section-desc">Retrieve a cryptographic receipt by its NGR-PC receipt ID. Each receipt is a permanent, immutable proof of capture.</div>
+
+        <div class="endpoint">
+          <div class="endpoint-head">
+            <span class="method">GET</span>
+            <span class="endpoint-path">?action=receipt</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-desc">Look up any Prechained receipt by its ID. Useful for verifying receipts programmatically in CI/CD pipelines, audit tools, or compliance systems.</div>
+            <table class="param-table">
+              <thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td class="param-name">id</td><td><span class="param-req">required</span></td><td class="param-desc">Receipt ID in format NGR-PC-XXXXXXXXXXXXXXXX</td></tr>
+              </tbody>
+            </table>
+            <div class="code-label">Example Request</div>
+            <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>GET https://prechained.com/.netlify/functions/api
+  ?action=receipt
+  &id=NGR-PC-MPHQEG6PZ9GYW2</pre>
+            <div class="code-label" style="margin-top:16px">Example Response</div>
+            <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>{
+  <span class="key">"found"</span>: <span class="bool">true</span>,
+  <span class="key">"receipt_id"</span>: <span class="str">"NGR-PC-MPHQEG6PZ9GYW2"</span>,
+  <span class="key">"package"</span>: <span class="str">"chart.js"</span>,
+  <span class="key">"version"</span>: <span class="str">"v3.0.0-beta.14"</span>,
+  <span class="key">"ecosystem"</span>: <span class="str">"npm"</span>,
+  <span class="key">"sha384"</span>: <span class="str">"4d3e15a8b85090c8..."</span>,
+  <span class="key">"btc_anchored"</span>: <span class="bool">true</span>,
+  <span class="key">"btc_block"</span>: <span class="num">950603</span>,
+  <span class="key">"captured_at"</span>: <span class="str">"2026-05-22T19:12:00.000Z"</span>,
+  <span class="key">"issued_by"</span>: <span class="str">"Prechained · NextGenRails™ · prechained.com"</span>,
+  <span class="key">"note"</span>: <span class="str">"Trust is not declared. It is computed."</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- PACKAGE -->
+      <div class="section" id="package">
+        <div class="section-title">Package Version History</div>
+        <div class="section-desc">Get the full captured version history for any package — every version fingerprinted, every Bitcoin block recorded.</div>
+
+        <div class="endpoint">
+          <div class="endpoint-head">
+            <span class="method">GET</span>
+            <span class="endpoint-path">?action=package</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-desc">Returns all captured versions of a package with SHA-384 fingerprints and Bitcoin anchors. Useful for diffing what changed between releases.</div>
+            <table class="param-table">
+              <thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td class="param-name">name</td><td><span class="param-req">required</span></td><td class="param-desc">Package name</td></tr>
+                <tr><td class="param-name">ecosystem</td><td><span class="param-opt">optional</span></td><td class="param-desc">Ecosystem filter</td></tr>
+              </tbody>
+            </table>
+            <div class="code-label">Example Request</div>
+            <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>GET https://prechained.com/.netlify/functions/api
+  ?action=package
+  &name=requests
+  &ecosystem=pypi</pre>
+            <div style="margin-top:12px">
+              <button class="try-btn" onclick="tryIt('package','?action=package&name=requests&ecosystem=pypi','resp-package')">Try it →</button>
+            </div>
+            <div class="response-area"><div id="resp-package" class="response-out"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTOR -->
+      <div class="section" id="actor">
+        <div class="section-title">Actor Intelligence</div>
+        <div class="section-desc">Check if a maintainer email, username, or package name appears in the Prechained threat actor index. Cross-package attribution across all 8 ecosystems.</div>
+
+        <div class="endpoint">
+          <div class="endpoint-head">
+            <span class="method">GET</span>
+            <span class="endpoint-path">?action=actor</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-desc">Query the actor index by email, username, or package name. Returns threat status, all connected packages, and investigation URL. Useful for pre-install checks and CI gates.</div>
+            <table class="param-table">
+              <thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td class="param-name">email</td><td><span class="param-opt">optional*</span></td><td class="param-desc">Maintainer email address</td></tr>
+                <tr><td class="param-name">username</td><td><span class="param-opt">optional*</span></td><td class="param-desc">Registry username (npm, GitHub, etc.)</td></tr>
+                <tr><td class="param-name">package</td><td><span class="param-opt">optional*</span></td><td class="param-desc">Package name to check for associated actors</td></tr>
+              </tbody>
+            </table>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">* At least one parameter required.</p>
+            <div class="code-label">Example Request</div>
+            <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>GET https://prechained.com/.netlify/functions/api
+  ?action=actor
+  &package=codexui-android</pre>
+            <div class="code-label" style="margin-top:16px">Example Response — Threat Detected</div>
+            <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>{
+  <span class="key">"found"</span>: <span class="bool">true</span>,
+  <span class="key">"flagged_count"</span>: <span class="num">1</span>,
+  <span class="key">"total_seen"</span>: <span class="num">1</span>,
+  <span class="key">"threat_detected"</span>: <span class="bool">true</span>,
+  <span class="key">"actors"</span>: [{
+    <span class="key">"email"</span>: <span class="str">"dorumonstr@gmail.com"</span>,
+    <span class="key">"username"</span>: <span class="str">"friuns"</span>,
+    <span class="key">"package"</span>: <span class="str">"codexui-android"</span>,
+    <span class="key">"ecosystem"</span>: <span class="str">"npm"</span>,
+    <span class="key">"flagged"</span>: <span class="bool">true</span>,
+    <span class="key">"first_seen_at"</span>: <span class="str">"2026-05-27T07:29:00.000Z"</span>,
+    <span class="key">"investigate_url"</span>: <span class="str">"https://prechained.com/threat?email=dorumonstr%40gmail.com"</span>
+  }]
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIFF -->
+      <div class="section" id="diff">
+        <div class="section-title">Version Diff</div>
+        <div class="section-desc">Compare two versions of the same package. If the SHA-384 fingerprints differ, the content changed — even if the version number didn't.</div>
+
+        <div class="endpoint">
+          <div class="endpoint-head">
+            <span class="method">GET</span>
+            <span class="endpoint-path">?action=diff</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="endpoint-desc">Returns the fingerprints and Bitcoin anchors for both versions and tells you if they match. Fingerprint mismatch = content changed between captures.</div>
+            <table class="param-table">
+              <thead><tr><th>Parameter</th><th>Required</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td class="param-name">package</td><td><span class="param-req">required</span></td><td class="param-desc">Package name</td></tr>
+                <tr><td class="param-name">ecosystem</td><td><span class="param-req">required</span></td><td class="param-desc">Ecosystem</td></tr>
+                <tr><td class="param-name">v1</td><td><span class="param-req">required</span></td><td class="param-desc">First version</td></tr>
+                <tr><td class="param-name">v2</td><td><span class="param-req">required</span></td><td class="param-desc">Second version</td></tr>
+              </tbody>
+            </table>
+            <div class="code-label">Example Request</div>
+            <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>GET https://prechained.com/.netlify/functions/api
+  ?action=diff
+  &package=lodash
+  &ecosystem=npm
+  &v1=4.17.20
+  &v2=4.17.21</pre>
+            <div class="code-label" style="margin-top:16px">Example Response</div>
+            <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>{
+  <span class="key">"package"</span>: <span class="str">"lodash"</span>,
+  <span class="key">"ecosystem"</span>: <span class="str">"npm"</span>,
+  <span class="key">"v1"</span>: {
+    <span class="key">"version"</span>: <span class="str">"4.17.20"</span>,
+    <span class="key">"sha384"</span>: <span class="str">"a1b2c3..."</span>,
+    <span class="key">"btc_block"</span>: <span class="num">950583</span>
+  },
+  <span class="key">"v2"</span>: {
+    <span class="key">"version"</span>: <span class="str">"4.17.21"</span>,
+    <span class="key">"sha384"</span>: <span class="str">"d4e5f6..."</span>,
+    <span class="key">"btc_block"</span>: <span class="num">950603</span>
+  },
+  <span class="key">"fingerprints_match"</span>: <span class="bool">false</span>,
+  <span class="key">"note"</span>: <span class="str">"Fingerprints differ — these versions have different content."</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- HEALTH -->
+      <div class="section" id="health">
+        <div class="section-title">Health Check</div>
+        <div class="section-desc">Verify the API is live and get current archive stats.</div>
+
+        <div class="endpoint">
+          <div class="endpoint-head">
+            <span class="method">GET</span>
+            <span class="endpoint-path">?action=health</span>
+          </div>
+          <div class="endpoint-body">
+            <div class="code-label">Example Request</div>
+            <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>GET https://prechained.com/.netlify/functions/api?action=health</pre>
+            <div style="margin-top:12px">
+              <button class="try-btn" onclick="tryIt('health','?action=health','resp-health')">Try it live →</button>
+            </div>
+            <div class="response-area"><div id="resp-health" class="response-out"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- USE CASES -->
+      <div class="section" id="usecases">
+        <div class="section-title">Built for security tools</div>
+        <div class="section-desc">The API is designed to be embedded in the tools investigators and developers already use.</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px;">
+          <div class="info-box" style="border-left-color:var(--green)">
+            <p><strong>CI/CD Pipeline Check</strong><br>Before deploying, verify your dependencies against Prechained. If a fingerprint doesn't match, fail the build.</p>
+          </div>
+          <div class="info-box" style="border-left-color:var(--green)">
+            <p><strong>Incident Response</strong><br>When an attack is disclosed, query Prechained for the pre-compromise fingerprint to know exactly what changed.</p>
+          </div>
+          <div class="info-box" style="border-left-color:var(--green)">
+            <p><strong>Actor Investigation</strong><br>Check any maintainer email or username across all 8 ecosystems simultaneously. One query, cross-ecosystem attribution.</p>
+          </div>
+          <div class="info-box" style="border-left-color:var(--green)">
+            <p><strong>SBOM Enrichment</strong><br>Add Bitcoin-anchored pre-compromise fingerprints to your SBOM. Every component, verified before it was needed.</p>
+          </div>
+        </div>
+
+        <div style="margin-top:24px">
+          <div class="code-label">Quick Start — Node.js</div>
+          <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><span class="comment">// Check if a package version is in the pre-compromise archive</span>
+const res = await fetch(
+  'https://prechained.com/.netlify/functions/api' +
+  '?action=fingerprint&package=express&version=4.18.2&ecosystem=npm'
+);
+const data = await res.json();
+
+if (data.found) {
+  console.log('SHA-384:', data.sha384);
+  console.log('Bitcoin Block:', data.btc_block);
+  console.log('Captured:', data.captured_at);
+  console.log('Manifest:', data.manifest_url);
+} else {
+  console.log('Not in archive — capture at:', data.capture_url);
+}</pre>
+
+          <div class="code-label" style="margin-top:16px">Quick Start — Python</div>
+          <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>import requests
+
+r = requests.get('https://prechained.com/.netlify/functions/api', params={
+    'action': 'fingerprint',
+    'package': 'requests',
+    'version': '2.31.0',
+    'ecosystem': 'pypi'
+})
+data = r.json()
+print(f"Found: {data['found']}")
+if data['found']:
+    print(f"SHA-384: {data['sha384']}")
+    print(f"BTC Block: {data['btc_block']}")</pre>
+
+          <div class="code-label" style="margin-top:16px">Quick Start — curl</div>
+          <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>curl "https://prechained.com/.netlify/functions/api\
+  ?action=fingerprint\
+  &package=laravel-lang/lang\
+  &ecosystem=packagist"</pre>
+        </div>
+      </div>
+
+    </div><!-- end main -->
+  </div><!-- end two-col -->
+</div><!-- end page -->
+
+<footer>
+  <span>Prechained · Built by <a href="https://nextgenrails.net">NextGenRails™</a></span>
+  <span>
+    <a href="https://github.com/ngr-dev1/prechained">GitHub</a> &nbsp;·&nbsp;
+    <a href="https://github.com/ngr-dev1/prechained-archive">Archive</a> &nbsp;·&nbsp;
+    <a href="/verify.html">Verify</a> &nbsp;·&nbsp;
+    <a href="/license.html">License</a>
+  </span>
+</footer>
+
+<script>
+async function tryIt(action, params, targetId) {
+  const el = document.getElementById(targetId);
+  el.classList.add('visible');
+  el.innerHTML = '<span class="response-loading">Fetching live data...</span>';
+  try {
+    const res = await fetch('/.netlify/functions/api' + params);
+    const data = await res.json();
+    el.textContent = JSON.stringify(data, null, 2);
+  } catch(e) {
+    el.textContent = 'Error: ' + e.message;
+  }
+}
+
+function copyCode(btn) {
+  const pre = btn.parentElement;
+  const text = pre.textContent.replace('Copy', '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+// Highlight active sidebar link on scroll
+const sections = document.querySelectorAll('.section[id]');
+const links = document.querySelectorAll('.sidebar a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 80) current = s.id;
+  });
+  links.forEach(l => {
+    l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+  });
+}, { passive: true });
+</script>
+</body>
+</html>
