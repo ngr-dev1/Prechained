@@ -5,6 +5,9 @@
 [functions]
   node_bundler = "esbuild"
 
+[functions."threat-feed"]
+  node_bundler = "nft"
+
 [[scheduled-functions]]
   name = "crawler-all"
   cron = "*/10 * * * *"
