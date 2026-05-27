@@ -229,10 +229,26 @@ export async function indexActors(pkg, ecosystem, manifest) {
 
   if (rows.length === 0) return;
 
-  // Upsert — ignore conflicts (already indexed)
-  await supabase
-    .from("actor_index")
-    .upsert(rows, { onConflict: "email,username,package_name,ecosystem", ignoreDuplicates: true });
+  // Insert each row individually — upsert onConflict doesn't handle NULLS NOT DISTINCT correctly
+  // so we check for existence first then insert if missing
+  for (const row of rows) {
+    try {
+      let query = supabase.from("actor_index").select("id", { count: "exact", head: true })
+        .eq("package_name", row.package_name)
+        .eq("ecosystem", row.ecosystem);
+      if (row.email)    query = query.eq("email", row.email);
+      else              query = query.is("email", null);
+      if (row.username) query = query.eq("username", row.username);
+      else              query = query.is("username", null);
+
+      const { count } = await query;
+      if ((count || 0) === 0) {
+        await supabase.from("actor_index").insert(row);
+      }
+    } catch(e) {
+      // ignore individual row errors
+    }
+  }
 }
 
 // ── UPDATE VELOCITY ──────────────────────────────────────────
