@@ -1,4 +1,4 @@
-// threat-actors.js — Returns all flagged actors for the public threat feed
+// threat-actors.mjs — Returns flagged actors for the public threat feed
 // GET /.netlify/functions/threat-actors
 // prechained.com · Built by NextGenRails™
 
@@ -20,22 +20,37 @@ export default async function handler(req) {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
 
   try {
+    // Only show actors that are explicitly flagged (known campaigns or velocity-triggered)
     const { data: actors, error } = await supabase
       .from("actor_index")
       .select("email, username, package_name, ecosystem, first_seen_at")
+      .eq("flagged", true)
       .order("first_seen_at", { ascending: false })
       .limit(50);
 
     if (error) throw error;
 
-    const { data: flagged } = await supabase
+    // Also pull any unflagged actors that have HIGH_VELOCITY and auto-flag them
+    const { data: velocityFlagged } = await supabase
       .from("publish_velocity")
       .select("package_name, ecosystem, version_count, window_minutes, flagged")
       .eq("flagged", true);
 
     const flaggedMap = new Map();
-    for (const f of flagged || []) {
+    for (const f of velocityFlagged || []) {
       flaggedMap.set(`${f.package_name}:${f.ecosystem}`, f);
+    }
+
+    // Auto-flag any actor_index rows with HIGH_VELOCITY that aren't flagged yet
+    if (velocityFlagged?.length) {
+      for (const v of velocityFlagged) {
+        await supabase
+          .from("actor_index")
+          .update({ flagged: true })
+          .eq("package_name", v.package_name)
+          .eq("ecosystem", v.ecosystem)
+          .eq("flagged", false);
+      }
     }
 
     const seen = new Set();
