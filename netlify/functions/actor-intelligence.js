@@ -240,6 +240,39 @@ export async function indexActors(pkg, ecosystem, manifest) {
       console.error("actor_index insert exception:", e.message);
     }
   }
+
+  // ── AUTO CROSS_ECOSYSTEM DETECTION ───────────────────────────
+  // After indexing, check each unique email/username across all ecosystems.
+  // If found in 2+ ecosystems, flag the actor and all their packages.
+  const identityKeys = new Set();
+  for (const row of rows) {
+    if (row.email) identityKeys.add({ type: "email", value: row.email });
+    if (row.username) identityKeys.add({ type: "username", value: row.username });
+  }
+
+  for (const { type, value } of identityKeys) {
+    try {
+      const { data: allAppearances } = await supabase
+        .from("actor_index")
+        .select("ecosystem, package_name, flagged")
+        .eq(type, value)
+        .limit(100);
+
+      if (!allAppearances || allAppearances.length === 0) continue;
+
+      const uniqueEcosystems = [...new Set(allAppearances.map(r => r.ecosystem))];
+      if (uniqueEcosystems.length >= 2) {
+        // Flag all entries for this identity as cross-ecosystem high risk
+        await supabase
+          .from("actor_index")
+          .update({ flagged: true })
+          .eq(type, value);
+        console.log(`[CROSS_ECOSYSTEM] ${type}=${value} flagged across: ${uniqueEcosystems.join(", ")}`);
+      }
+    } catch(e) {
+      console.error("[CROSS_ECOSYSTEM] check error:", e.message);
+    }
+  }
 }
 
 // ── UPDATE VELOCITY ──────────────────────────────────────────
