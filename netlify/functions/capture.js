@@ -13,6 +13,63 @@ const CRAWLER_SHA384 = (() => {
   try { return sha384(readFileSync(new URL(import.meta.url).pathname, "utf8")); } catch(e) { return null; }
 })();
 
+// ── TYPOSQUAT DETECTION ───────────────────────────────────────
+// Levenshtein distance — cheap, no deps needed
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i-1] === b[j-1]
+        ? dp[i-1][j-1]
+        : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+
+async function checkTyposquat(packageName, ecosystem) {
+  try {
+    // Get top 500 known packages for this ecosystem from the packages table
+    const { data: knownPkgs } = await supabase
+      .from("packages")
+      .select("name")
+      .eq("ecosystem", ecosystem)
+      .order("total_versions", { ascending: false })
+      .limit(500);
+
+    if (!knownPkgs || knownPkgs.length === 0) return null;
+
+    const nameLower = packageName.toLowerCase();
+    let closest = null;
+    let minDist = Infinity;
+
+    for (const { name } of knownPkgs) {
+      if (name.toLowerCase() === nameLower) continue; // same package, skip
+      const dist = levenshtein(nameLower, name.toLowerCase());
+      if (dist <= 2 && dist < minDist) {
+        minDist = dist;
+        closest = name;
+      }
+    }
+
+    if (closest) {
+      return {
+        type: "TYPOSQUAT",
+        severity: "HIGH",
+        detail: `"${packageName}" is ${minDist} character(s) from known package "${closest}" — potential typosquat`,
+        closest_match: closest,
+        edit_distance: minDist,
+      };
+    }
+    return null;
+  } catch (e) {
+    console.error("[TYPOSQUAT] error:", e.message);
+    return null;
+  }
+}
+
 const CORS = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
@@ -423,6 +480,30 @@ export default async function handler(req, context) {
       }
     } catch (e) {
       console.error("Actor intelligence error:", e.message);
+    }
+
+    // ── TYPOSQUAT DETECTION ────────────────────────────────────
+    let typosquatFlag = null;
+    try {
+      typosquatFlag = await checkTyposquat(packageName, eco);
+    } catch (e) {
+      console.error("Typosquat detection error:", e.message);
+    }
+
+    // Merge typosquat flag into actor intelligence flags if found
+    if (typosquatFlag && actorIntel) {
+      actorIntel.flags = [typosquatFlag, ...(actorIntel.flags || [])];
+      if (actorIntel.threat_level !== "HIGH") actorIntel.threat_level = "HIGH";
+    } else if (typosquatFlag && !actorIntel) {
+      actorIntel = {
+        actor: { email: null, username: null, known_identities: [] },
+        connected_packages: [],
+        connected_package_count: 0,
+        flags: [typosquatFlag],
+        threat_level: "HIGH",
+        velocity: null,
+        is_new_actor: false,
+      };
     }
 
     return new Response(JSON.stringify({
