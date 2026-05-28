@@ -1,5 +1,5 @@
 // capture.js — On-demand package capture endpoint
-// POST /.netlify/functions/capture { "package": "name", "ecosystem": "npm" }
+// POST /.netlify/functions/capture { "package": "name", "ecosystem": "npm", "version": "2.39.0" (optional) }
 // prechained.com · Built by NextGenRails™
 
 import {
@@ -41,7 +41,7 @@ async function logRequest(ip, packageName, ecosystem) {
   } catch(e) {}
 }
 
-async function captureNpm(name) {
+async function captureNpm(name, targetVersion) {
   const res = await fetch(`https://registry.npmjs.org/${encodeURIComponent(name)}`, {
     headers: { "Accept": "application/json" }
   });
@@ -54,7 +54,9 @@ async function captureNpm(name) {
   if (!pkg) throw new Error("npm: failed to upsert package");
   const { data: existing } = await supabase.from("snapshots").select("version").eq("package_id", pkg.id);
   const seen = new Set((existing || []).map(s => s.version));
-  const toCapture = allVersions.filter(v => !seen.has(v));
+  const toCapture = targetVersion
+    ? allVersions.filter(v => v === targetVersion && !seen.has(v))
+    : allVersions.filter(v => !seen.has(v));
   let captured = 0;
   let lastManifest = null;
   for (const version of toCapture) {
@@ -96,7 +98,7 @@ async function captureNpm(name) {
   return { pkg, captured, total: allVersions.length, already: seen.size, lastManifest };
 }
 
-async function capturePypi(name) {
+async function capturePypi(name, targetVersion) {
   const res = await fetch(`https://pypi.org/pypi/${name}/json`);
   if (!res.ok) throw new Error(`pypi: package not found`);
   const data = await res.json();
@@ -107,7 +109,9 @@ async function capturePypi(name) {
   if (!pkg) throw new Error("pypi: failed to upsert package");
   const { data: existing } = await supabase.from("snapshots").select("version").eq("package_id", pkg.id);
   const seen = new Set((existing || []).map(s => s.version));
-  const toCapture = allVersions.filter(v => !seen.has(v));
+  const toCapture = targetVersion
+    ? allVersions.filter(v => v === targetVersion && !seen.has(v))
+    : allVersions.filter(v => !seen.has(v));
   let captured = 0;
   let lastManifest = null;
   for (const version of toCapture) {
@@ -138,7 +142,7 @@ async function capturePypi(name) {
   return { pkg, captured, total: allVersions.length, already: seen.size, lastManifest };
 }
 
-async function captureCargo(name) {
+async function captureCargo(name, targetVersion) {
   const res = await fetch(`https://crates.io/api/v1/crates/${name}`, {
     headers: { "User-Agent": "prechained.com/1.0 (supply chain archive)" }
   });
@@ -362,7 +366,7 @@ export default async function handler(req, context) {
   let body;
   try { body = await req.json(); } catch(e) { return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers: CORS }); }
 
-  const { package: packageName, ecosystem } = body;
+  const { package: packageName, ecosystem, version: targetVersion } = body;
   if (!packageName || !ecosystem) return new Response(JSON.stringify({ error: "package and ecosystem required" }), { status: 400, headers: CORS });
 
   const validEcosystems = ["npm", "pypi", "cargo", "rubygems", "packagist", "nuget", "github"];
@@ -378,9 +382,9 @@ export default async function handler(req, context) {
   try {
     let result;
     const eco = ecosystem.toLowerCase();
-    if (eco === "npm") result = await captureNpm(packageName);
-    else if (eco === "pypi") result = await capturePypi(packageName);
-    else if (eco === "cargo") result = await captureCargo(packageName);
+    if (eco === "npm") result = await captureNpm(packageName, targetVersion);
+    else if (eco === "pypi") result = await capturePypi(packageName, targetVersion);
+    else if (eco === "cargo") result = await captureCargo(packageName, targetVersion);
     else if (eco === "rubygems") result = await captureRubygems(packageName);
     else if (eco === "packagist") result = await capturePackagist(packageName);
     else if (eco === "nuget") result = await captureNuget(packageName);
