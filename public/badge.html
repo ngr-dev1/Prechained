@@ -136,5 +136,16 @@
       });
     }
   </script>
+
+<script>
+function toggleMore(e) {
+  e.stopPropagation();
+  document.getElementById('nav-dropdown').classList.toggle('open');
+}
+document.addEventListener('click', function() {
+  var d = document.getElementById('nav-dropdown');
+  if (d) d.classList.remove('open');
+});
+</script>
 </body>
 </html>
