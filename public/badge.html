@@ -44,7 +44,20 @@
     footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; color: var(--muted); font-size: 0.8rem; }
     footer a { color: var(--muted); text-decoration: none; }
     footer a:hover { color: var(--text); }
-  </style>
+  
+/* ── NAV DROPDOWN ──────────────────────────────────────── */
+.nav-more{position:relative;}
+.nav-more-btn{background:none;border:1px solid #ccc;border-radius:6px;padding:4px 10px;font-size:13px;font-weight:500;color:#333;cursor:pointer;font-family:inherit;line-height:1;}
+.nav-more-btn:hover{border-color:var(--accent);color:var(--accent);}
+.nav-dropdown{display:none;position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid #e0dbd4;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:240px;z-index:9999;overflow:hidden;}
+.nav-dropdown.open{display:block;}
+.nav-dropdown a{display:flex;flex-direction:column;padding:10px 16px;text-decoration:none;border-bottom:1px solid #f0ede8;}
+.nav-dropdown a:last-child{border-bottom:none;}
+.nav-dropdown a:hover{background:#f7f4f0;}
+.nav-dropdown .dd-label{font-size:13px;font-weight:600;color:#111;}
+.nav-dropdown .dd-desc{font-size:11px;color:#888;margin-top:2px;}
+
+</style>
 </head>
 <body>
   <header>
