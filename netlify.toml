@@ -49,6 +49,16 @@
   status = 200
 
 [[redirects]]
+  from = "/badge"
+  to = "/badge.html"
+  status = 200
+
+[[redirects]]
+  from = "/webhooks"
+  to = "/webhooks.html"
+  status = 200
+
+[[redirects]]
   from = "/incidents"
   to = "/incidents.html"
   status = 200
