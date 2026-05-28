@@ -233,20 +233,41 @@ async function doVerify(){
   document.getElementById('loading').classList.add('show');
 
   try {
-    // Try receipt ID first
     let snap = null;
+
+    // 1. Try snapshots function by receipt_id (works for recent captures)
     const res = await fetch(`/.netlify/functions/snapshots?receipt_id=${encodeURIComponent(input)}&t=`+Date.now());
-    if(res.ok){
-      const d = await res.json();
-      if(d && d.receipt_id) snap = d;
+    const d = await res.json();
+    if(res.ok && d && d.receipt_id) snap = d;
+
+    // 2. Try public API receipt lookup (covers all receipts in DB)
+    if(!snap && input.startsWith('NGR-PC-')) {
+      const res2 = await fetch(`/.netlify/functions/api?action=receipt&id=${encodeURIComponent(input)}&t=`+Date.now());
+      if(res2.ok) {
+        const d2 = await res2.json();
+        if(d2 && d2.found && d2.receipt_id) {
+          // Map API response to snap shape
+          snap = {
+            receipt_id: d2.receipt_id,
+            version: d2.version,
+            ecosystem: d2.ecosystem,
+            sha384_fingerprint: d2.sha384,
+            captured_at: d2.captured_at,
+            btc_anchored: d2.btc_anchored,
+            btc_block: d2.btc_block,
+            package_id: null,
+            packages: { name: d2.package }
+          };
+        }
+      }
     }
 
-    // If not found try fingerprint search
-    if(!snap){
-      const res2 = await fetch(`/.netlify/functions/snapshots?limit=500&t=`+Date.now());
-      if(res2.ok){
-        const d2 = await res2.json();
-        snap = (d2.snapshots||[]).find(s => s.sha384_fingerprint === input || s.receipt_id === input);
+    // 3. Try SHA-384 fingerprint search in recent snapshots
+    if(!snap) {
+      const res3 = await fetch(`/.netlify/functions/snapshots?limit=500&t=`+Date.now());
+      if(res3.ok){
+        const d3 = await res3.json();
+        snap = (d3.snapshots||[]).find(s => s.sha384_fingerprint === input || s.receipt_id === input);
       }
     }
 
