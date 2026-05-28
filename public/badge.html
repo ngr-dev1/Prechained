@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prechained Badge — Supply Chain Verification</title>
+  <meta name="description" content="Add the Prechained archive badge to your README. Show your dependencies are cryptographically verified before incidents happen.">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111;
+      --border: #222;
+      --accent: #f97316;
+      --text: #e5e7eb;
+      --muted: #6b7280;
+      --code-bg: #1a1a1a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-height: 100vh; }
+    header { border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+    header a { color: var(--accent); text-decoration: none; font-weight: 700; font-size: 1.1rem; }
+    header a:hover { opacity: 0.8; }
+    .nav-links { margin-left: auto; display: flex; gap: 1.5rem; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+    .nav-links a:hover { color: var(--text); }
+    main { max-width: 780px; margin: 0 auto; padding: 3rem 2rem; }
+    h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .tagline { color: var(--muted); margin-bottom: 2.5rem; }
+    .badge-preview { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 2rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+    .badge-preview img { height: 20px; }
+    .badge-label { color: var(--muted); font-size: 0.85rem; }
+    section { margin-bottom: 2.5rem; }
+    h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.8rem; }
+    .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.4rem; font-family: "SF Mono", "Fira Code", monospace; font-size: 0.82rem; line-height: 1.6; color: #a3e635; position: relative; overflow-x: auto; }
+    .copy-btn { position: absolute; top: 0.75rem; right: 0.75rem; background: var(--border); border: none; color: var(--muted); padding: 0.3rem 0.7rem; border-radius: 5px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+    .copy-btn:hover { background: var(--accent); color: white; }
+    .copy-btn.copied { background: #16a34a; color: white; }
+    .note { background: #1a1a00; border: 1px solid #333300; border-radius: 8px; padding: 1rem 1.2rem; font-size: 0.85rem; color: #d4d400; margin-top: 1rem; }
+    .steps { display: flex; flex-direction: column; gap: 1rem; }
+    .step { display: flex; gap: 1rem; align-items: flex-start; }
+    .step-num { background: var(--accent); color: black; font-weight: 800; font-size: 0.75rem; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    .step-text { font-size: 0.9rem; color: var(--text); line-height: 1.5; }
+    .step-text code { background: var(--code-bg); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.85rem; color: #a3e635; }
+    footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; color: var(--muted); font-size: 0.8rem; }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/">⬡ Prechained</a>
+    <div class="nav-links">
+      <a href="/browse">Browse</a>
+      <a href="/capture">Capture</a>
+      <a href="/verify">Verify</a>
+      <a href="/api">API</a>
+    </div>
+  </header>
+
+  <main>
+    <h1>README Badge</h1>
+    <p class="tagline">Show your dependencies are archived before incidents happen.</p>
+
+    <div class="badge-preview">
+      <img src="https://img.shields.io/badge/archived-prechained.com-orange?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNOCAxTDEgNHY4bDcgM0wxNSAxMlY0TDggMXoiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMS41IiBmaWxsPSJub25lIi8+PC9zdmc+" alt="archived on prechained" />
+      <img src="https://img.shields.io/badge/supply%20chain-verified-orange?style=flat-square" alt="supply chain verified" />
+      <img src="https://img.shields.io/badge/prechained-✓%20archived-orange?style=for-the-badge" alt="prechained archived" />
+      <span class="badge-label">Choose your style ↑</span>
+    </div>
+
+    <section>
+      <h2>Markdown (flat — recommended)</h2>
+      <div class="code-block" id="code-flat">[![Archived on Prechained](https://img.shields.io/badge/archived-prechained.com-orange?style=flat)](https://prechained.com)
+<button class="copy-btn" onclick="copyCode('code-flat', this)">Copy</button></div>
+    </section>
+
+    <section>
+      <h2>Markdown (flat-square)</h2>
+      <div class="code-block" id="code-square">[![Supply chain verified](https://img.shields.io/badge/supply%20chain-verified-orange?style=flat-square)](https://prechained.com)
+<button class="copy-btn" onclick="copyCode('code-square', this)">Copy</button></div>
+    </section>
+
+    <section>
+      <h2>Markdown (for-the-badge)</h2>
+      <div class="code-block" id="code-ftb">[![Prechained](https://img.shields.io/badge/prechained-%E2%9C%93%20archived-orange?style=for-the-badge)](https://prechained.com)
+<button class="copy-btn" onclick="copyCode('code-ftb', this)">Copy</button></div>
+    </section>
+
+    <section>
+      <h2>HTML</h2>
+      <div class="code-block" id="code-html">&lt;a href="https://prechained.com"&gt;
+  &lt;img src="https://img.shields.io/badge/archived-prechained.com-orange?style=flat" alt="Archived on Prechained"&gt;
+&lt;/a&gt;
+<button class="copy-btn" onclick="copyCode('code-html', this)">Copy</button></div>
+    </section>
+
+    <section>
+      <h2>How to use it</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">Go to <a href="/capture" style="color:var(--accent)">prechained.com/capture</a> and submit your package to create a cryptographic archive record.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">Copy a badge snippet above and paste it into your <code>README.md</code>.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">Optionally link directly to your package page: <code>https://prechained.com/package.html?name=YOUR-PKG&ecosystem=npm</code></div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text">Add the <a href="https://github.com/ngr-dev1/prechained-action" target="_blank" style="color:var(--accent)">Prechained GitHub Action</a> to verify on every push automatically.</div>
+        </div>
+      </div>
+      <div class="note">
+        The badge links to prechained.com — no tracking, no cookies, no referrer data collected. AGPL-3.0.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Prechained · <a href="https://nextgenrails.net">NextGenRails™</a> · <a href="/license">AGPL-3.0</a></p>
+  </footer>
+
+  <script>
+    function copyCode(id, btn) {
+      const el = document.getElementById(id);
+      // Get text content, excluding the button
+      const text = el.childNodes[0].textContent.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = "Copied!";
+        btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
