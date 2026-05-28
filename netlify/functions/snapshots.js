@@ -38,9 +38,9 @@ export default async function handler(req) {
       .from("snapshots")
       .select("*, packages(*)")
       .eq("receipt_id", receiptId)
-      .single();
-    if (error) return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: NO_CACHE });
-    return new Response(JSON.stringify(data), { headers: NO_CACHE });
+      .limit(1);
+    if (error || !data || data.length === 0) return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: NO_CACHE });
+    return new Response(JSON.stringify(data[0]), { headers: NO_CACHE });
   }
 
   if (packageId) {
