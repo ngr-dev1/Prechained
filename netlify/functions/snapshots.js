@@ -36,7 +36,7 @@ export default async function handler(req) {
   if (receiptId) {
     const { data, error } = await supabase
       .from("snapshots")
-      .select("*, packages(*), manifest_path")
+      .select("*, packages(*)")
       .eq("receipt_id", receiptId)
       .single();
     if (error) return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: NO_CACHE });
