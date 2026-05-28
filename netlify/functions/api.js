@@ -262,7 +262,7 @@ export default async function handler(req) {
     const id = url.searchParams.get("id");
     if (!id) return err("Missing required parameter: id");
 
-    const { data, error } = await supabase
+    const { data: rows, error } = await supabase
       .from("snapshots")
       .select(`
         id, version, ecosystem, sha384_fingerprint, receipt_id,
@@ -270,8 +270,9 @@ export default async function handler(req) {
         packages!inner(name, ecosystem, description)
       `)
       .eq("receipt_id", id)
-      .single();
+      .limit(1);
 
+    const data = rows?.[0] || null;
     if (error || !data) return json({ found: false, receipt_id: id }, 404);
 
     return json({
