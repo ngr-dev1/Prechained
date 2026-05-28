@@ -4,6 +4,29 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Prechained — Verify a Receipt</title>
+<!-- Dynamic OG image — shows package, BTC block, and SHA-384 when shared -->
+<meta property="og:title" content="Prechained — Cryptographic Supply Chain Verification"/>
+<meta property="og:description" content="Independently verify any package receipt. SHA-384 fingerprint, Bitcoin anchor, zero retention."/>
+<meta property="og:image" id="og-image-meta" content="https://prechained.com/.netlify/functions/og-image"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:type" content="website"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Prechained — Supply Chain Receipt"/>
+<meta name="twitter:description" content="SHA-384 fingerprinted. Bitcoin anchored. Recorded before it happened."/>
+<meta name="twitter:image" id="twitter-image-meta" content="https://prechained.com/.netlify/functions/og-image"/>
+<script>
+  // Set OG image URL dynamically based on receipt param so crawlers get correct image
+  (function() {
+    const params = new URLSearchParams(window.location.search);
+    const receipt = params.get("receipt") || params.get("r");
+    if (receipt) {
+      const ogUrl = "https://prechained.com/.netlify/functions/og-image?receipt=" + encodeURIComponent(receipt);
+      document.getElementById("og-image-meta")?.setAttribute("content", ogUrl);
+      document.getElementById("twitter-image-meta")?.setAttribute("content", ogUrl);
+    }
+  })();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
