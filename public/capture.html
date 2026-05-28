@@ -189,10 +189,10 @@ async function capture() {
     </div>`;
 
   try {
+    const versionVal = document.getElementById('version-input')?.value.trim() || null;
     const res = await fetch('/.netlify/functions/capture', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      const versionVal = document.getElementById('version-input')?.value.trim() || null;
       body: JSON.stringify({ package: pkg, ecosystem: selectedEco, ...(versionVal && { version: versionVal }) })
     });
     const data = await res.json();
