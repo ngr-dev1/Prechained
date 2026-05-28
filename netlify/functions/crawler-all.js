@@ -14,6 +14,66 @@ import { readFileSync } from "fs";
 
 const TIMEOUT = 8500;
 
+// ── DIFF DETECTION ────────────────────────────────────────────
+// Detects when a version that was already archived reappears with a
+// different SHA-384 — the XZ Utils / supply-chain-swap attack pattern.
+// Called after every captureVersion() that returns a new fingerprint.
+async function checkFingerprintDiff(pkgId, pkgName, ecosystem, version, newFingerprint) {
+  try {
+    const { data: prior } = await supabase
+      .from("snapshots")
+      .select("id, sha384_fingerprint, receipt_id, captured_at")
+      .eq("package_id", pkgId)
+      .eq("version", version)
+      .neq("sha384_fingerprint", newFingerprint)
+      .limit(1);
+
+    if (!prior || prior.length === 0) return; // No conflict — normal
+
+    const priorSnap = prior[0];
+    const alertMsg = `FINGERPRINT MISMATCH: ${ecosystem}/${pkgName}@${version} ` +
+      `prior=${priorSnap.sha384_fingerprint.slice(0,16)}… new=${newFingerprint.slice(0,16)}… ` +
+      `— XZ-style content substitution detected`;
+    console.error(`[DIFF-ALERT] ${alertMsg}`);
+
+    // Auto-flag all actors associated with this package
+    await supabase
+      .from("actor_index")
+      .update({ flagged: true })
+      .eq("package_name", pkgName)
+      .eq("ecosystem", ecosystem);
+
+    // Insert into snapshots with a DIFF_ALERT flag in raw_metadata
+    const { data: newSnap } = await supabase
+      .from("snapshots")
+      .select("id, receipt_id")
+      .eq("package_id", pkgId)
+      .eq("version", version)
+      .eq("sha384_fingerprint", newFingerprint)
+      .limit(1)
+      .single();
+
+    if (newSnap?.id) {
+      await supabase
+        .from("snapshots")
+        .update({
+          raw_metadata: {
+            diff_alert: true,
+            prior_fingerprint: priorSnap.sha384_fingerprint,
+            prior_receipt_id: priorSnap.receipt_id,
+            prior_captured_at: priorSnap.captured_at,
+            alert_type: "FINGERPRINT_MISMATCH",
+            alert_severity: "HIGH",
+            alert_detail: alertMsg,
+          }
+        })
+        .eq("id", newSnap.id);
+    }
+  } catch (e) {
+    console.error("[DIFF-DETECT] error:", e.message);
+  }
+}
+
 function crawlerSha(url) {
   try { return sha384(readFileSync(new URL(url).pathname, "utf8")); } catch(e) { return null; }
 }
@@ -73,7 +133,8 @@ export async function crawlerNpm(req, context) {
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
         const ok = await captureVersion(pkg, version, "npm", vd.dist?.integrity, vd.dist?.shasum, vd.license, Object.keys(vd.dependencies || {}), manifest, CRAWLER_SHA384);
-        ok ? captured++ : skipped++;
+        if (ok) { captured++; await checkFingerprintDiff(pkg.id, name, "npm", version, manifest.sha384_fingerprint || vd.dist?.integrity || ""); }
+        else skipped++;
       }
     } catch(e) { console.error(`[npm] ${name}:`, e.message); }
   }
@@ -126,7 +187,7 @@ export async function crawlerPypi(req, context) {
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
         const ok = await captureVersion(pkg, version, "pypi", wheel?.digests?.sha256 ? "sha256:" + wheel.digests.sha256 : "", wheel?.digests?.md5 || "", data.info?.license || [], manifest, CRAWLER_SHA384);
-        ok ? captured++ : skipped++;
+        if (ok) { captured++; await checkFingerprintDiff(pkg.id, name, "pypi", version, wheel?.digests?.sha256 ? "sha256:"+wheel.digests.sha256 : ""); } else skipped++;
       }
     } catch(e) { console.error(`[pypi] ${name}:`, e.message); }
   }
@@ -184,7 +245,7 @@ export async function crawlerCargo(req, context) {
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
         const ok = await captureVersion(pkg, version, "cargo", vData?.checksum ? "sha256:" + vData.checksum : "", "", vData?.license || "", cargoDeps.map(d => d.name), manifest, CRAWLER_SHA384);
-        ok ? captured++ : skipped++;
+        if (ok) { captured++; await checkFingerprintDiff(pkg.id, name, "cargo", version, vData?.checksum ? "sha256:"+vData.checksum : ""); } else skipped++;
       }
     } catch(e) { console.error(`[cargo] ${name}:`, e.message); }
   }
@@ -350,7 +411,7 @@ export async function crawlerNuget(req, context) {
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
         const ok = await captureVersion(pkg, version, "nuget", entry?.packageHash || "", "", entry?.licenseExpression || "", nugetDeps.map(d => d.id), manifest, CRAWLER_SHA384);
-        ok ? captured++ : skipped++;
+        if (ok) { captured++; await checkFingerprintDiff(pkg.id, name, "nuget", version, entry?.packageHash || ""); } else skipped++;
       }
     } catch(e) { console.error(`[nuget] ${name}:`, e.message); }
   }
@@ -442,7 +503,7 @@ export async function crawlerMaven(req, context) {
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
         const ok = await captureVersion(pkg, version, "maven", "", "", pomData.licenses?.[0]?.name || "", (pomData.dependencies || []).map(d => `${d.groupId}:${d.artifactId}`), manifest, CRAWLER_SHA384);
-        ok ? captured++ : skipped++;
+        if (ok) { captured++; await checkFingerprintDiff(pkg.id, artifact, "maven", version, ""); } else skipped++;
       }
     } catch(e) { console.error(`[maven] ${artifact}:`, e.message); }
   }
@@ -515,7 +576,7 @@ export async function crawlerRubygems(req, context) {
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
         const ok = await captureVersion(pkg, version, "rubygems", vData?.sha ? "sha256:" + vData.sha : "", "", vData?.licenses?.[0] || "", [], manifest, CRAWLER_SHA384);
-        ok ? captured++ : skipped++;
+        if (ok) { captured++; await checkFingerprintDiff(pkg.id, name, "rubygems", version, vData?.sha ? "sha256:"+vData.sha : ""); } else skipped++;
       }
     } catch(e) { console.error(`[rubygems] ${name}:`, e.message); }
   }
@@ -569,7 +630,7 @@ export async function crawlerPackagist(req, context) {
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
         const ok = await captureVersion(pkg, cleanVersion, "packagist", vData?.dist?.shasum ? "sha1:" + vData.dist.shasum : "", "", vData?.license?.[0] || "", Object.keys(vData?.require || {}), manifest, CRAWLER_SHA384);
-        ok ? captured++ : skipped++;
+        if (ok) { captured++; await checkFingerprintDiff(pkg.id, name, "packagist", cleanVersion, vData?.dist?.shasum ? "sha1:"+vData.dist.shasum : ""); } else skipped++;
       }
     } catch(e) { console.error(`[packagist] ${name}:`, e.message); }
   }
