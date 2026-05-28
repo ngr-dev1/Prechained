@@ -47,3 +47,8 @@
   from = "/api"
   to = "/api.html"
   status = 200
+
+[[redirects]]
+  from = "/incidents"
+  to = "/incidents.html"
+  status = 200
