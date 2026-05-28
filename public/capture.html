@@ -102,6 +102,10 @@ footer a{color:var(--ink-3);text-decoration:none;}
         <div class="eco-btn" data-eco="github">GitHub</div>
       </div>
       <div class="rate" id="eco-hint">Enter package name exactly as it appears in the registry</div>
+      <div style="margin-top:16px;">
+        <div style="font-size:11px;font-weight:600;color:var(--ink-3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">VERSION <span style="font-weight:400;color:var(--ink-4);">(optional)</span></div>
+        <input id="version-input" type="text" placeholder="e.g. 2.39.0 — leave blank to capture all versions" style="width:100%;font-family:var(--mono);font-size:13px;padding:10px 14px;border:1px solid var(--border);border-radius:6px;background:var(--white);color:var(--ink);outline:none;"/>
+      </div>
     </div>
     <button class="submit-btn" id="submit-btn" onclick="capture()">Capture Package →</button>
     <div id="result"></div>
@@ -188,7 +192,8 @@ async function capture() {
     const res = await fetch('/.netlify/functions/capture', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ package: pkg, ecosystem: selectedEco })
+      const versionVal = document.getElementById('version-input')?.value.trim() || null;
+      body: JSON.stringify({ package: pkg, ecosystem: selectedEco, ...(versionVal && { version: versionVal }) })
     });
     const data = await res.json();
 
