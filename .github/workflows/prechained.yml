@@ -17,7 +17,7 @@ jobs:
         run: npm install --package-lock-only
 
       - name: Tamper-check with Prechained
-        uses: ngr-dev1/prechained-action@v1
+        uses: ngr-dev1/prechained-action@main
         with:
           ecosystem: npm
           fail-on-mismatch: true
