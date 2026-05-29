@@ -1,12 +1,23 @@
 name: Prechained Verify
 
-on: [push]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ngr-dev1/prechained-action@v1
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Generate lockfile
+        run: npm install --package-lock-only
+
+      - name: Tamper-check with Prechained
+        uses: ngr-dev1/prechained-action@v1
         with:
           ecosystem: npm
+          fail-on-mismatch: true
