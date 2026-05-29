@@ -152,6 +152,10 @@ function fingerprintFromGitHub(manifest, path) {
     version: manifest.version,
     ecosystem: manifest.ecosystem,
     sha384: sha,
+    // Registry-native artifact hashes — reproducible by anyone, used by the
+    // CI gate to detect tamper. integrity = npm SRI (sha512), shasum = sha1 tarball.
+    artifact_integrity: manifest.dist?.integrity || null,
+    artifact_shasum: manifest.dist?.shasum || null,
     receipt_id: null,                   // not yet anchored; backfill will fix this
     btc_anchored: false,
     btc_block: null,
@@ -207,12 +211,32 @@ export default async function handler(req) {
     // ── Supabase hit ──
     if (data && data.length > 0) {
       const snap = data[0];
+
+      // The Supabase row carries the BTC anchor but not the registry-native
+      // artifact hashes. Those live in the stored manifest. Fetch them so the
+      // CI gate has a reproducible value to compare against. Best-effort: if the
+      // manifest fetch fails, the anchor data is still returned.
+      let artifactIntegrity = null, artifactShasum = null;
+      if (snap.manifest_path) {
+        try {
+          const mRes = await fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/main/${snap.manifest_path}`);
+          if (mRes.ok) {
+            const m = await mRes.json();
+            artifactIntegrity = m.dist?.integrity || null;
+            artifactShasum = m.dist?.shasum || null;
+          }
+        } catch (_) { /* anchor data below is still valid */ }
+      }
+
       return json({
         found: true,
         package: snap.packages?.name || name,
         version: snap.version,
         ecosystem: snap.ecosystem,
         sha384: snap.sha384_fingerprint,
+        // Reproducible registry-native artifact hashes for tamper detection.
+        artifact_integrity: artifactIntegrity,
+        artifact_shasum: artifactShasum,
         receipt_id: snap.receipt_id,
         btc_anchored: snap.btc_anchored,
         btc_block: snap.btc_block,
