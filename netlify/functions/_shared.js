@@ -82,7 +82,8 @@ export async function upsertPackage(name, ecosystem, description, latestVersion,
       description: (description || "").substring(0, 200),
       latest_version: latestVersion,
       total_versions: totalVersions,
-      last_captured_at: new Date().toISOString()
+      last_captured_at: new Date().toISOString(),
+      last_discovered_at: new Date().toISOString()
     }, { onConflict: "name,ecosystem" })
     .select().single();
   return error ? null : data;
@@ -124,6 +125,85 @@ export async function captureVersion(pkg, version, ecosystem, integrity, shasum,
     console.log(`CAPTURED: ${ecosystem}/${pkg.name}@${version} | btc:${btcBlock} | manifest:${manifestPath ? "stored" : "failed"}`);
   }
   return !error;
+}
+
+// ── VERSION CLASSIFICATION ─────────────────────────────────────
+// We deliberately DO capture dev branches and prereleases now.
+// The Famous Chollima / take-home-interview lures live on dev branches
+// (e.g. composer "dev-feature/test-case"); skipping them is skipping the
+// exact thing that gets attacked. This helper only flags a version so the
+// queue can PRIORITISE it — it never excludes it.
+export function isRiskyVersion(version) {
+  if (!version) return false;
+  const v = String(version).toLowerCase();
+  return v.startsWith("dev-") || v.includes("dev-") ||
+    /-(alpha|beta|rc|next|canary|nightly|preview|snapshot|insiders|experimental)/.test(v) ||
+    /\.(dev|pre|post)\d/.test(v) ||
+    v.includes("0.0.1-security");   // npm/registry malware-takedown placeholder
+}
+
+// ── DURABLE CAPTURE QUEUE ──────────────────────────────────────
+// Crawlers DISCOVER cheaply and ENQUEUE every (pkg, version) they don't have.
+// The drainer does the expensive capture work in 8.5s slices. Work that
+// doesn't finish in one run waits for the next run instead of being dropped.
+
+// Enqueue a batch of {ecosystem, package_name, version, source, hint} rows.
+// Dev/prerelease versions get a lower (sooner) priority number.
+export async function enqueueCaptures(rows) {
+  if (!rows || !rows.length) return 0;
+  const payload = rows.map(r => ({
+    ecosystem: r.ecosystem,
+    package_name: r.package_name,
+    version: String(r.version),
+    source: r.source || null,
+    hint: r.hint || null,
+    priority: r.priority != null
+      ? r.priority
+      : (isRiskyVersion(r.version) ? 10 : 100),
+    status: "pending"
+  }));
+  // ON CONFLICT DO NOTHING via ignoreDuplicates — re-discovering a queued
+  // version is a no-op (the unique index is ecosystem+package_name+version).
+  const { error, count } = await supabase
+    .from("pending_captures")
+    .upsert(payload, {
+      onConflict: "ecosystem,package_name,version",
+      ignoreDuplicates: true,
+      count: "exact"
+    });
+  if (error) { console.error("[queue] enqueue error:", error.message); return 0; }
+  return count || 0;
+}
+
+// Atomically claim up to `limit` pending rows (flips them to 'processing').
+export async function claimCaptures(limit) {
+  const { data, error } = await supabase.rpc("claim_pending_captures", { p_limit: limit });
+  if (error) { console.error("[queue] claim error:", error.message); return []; }
+  return data || [];
+}
+
+// Mark a claimed row done / errored.
+export async function finishCapture(id, ok, errMsg) {
+  const patch = ok
+    ? { status: "done", processed_at: new Date().toISOString() }
+    : { status: "pending", last_error: (errMsg || "").slice(0, 500), claimed_at: null };
+  const { error } = await supabase.from("pending_captures").update(patch).eq("id", id);
+  if (error) console.error("[queue] finish error:", error.message);
+}
+
+// Self-heal: send rows stuck in 'processing' (crashed drainer) back to pending.
+export async function requeueStale() {
+  const { data, error } = await supabase.rpc("requeue_stale_captures");
+  if (error) { console.error("[queue] requeue error:", error.message); return 0; }
+  return data || 0;
+}
+
+// Has this exact (package_id, version) already been fingerprinted?
+export async function snapshotExists(packageId, version) {
+  const { data } = await supabase
+    .from("snapshots").select("id")
+    .eq("package_id", packageId).eq("version", version).limit(1).maybeSingle();
+  return !!data;
 }
 
 // ── PACKAGE LISTS ──────────────────────────────────────────────
