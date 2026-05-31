@@ -67,6 +67,13 @@
   name = "crawler-new"
   cron = "*/10 * * * *"
 
+# Drains the pending_captures queue in 8.5s slices. Runs every 5 minutes —
+# twice as often as discovery — so the backlog keeps shrinking between
+# discovery sweeps. Bump frequency / move to GitHub Actions if backlog grows.
+[[scheduled-functions]]
+  name = "queue-drainer"
+  cron = "*/5 * * * *"
+
 [[scheduled-functions]]
   name = "pruner"
   cron = "0 3 * * *"
