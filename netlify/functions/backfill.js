@@ -7,12 +7,7 @@
 //             ~100 rows/run, done in hours.
 //   Pass 2 — rows without manifest_path: fetch manifest from registry API,
 //             compute canonical fingerprint, update to fp:v2.
-//             Skips GitHub archive write (done separately by backfill-archive.js)
-//             so each row takes ~150ms instead of ~500ms.
 //             ~40 rows/run.
-//
-// Priority order: packages with most versions first (aws-sdk, rails, react etc.)
-// so the high-visibility records clear first.
 //
 // prechained.com · Built by NextGenRails™
 
@@ -24,9 +19,15 @@ import {
 } from "./_shared.js";
 
 const TIMEOUT = 8500;
-const ARCHIVE_BATCH = 100;  // rows with existing manifest_path
-const REGISTRY_BATCH = 40;  // rows needing registry fetch
+const ARCHIVE_BATCH = 100;
+const REGISTRY_BATCH = 40;
 const ARCHIVE_REPO = process.env.GITHUB_ARCHIVE_REPO || "ngr-dev1/prechained-archive";
+
+// ── LEGACY ROW FILTER ────────────────────────────────────────────────────────
+// Matches rows where fp is NOT 'v2' — including null raw_metadata,
+// missing fp key, or fp set to something else.
+// PostgREST "neq" doesn't catch nulls, so we use .or() instead.
+const LEGACY_FILTER = "raw_metadata->>fp.is.null,raw_metadata->>fp.neq.v2,raw_metadata.is.null";
 
 // ── REGISTRY MANIFEST FETCHERS ───────────────────────────────────────────────
 
@@ -167,8 +168,7 @@ async function fetchNugetManifest(pkgName, version) {
   const regData = await regRes.json();
   let entry = null;
   for (const page of regData.items || []) {
-    const items = page.items || [];
-    for (const item of items) {
+    for (const item of (page.items || [])) {
       if (item.catalogEntry?.version?.toLowerCase() === version.toLowerCase()) { entry = item.catalogEntry; break; }
     }
     if (entry) break;
@@ -215,7 +215,7 @@ async function fetchMavenManifest(pkgName, version) {
     description: getTag(pomText, "description"), url: getTag(pomText, "url"),
     inceptionYear: getTag(pomText, "inceptionYear"),
     licenses: (() => { const lics = []; const lr = /<license>([\s\S]*?)<\/license>/gi; let m; while ((m = lr.exec(pomText)) !== null) lics.push({ name: getTag(m[1], "name"), url: getTag(m[1], "url") }); return lics; })(),
-    developers: (() => { const devs = []; const dr = /<developer>([\s\S]*?)<\/developer>/gi; let m; while ((m = dr.exec(pomText)) !== null) devs.push({ id: getTag(m[1], "id"), name: getTag(m[1], "name"), email: getTag(m[1], "email") }); return devs; })(),
+    developers: (() => { const devs = []; const dr2 = /<developer>([\s\S]*?)<\/developer>/gi; let m; while ((m = dr2.exec(pomText)) !== null) devs.push({ id: getTag(m[1], "id"), name: getTag(m[1], "name"), email: getTag(m[1], "email") }); return devs; })(),
     scm: { url: getTag(pomText, "url"), connection: getTag(pomText, "connection") },
     dependencies: getDeps(pomText),
     centralUrl: `https://repo1.maven.org/maven2/${groupPath}/${artifactId}/${version}/`,
@@ -277,22 +277,26 @@ export default async function handler(req, context) {
 
   let archiveDone = 0, registryDone = 0, failed = 0;
 
-  // ── PASS 1: rows with archived manifests (fast — no registry call) ──
-  const { data: archiveRows } = await supabase
+  // ── PASS 1: rows with archived manifests (fast) ──────────────────────────
+  const { data: archiveRows, error: archiveErr } = await supabase
     .from("snapshots")
     .select("id, version, ecosystem, manifest_path, package_id")
-    .filter("raw_metadata->>fp", "neq", "v2")
+    .or(LEGACY_FILTER)
     .not("manifest_path", "is", null)
     .order("id", { ascending: true })
     .limit(ARCHIVE_BATCH);
 
+  if (archiveErr) console.error("[backfill] archive query:", archiveErr.message);
+
   // Get package names
-  const allIds = [...new Set([...(archiveRows || []).map(r => r.package_id)])];
-  const { data: packages } = await supabase.from("packages").select("id, name, ecosystem").in("id", allIds.length ? allIds : ["00000000-0000-0000-0000-000000000000"]);
-  const pkgMap = new Map((packages || []).map(p => [p.id, p]));
+  const archiveIds = [...new Set((archiveRows || []).map(r => r.package_id))];
+  const { data: archivePkgs } = archiveIds.length
+    ? await supabase.from("packages").select("id, name, ecosystem").in("id", archiveIds)
+    : { data: [] };
+  const pkgMap = new Map((archivePkgs || []).map(p => [p.id, p]));
 
   for (const row of archiveRows || []) {
-    if (Date.now() - start > TIMEOUT * 0.45) break; // leave half the budget for pass 2
+    if (Date.now() - start > TIMEOUT * 0.45) break;
     const pkg = pkgMap.get(row.package_id);
     if (!pkg) { failed++; continue; }
     try {
@@ -310,15 +314,17 @@ export default async function handler(req, context) {
     }
   }
 
-  // ── PASS 2: rows without manifests (registry fetch, skip GitHub write) ──
+  // ── PASS 2: rows without manifests (registry fetch) ──────────────────────
   if (Date.now() - start < TIMEOUT * 0.5) {
-    const { data: registryRows } = await supabase
+    const { data: registryRows, error: regErr } = await supabase
       .from("snapshots")
       .select("id, version, ecosystem, package_id")
-      .filter("raw_metadata->>fp", "neq", "v2")
+      .or(LEGACY_FILTER)
       .is("manifest_path", null)
       .order("id", { ascending: true })
       .limit(REGISTRY_BATCH);
+
+    if (regErr) console.error("[backfill] registry query:", regErr.message);
 
     const regIds = [...new Set((registryRows || []).map(r => r.package_id))];
     if (regIds.length) {
@@ -332,19 +338,18 @@ export default async function handler(req, context) {
         try {
           const manifest = await fetchManifestFromRegistry(row.ecosystem, pkg.name, row.version);
           const fingerprint = canonicalFingerprint(manifest);
-          // Store manifest in GitHub archive (best-effort, don't fail the row if this fails)
+          // Best-effort GitHub archive store — don't fail the row if this fails
           let manifestPath = null;
           try {
             manifestPath = await storeManifestInGithub(row.ecosystem, pkg.name, row.version, manifest);
           } catch (e) {
             console.warn(`[backfill] github store ${pkg.name}@${row.version}: ${e.message}`);
           }
-          const updateData = {
+          const { error } = await supabase.from("snapshots").update({
             sha384_fingerprint: fingerprint,
             raw_metadata: { fp: "v2", backfilled: true, source: "registry" },
             ...(manifestPath ? { manifest_path: manifestPath } : {})
-          };
-          const { error } = await supabase.from("snapshots").update(updateData).eq("id", row.id);
+          }).eq("id", row.id);
           if (error) throw new Error(error.message);
           registryDone++;
         } catch (e) {
@@ -359,14 +364,13 @@ export default async function handler(req, context) {
   const { count: remaining } = await supabase
     .from("snapshots")
     .select("id", { count: "exact", head: true })
-    .filter("raw_metadata->>fp", "neq", "v2");
+    .or(LEGACY_FILTER);
 
   const elapsed = Date.now() - start;
-  const done = archiveDone + registryDone;
   console.log(`[backfill] done: archive=${archiveDone} registry=${registryDone} failed=${failed} remaining=${remaining} ${elapsed}ms`);
 
   return new Response(JSON.stringify({
-    ok: true, archiveDone, registryDone, totalDone: done,
+    ok: true, archiveDone, registryDone, totalDone: archiveDone + registryDone,
     failed, remaining, elapsed_ms: elapsed,
     timestamp: new Date().toISOString(),
     ...(remaining === 0 ? { allDone: true } : {})
