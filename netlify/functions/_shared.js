@@ -35,6 +35,38 @@ export function sha384(data) {
   return createHash("sha384").update(data).digest("hex");
 }
 
+// ── CANONICAL FINGERPRINT ──────────────────────────────────────
+// ONE reproducible fingerprint for the whole pipeline. Anyone can recompute
+// it from the archived manifest.json: drop the volatile capture-metadata
+// fields, recursively sort keys, JSON.stringify with no whitespace, SHA-384.
+// No timestamps or crawler identity enter the hash → the value is stable and
+// independently verifiable. (Replaces the old per-path hashes that baked in
+// `new Date()` and therefore could never be reproduced.)
+const VOLATILE_FIELDS = new Set(["captured_at", "captured_by", "crawler_sha384", "sha384_fingerprint"]);
+
+export function canonicalize(value) {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value && typeof value === "object") {
+    const out = {};
+    for (const key of Object.keys(value).sort()) {
+      if (VOLATILE_FIELDS.has(key)) continue;
+      out[key] = canonicalize(value[key]);
+    }
+    return out;
+  }
+  return value;
+}
+
+// The exact bytes the fingerprint hashes — exported so the OTS layer and any
+// verifier can agree on them.
+export function canonicalBytes(manifest) {
+  return JSON.stringify(canonicalize(manifest));
+}
+
+export function canonicalFingerprint(manifest) {
+  return sha384(canonicalBytes(manifest));
+}
+
 export function generateReceiptId() {
   return "NGR-PC-" + Date.now().toString(36).toUpperCase() +
     Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -95,36 +127,37 @@ export async function captureVersion(pkg, version, ecosystem, integrity, shasum,
   const { data: existing } = await supabase
     .from("snapshots").select("id")
     .eq("package_id", pkg.id).eq("version", version).single();
-  if (existing) return false;
+  if (existing) return null;
 
-  const payload = JSON.stringify({
-    name: pkg.name, version, ecosystem,
-    integrity: integrity || "",
-    shasum: shasum || "",
-    dependencies: (dependencies || []).sort(),
-    timestamp: new Date().toISOString()
-  });
-
-  const fingerprint = sha384(payload);
+  // Reproducible fingerprint over the canonical manifest bytes. integrity,
+  // shasum and dependencies are already inside the manifest, so they still
+  // bind into the hash — but nothing volatile does.
+  const fingerprint = canonicalFingerprint(manifest);
   const receiptId = generateReceiptId();
   const manifestPath = await storeManifestInGithub(ecosystem, pkg.name, version, manifest);
-  const btcBlock = await getCurrentBtcBlock();
 
-  const { error } = await supabase.from("snapshots").insert({
+  // Insert UNANCHORED. We no longer write btc_anchored:true with a current
+  // block height that proves nothing. The OTS pipeline stamps ots_proof, and
+  // anchor-checker promotes btc_anchored/btc_block only on a real Bitcoin
+  // attestation. raw_metadata.fp:"v2" flags canonical-fingerprint rows so
+  // verify.html can tell them apart from legacy pre-OTS records.
+  const { data: inserted, error } = await supabase.from("snapshots").insert({
     package_id: pkg.id, version, ecosystem,
     sha384_fingerprint: fingerprint,
     receipt_id: receiptId,
-    btc_anchored: btcBlock ? true : false,
-    btc_block: btcBlock || null,
+    btc_anchored: false,
+    btc_block: null,
     ots_proof: null,
     manifest_path: manifestPath,
-    raw_metadata: license ? { license, crawler_sha384: crawlerSha384 || null } : { crawler_sha384: crawlerSha384 || null }
-  });
+    raw_metadata: { fp: "v2", crawler_sha384: crawlerSha384 || null, ...(license ? { license } : {}) }
+  }).select("id").single();
 
-  if (!error) {
-    console.log(`CAPTURED: ${ecosystem}/${pkg.name}@${version} | btc:${btcBlock} | manifest:${manifestPath ? "stored" : "failed"}`);
+  if (error) {
+    console.error(`[capture] insert ${ecosystem}/${pkg.name}@${version}:`, error.message);
+    return null;
   }
-  return !error;
+  console.log(`CAPTURED: ${ecosystem}/${pkg.name}@${version} | manifest:${manifestPath ? "stored" : "failed"} | unanchored`);
+  return { snapshotId: inserted.id, fingerprint };
 }
 
 // ── VERSION CLASSIFICATION ─────────────────────────────────────

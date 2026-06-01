@@ -222,6 +222,7 @@ footer a:hover{color:var(--accent);}
       <div class="rrow"><div class="rlbl">Version</div><div class="rval" id="r-ver">—</div></div>
       <div class="rrow"><div class="rlbl">Ecosystem</div><div class="rval" id="r-eco">—</div></div>
       <div class="rrow"><div class="rlbl">SHA-384</div><div class="rval" id="r-fp">—</div></div>
+      <div class="rrow"><div class="rlbl">Integrity</div><div class="rval" id="r-integrity">—</div></div>
       <div class="rrow"><div class="rlbl">Captured At</div><div class="rval" id="r-date">—</div></div>
       <div class="rrow"><div class="rlbl">Bitcoin Anchor</div><div class="rval" id="r-btc">—</div></div>
       <div class="rrow"><div class="rlbl">Issued By</div><div class="rval">Prechained · NextGenRails™ · prechained.com</div></div>
@@ -231,6 +232,7 @@ footer a:hover{color:var(--accent);}
       <button class="action-btn" onclick="copyReceipt()">📋 Copy receipt ID</button>
       <a class="action-btn" id="pkg-link" href="#" target="_blank">📦 View package →</a>
       <a class="action-btn" id="btc-link" href="https://blockstream.info" target="_blank">⬡ Verify on Bitcoin →</a>
+      <a class="action-btn" id="ots-link" href="#" download style="display:none;">⬡ Download .ots proof</a>
     </div>
   </div>
 
@@ -243,11 +245,11 @@ footer a:hover{color:var(--accent);}
       </div>
       <div class="info-card">
         <div class="info-card-title">⬡ Bitcoin anchored</div>
-        <div class="info-card-desc">Records are anchored to the Bitcoin blockchain. Independently verifiable at blockstream.info without trusting Prechained.</div>
+        <div class="info-card-desc">Records are timestamped with OpenTimestamps and confirmed in a Bitcoin block. The .ots proof is downloadable and verifiable at blockstream.info without trusting Prechained.</div>
       </div>
       <div class="info-card">
         <div class="info-card-title">🔐 SHA-384 integrity</div>
-        <div class="info-card-desc">Every snapshot is SHA-384 fingerprinted. The fingerprint proves the package state at capture time was not altered.</div>
+        <div class="info-card-desc">Every snapshot is SHA-384 fingerprinted over the canonical manifest. Your browser re-hashes the archived manifest here and only shows VERIFIED if it matches — you don't have to trust our database.</div>
       </div>
       <div class="info-card">
         <div class="info-card-title">⚖️ Legally defensible</div>
@@ -265,6 +267,55 @@ footer a:hover{color:var(--accent);}
 
 <script>
 let currentSnap = null;
+
+// ── Canonical fingerprint (mirror of netlify/functions/_shared.js) ──
+// Re-derive the SHA-384 from the archived manifest the exact same way the
+// backend does: strip volatile capture-metadata, recursively sort keys,
+// JSON.stringify with no whitespace, SHA-384. This is what makes a record
+// independently verifiable — we trust the recomputation, not the database.
+const ARCHIVE_REPO = 'ngr-dev1/prechained-archive';
+const VOLATILE = new Set(['captured_at','captured_by','crawler_sha384','sha384_fingerprint']);
+
+function canonicalize(v){
+  if(Array.isArray(v)) return v.map(canonicalize);
+  if(v && typeof v === 'object'){
+    const o = {};
+    for(const k of Object.keys(v).sort()){ if(VOLATILE.has(k)) continue; o[k] = canonicalize(v[k]); }
+    return o;
+  }
+  return v;
+}
+async function sha384Hex(str){
+  const buf = await crypto.subtle.digest('SHA-384', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+function manifestUrlFor(snap){
+  if(snap.manifest_url) return snap.manifest_url;
+  if(snap.manifest_path) return `https://raw.githubusercontent.com/${ARCHIVE_REPO}/main/${snap.manifest_path}`;
+  return null;
+}
+function isCanonicalRow(snap){
+  // Canonical rows carry raw_metadata.fp:"v2". Legacy pre-OTS rows don't.
+  const fp = (snap.raw_metadata && snap.raw_metadata.fp) || snap.fingerprint_version;
+  return fp === 'v2';
+}
+// → 'verified' | 'mismatch' | 'legacy' | 'unverifiable'
+async function rehashVerify(snap){
+  const url = manifestUrlFor(snap);
+  if(!url) return isCanonicalRow(snap) ? 'unverifiable' : 'legacy';
+  let manifest;
+  try {
+    const r = await fetch(url, { cache:'no-store' });
+    if(!r.ok) return 'unverifiable';
+    manifest = await r.json();
+  } catch { return 'unverifiable'; }
+  if(!snap.sha384_fingerprint) return isCanonicalRow(snap) ? 'unverifiable' : 'legacy';
+  const recomputed = await sha384Hex(JSON.stringify(canonicalize(manifest)));
+  if(recomputed === snap.sha384_fingerprint) return 'verified';
+  // Mismatch on a canonical row = real problem. On a legacy row = expected
+  // (the old algorithm baked in a timestamp), so quarantine, don't cry tamper.
+  return isCanonicalRow(snap) ? 'mismatch' : 'legacy';
+}
 
 function fmt(d){
   return new Date(d).toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
@@ -301,6 +352,9 @@ async function doVerify(){
             captured_at: d2.captured_at,
             btc_anchored: d2.btc_anchored,
             btc_block: d2.btc_block,
+            ots_proof: d2.ots_proof || null,
+            manifest_url: d2.manifest_url || null,
+            fingerprint_version: d2.fingerprint_version || null,
             package_id: null,
             packages: { name: d2.package }
           };
@@ -337,18 +391,57 @@ async function doVerify(){
     document.getElementById('r-fp').textContent = snap.sha384_fingerprint;
     document.getElementById('r-date').textContent = fmt(snap.captured_at);
 
+    // ── Bitcoin / OTS anchor status — now truthful: btc_* is set only on a
+    //     real OpenTimestamps Bitcoin attestation, never a fake current block.
+    const btcLink = document.getElementById('btc-link');
     if(snap.btc_anchored && snap.btc_block){
       document.getElementById('r-btc').innerHTML = `<span class="btc">⬡ Bitcoin Block #${Number(snap.btc_block).toLocaleString()} — Confirmed</span>`;
-      document.getElementById('btc-link').href = `https://blockstream.info/block-height/${snap.btc_block}`;
+      btcLink.href = `https://blockstream.info/block-height/${snap.btc_block}`;
+      btcLink.style.display = 'inline-flex';
     } else if(snap.ots_proof){
-      document.getElementById('r-btc').innerHTML = `<span class="pending">⏳ Submitted to Bitcoin network — confirmation pending</span>`;
+      document.getElementById('r-btc').innerHTML = `<span class="pending">⏳ OpenTimestamps proof submitted — Bitcoin confirmation pending</span>`;
+      btcLink.style.display = 'none';
     } else {
-      document.getElementById('r-btc').textContent = 'Pending submission';
+      document.getElementById('r-btc').textContent = 'Pending OpenTimestamps submission';
+      btcLink.style.display = 'none';
     }
 
-    document.getElementById('result-status').textContent = '✓ VERIFIED';
-    document.getElementById('result-status').className = 'result-status rs-valid';
-    document.getElementById('result-title').textContent = `${name} v${snap.version} · Record authenticated`;
+    // Offer the raw .ots proof so anyone can verify it independently (`ots verify`).
+    const otsLink = document.getElementById('ots-link');
+    if(snap.ots_proof){
+      try {
+        const bytes = Uint8Array.from(atob(snap.ots_proof), c => c.charCodeAt(0));
+        otsLink.href = URL.createObjectURL(new Blob([bytes], { type:'application/octet-stream' }));
+        otsLink.download = `${(name||'receipt').replace(/[^\w.-]+/g,'_')}-${snap.version}.ots`;
+        otsLink.style.display = 'inline-flex';
+      } catch { otsLink.style.display = 'none'; }
+    } else {
+      otsLink.style.display = 'none';
+    }
+
+    // ── INTEGRITY GATE ── Re-hash the archived manifest in the browser and gate
+    //     the badge on THAT result — never on the database's say-so.
+    const verdict = await rehashVerify(snap);
+    const statusEl = document.getElementById('result-status');
+    const titleEl  = document.getElementById('result-title');
+    const integEl  = document.getElementById('r-integrity');
+    if(verdict === 'verified'){
+      statusEl.textContent = '✓ VERIFIED'; statusEl.className = 'result-status rs-valid';
+      titleEl.textContent = `${name} v${snap.version} · Re-hashed and authentic`;
+      integEl.innerHTML = '<span class="btc">✓ Manifest re-hashed in your browser — matches the recorded SHA-384.</span>';
+    } else if(verdict === 'mismatch'){
+      statusEl.textContent = '✗ MISMATCH'; statusEl.className = 'result-status rs-invalid';
+      titleEl.textContent = `${name} v${snap.version} · Does NOT match the archived manifest`;
+      integEl.innerHTML = '<span style="color:var(--red);font-weight:700;">✗ Re-hash differs from the recorded fingerprint — the manifest may have been altered.</span>';
+    } else if(verdict === 'legacy'){
+      statusEl.textContent = '⚠ LEGACY'; statusEl.className = 'result-status rs-pending';
+      titleEl.textContent = `${name} v${snap.version} · Legacy pre-OTS record`;
+      integEl.innerHTML = '<span class="pending">Legacy pre-OTS record — its fingerprint used an older, non-reproducible algorithm and is not independently verifiable. Re-capture pending.</span>';
+    } else {
+      statusEl.textContent = '⚠ UNVERIFIED'; statusEl.className = 'result-status rs-pending';
+      titleEl.textContent = `${name} v${snap.version} · Manifest unavailable to re-hash`;
+      integEl.innerHTML = '<span class="pending">The archived manifest could not be fetched to re-hash right now. The record exists, but verify it yourself shortly.</span>';
+    }
     // Only set View Package link if package_id is valid
     const pkgLink = document.getElementById('pkg-link');
     if(snap.package_id && snap.package_id !== 'null' && snap.package_id !== 'undefined'){
