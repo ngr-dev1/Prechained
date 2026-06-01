@@ -17,6 +17,28 @@
   name = "anchor-checker"
   cron = "*/10 * * * *"
 
+[[scheduled-functions]]
+  name = "crawler-new"
+  cron = "*/10 * * * *"
+
+# Drains the pending_captures queue in 8.5s slices. Runs every 5 minutes —
+# twice as often as discovery — so the backlog keeps shrinking between
+# discovery sweeps.
+[[scheduled-functions]]
+  name = "queue-drainer"
+  cron = "*/5 * * * *"
+
+# Backfills legacy snapshots to canonical fp:v2 fingerprints + real OTS proofs.
+# Runs every 5 minutes until all ~97k legacy rows are cleared.
+# Remove or disable once remaining=0 is reported.
+[[scheduled-functions]]
+  name = "backfill"
+  cron = "*/5 * * * *"
+
+[[scheduled-functions]]
+  name = "pruner"
+  cron = "0 3 * * *"
+
 [[redirects]]
   from = "/capture"
   to = "/capture.html"
@@ -66,18 +88,3 @@
   from = "/incidents"
   to = "/incidents.html"
   status = 200
-
-[[scheduled-functions]]
-  name = "crawler-new"
-  cron = "*/10 * * * *"
-
-# Drains the pending_captures queue in 8.5s slices. Runs every 5 minutes —
-# twice as often as discovery — so the backlog keeps shrinking between
-# discovery sweeps. Bump frequency / move to GitHub Actions if backlog grows.
-[[scheduled-functions]]
-  name = "queue-drainer"
-  cron = "*/5 * * * *"
-
-[[scheduled-functions]]
-  name = "pruner"
-  cron = "0 3 * * *"
