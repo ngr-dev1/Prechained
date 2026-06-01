@@ -4,6 +4,7 @@
   "description": "The internet's cryptographic memory for the software supply chain.",
   "type": "module",
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0"
+    "@supabase/supabase-js": "^2.39.0",
+    "opentimestamps": "^0.4.9"
   }
 }

@@ -1,8 +1,9 @@
 // queue-drainer.js — Capture Queue Drainer
 // Runs every few minutes. Claims a batch of pending (package, version) rows
 // from `pending_captures`, fetches the real manifest for each, fingerprints +
-// stores + BTC-anchors it via the shared captureVersion(), then marks the row
-// done. Whatever doesn't finish in the 8.5s budget stays 'pending' and is
+// stores it via the shared captureVersion(), batch-stamps the whole run's
+// fingerprints with OpenTimestamps (one Merkle root), then marks rows done.
+// Whatever doesn't finish in the 8.5s budget stays 'pending' and is
 // picked up next run — so the firehose is drained in slices, nothing dropped.
 //
 // This is the half of the pipeline that the old design was missing: the
@@ -16,6 +17,7 @@ import {
   claimCaptures, finishCapture, requeueStale, snapshotExists,
   sha384
 } from "./_shared.js";
+import { stampFingerprints } from "./_ots.js";
 
 const TIMEOUT = 8500;
 const BATCH = 60;   // claim this many per run; drain as many as time allows
@@ -276,24 +278,19 @@ async function processRow(row) {
       captured_by: "prechained.com/queue-drainer"
     };
 
-    const ok = await captureVersion(
+    const result = await captureVersion(
       pkg, version, ecosystem,
       fetched.integrity, fetched.shasum, fetched.license,
       fetched.dependencies, fullManifest, null
     );
 
-    if (ok) {
-      // Recompute the same fingerprint captureVersion used, for diff detection.
-      const fp = sha384(JSON.stringify({
-        name: pkg.name, version, ecosystem,
-        integrity: fetched.integrity || "", shasum: fetched.shasum || "",
-        dependencies: (fetched.dependencies || []).slice().sort(),
-        timestamp: fullManifest.captured_at
-      }));
-      await checkFingerprintDiff(pkg.id, package_name, ecosystem, version, fp);
+    if (result) {
+      // captureVersion returns the canonical fingerprint it stored — reuse it
+      // for diff detection instead of recomputing a (now non-canonical) hash.
+      await checkFingerprintDiff(pkg.id, package_name, ecosystem, version, result.fingerprint);
     }
     await finishCapture(id, true);
-    return ok;
+    return result;   // { snapshotId, fingerprint } | null — handler batch-stamps these
   } catch (e) {
     await finishCapture(id, false, e.message);
     return false;
@@ -310,6 +307,7 @@ export default async function handler(req, context) {
   if (requeued) console.log(`[queue-drainer] requeued ${requeued} stale rows`);
 
   let captured = 0, processed = 0;
+  const newlyCaptured = [];   // { snapshotId, fingerprint } collected for one batch stamp
   // Keep claiming small batches until the time budget runs out.
   while (Date.now() - startTime < TIMEOUT) {
     const rows = await claimCaptures(BATCH);
@@ -317,7 +315,30 @@ export default async function handler(req, context) {
     for (const row of rows) {
       if (Date.now() - startTime > TIMEOUT) break;
       processed++;
-      if (await processRow(row)) captured++;
+      const result = await processRow(row);
+      if (result) { captured++; newlyCaptured.push(result); }
+    }
+  }
+
+  // ── BATCH OTS STAMP ─────────────────────────────────────────
+  // One Merkle root + one calendar submission for everything captured this run,
+  // regardless of how many rows — cost is ~constant. Best-effort: if the
+  // calendars are unreachable the rows stay ots_proof:null and anchor-checker's
+  // back-stamp pass retries them later. Runs after the drain loop so it never
+  // eats into the per-row time budget.
+  let stamped = 0;
+  if (newlyCaptured.length) {
+    try {
+      const proofs = await stampFingerprints(newlyCaptured.map(c => c.fingerprint));
+      await Promise.all(newlyCaptured.map(async c => {
+        const proof = proofs.get(c.fingerprint);
+        if (!proof) return;
+        const { error } = await supabase.from("snapshots")
+          .update({ ots_proof: proof }).eq("id", c.snapshotId);
+        if (!error) stamped++;
+      }));
+    } catch (e) {
+      console.error("[queue-drainer] OTS stamp failed (anchor-checker will retry):", e.message);
     }
   }
 
@@ -326,10 +347,10 @@ export default async function handler(req, context) {
     .from("pending_captures").select("id", { count: "exact", head: true })
     .eq("status", "pending");
 
-  console.log(`[queue-drainer] done: processed ${processed}, captured ${captured}, backlog ${backlog ?? "?"}, ${elapsed}ms`);
+  console.log(`[queue-drainer] done: processed ${processed}, captured ${captured}, stamped ${stamped}, backlog ${backlog ?? "?"}, ${elapsed}ms`);
 
   return new Response(JSON.stringify({
-    ok: true, processed, captured, requeued, backlog: backlog ?? null,
+    ok: true, processed, captured, stamped, requeued, backlog: backlog ?? null,
     elapsed_ms: elapsed, timestamp: new Date().toISOString()
   }), { headers: { "Content-Type": "application/json" } });
 }

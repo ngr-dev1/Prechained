@@ -4,6 +4,10 @@
 
 [functions]
   node_bundler = "esbuild"
+  # opentimestamps is CommonJS with dynamic require()s that esbuild cannot inline
+  # into the ESM bundle (it throws `Dynamic require of "util"` at runtime).
+  # Keeping it external lets Node load it natively. See netlify/functions/_ots.js.
+  external_node_modules = ["opentimestamps"]
 
 [[scheduled-functions]]
   name = "crawler-all"

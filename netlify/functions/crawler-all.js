@@ -5,7 +5,7 @@
 
 import {
   supabase, upsertPackage, captureVersion, sha384, generateReceiptId,
-  storeManifestInGithub, getCurrentBtcBlock,
+  storeManifestInGithub, canonicalFingerprint,
   GITHUB_TOKEN,
   fetchNpmPackages, fetchPypiPackages, fetchCargoPackages, fetchGithubRepos,
   fetchNugetPackages, fetchMavenPackages, fetchRubygemsPackages, fetchPackagistPackages
@@ -260,7 +260,6 @@ export async function crawlerGithub(req, context) {
   let captured = 0, skipped = 0;
   console.log(`[github] starting ${new Date().toISOString()}`);
 
-  const btcBlock = await getCurrentBtcBlock();
   const headers = { "Accept": "application/vnd.github.v3+json", "User-Agent": "prechained.com/1.0" };
   if (GITHUB_TOKEN) headers["Authorization"] = "token " + GITHUB_TOKEN;
 
@@ -327,15 +326,18 @@ export async function crawlerGithub(req, context) {
           parent_repo: repoData.parent?.full_name || null,
           captured_at: new Date().toISOString(), captured_by: "prechained.com", crawler_sha384: CRAWLER_SHA384
         };
-        const payload = JSON.stringify({ repo, commit_sha: latestSha, ecosystem: "github", timestamp: manifest.captured_at });
-        const fingerprint = sha384(payload);
+        // Canonical, reproducible fingerprint over the stored manifest (same
+        // algorithm captureVersion uses). Insert UNANCHORED — no fake BTC block;
+        // anchor-checker back-stamps this fp:"v2" row, then upgrades it once a
+        // real Bitcoin attestation exists.
+        const fingerprint = canonicalFingerprint(manifest);
         const manifestPath = await storeManifestInGithub("github", repo, version, manifest);
         const { error } = await supabase.from("snapshots").insert({
           package_id: pkg.id, version, ecosystem: "github",
           sha384_fingerprint: fingerprint, receipt_id: generateReceiptId(),
-          btc_anchored: btcBlock ? true : false, btc_block: btcBlock || null,
+          btc_anchored: false, btc_block: null, ots_proof: null,
           manifest_path: manifestPath,
-          raw_metadata: { commit_sha: latestSha, branch: repoData.default_branch || "main", license: repoData.license?.spdx_id || "", crawler_sha384: CRAWLER_SHA384 }
+          raw_metadata: { fp: "v2", commit_sha: latestSha, branch: repoData.default_branch || "main", license: repoData.license?.spdx_id || "", crawler_sha384: CRAWLER_SHA384 }
         });
         if (!error) captured++;
         else skipped++;
