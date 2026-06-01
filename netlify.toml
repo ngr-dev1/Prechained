@@ -21,18 +21,26 @@
   name = "crawler-new"
   cron = "*/10 * * * *"
 
-# Drains the pending_captures queue in 8.5s slices. Runs every 5 minutes —
-# twice as often as discovery — so the backlog keeps shrinking between
-# discovery sweeps.
 [[scheduled-functions]]
   name = "queue-drainer"
   cron = "*/5 * * * *"
 
-# Backfills legacy snapshots to canonical fp:v2 fingerprints + real OTS proofs.
-# Runs every 5 minutes until all ~97k legacy rows are cleared.
-# Remove or disable once remaining=0 is reported.
+# Three parallel backfill workers — each runs every 5 min simultaneously.
+# Worker A: ascending order (oldest rows first)
+# Worker B: descending order (newest rows first)  
+# Worker C: rubygems + cargo specialist (30k rows combined)
+# Combined: ~3x throughput, ~5 days to clear all 97k legacy rows.
+# Remove all three once remaining=0.
 [[scheduled-functions]]
   name = "backfill"
+  cron = "*/5 * * * *"
+
+[[scheduled-functions]]
+  name = "backfill-b"
+  cron = "*/5 * * * *"
+
+[[scheduled-functions]]
+  name = "backfill-c"
   cron = "*/5 * * * *"
 
 [[scheduled-functions]]
