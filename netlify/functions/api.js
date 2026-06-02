@@ -12,6 +12,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { createHash } from "crypto";
+import { canonicalFingerprint } from "./_shared.js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -79,20 +80,14 @@ async function fetchGitHubManifest(ecosystem, name, version) {
 }
 
 /**
- * Compute the canonical SHA-384 fingerprint from a manifest the same
- * way capture.js / _shared.js does, so the returned value is consistent.
+ * Canonical SHA-384 fingerprint. Delegates to _shared.js::canonicalFingerprint
+ * so the API returns the EXACT same reproducible hash that capture.js and the
+ * queue-drainer store. The previous local implementation hashed a different
+ * field subset and folded in a timestamp fallback, which made API fingerprints
+ * non-reproducible and inconsistent with stored receipts. Fixed.
  */
 function fingerprintFromManifest(manifest) {
-  const payload = JSON.stringify({
-    name: manifest.name,
-    version: manifest.version,
-    ecosystem: manifest.ecosystem,
-    integrity: manifest.dist?.integrity || "",
-    shasum: manifest.dist?.shasum || "",
-    dependencies: Object.keys(manifest.dependencies || {}).sort(),
-    timestamp: manifest.captured_at || new Date().toISOString(),
-  });
-  return createHash("sha384").update(payload).digest("hex");
+  return canonicalFingerprint(manifest);
 }
 
 /**
@@ -130,7 +125,7 @@ async function backfillFromGitHub(manifest, path) {
       btc_block: null,
       ots_proof: null,
       manifest_path: path,
-      raw_metadata: { backfilled_from_github: true, original_captured_at: manifest.captured_at || null },
+      raw_metadata: { fp: "v2", backfilled_from_github: true, original_captured_at: manifest.captured_at || null },
     });
     console.log(`BACKFILLED: ${manifest.ecosystem}/${manifest.name}@${manifest.version} from GitHub → Supabase`);
   } catch (e) {
