@@ -485,7 +485,7 @@ document.getElementById('verify-input').addEventListener('keydown', e => {
 
 // Auto-verify from URL
 const params = new URLSearchParams(window.location.search);
-const receipt = params.get('receipt');
+const receipt = params.get('receipt') || params.get('r');
 if(receipt){
   document.getElementById('verify-input').value = receipt;
   doVerify();
