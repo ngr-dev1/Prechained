@@ -31,30 +31,47 @@ export default async function handler(req) {
   const typeFilter = url.searchParams.get("type") || null; // optional single type
 
   try {
-    // A snapshot is "flagged" if it has EITHER a mutation alert (diff_alert)
-    // OR one or more threat_flags. We query the union via two filtered reads
-    // and merge, because the two markers live under different raw_metadata keys.
-    // Both reads are ordered newest-first and bounded.
-
-    // Pull a generous window of recently-flagged rows, then unify + paginate
-    // in memory. Bounded by FETCH_WINDOW so this stays cheap.
+    // A snapshot is "flagged" if it has EITHER a mutation alert (diff_alert:true)
+    // OR one or more threat_flags (threat_flagged:true). PostgREST's .or() filter
+    // mishandles the ->> JSON arrow, so we run two separate reads — each using the
+    // .eq("raw_metadata->>key", ...) form that is proven to work elsewhere in this
+    // codebase (see anchor-checker.js) — then merge and de-duplicate by id.
     const FETCH_WINDOW = 500;
+    const SELECT = "id, receipt_id, version, ecosystem, captured_at, sha384_fingerprint, manifest_path, raw_metadata, packages(name, description)";
 
-    let base = supabase
-      .from("snapshots")
-      .select("id, receipt_id, version, ecosystem, captured_at, sha384_fingerprint, manifest_path, raw_metadata, packages(name, description)")
-      .order("captured_at", { ascending: false })
-      .limit(FETCH_WINDOW);
-
-    if (ecosystem) base = base.eq("ecosystem", ecosystem);
-
-    // Supabase 'or' across JSON keys: diff_alert true OR threat_flagged true
-    base = base.or("raw_metadata->>diff_alert.eq.true,raw_metadata->>threat_flagged.eq.true");
-
-    const { data, error } = await base;
-    if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: HEADERS });
+    function buildQuery(metaKey) {
+      let q = supabase
+        .from("snapshots")
+        .select(SELECT)
+        .eq(`raw_metadata->>${metaKey}`, "true")
+        .order("captured_at", { ascending: false })
+        .limit(FETCH_WINDOW);
+      if (ecosystem) q = q.eq("ecosystem", ecosystem);
+      return q;
     }
+
+    const [mutRes, threatRes] = await Promise.all([
+      buildQuery("diff_alert"),
+      buildQuery("threat_flagged"),
+    ]);
+
+    if (mutRes.error) {
+      return new Response(JSON.stringify({ error: mutRes.error.message }), { status: 500, headers: HEADERS });
+    }
+    if (threatRes.error) {
+      return new Response(JSON.stringify({ error: threatRes.error.message }), { status: 500, headers: HEADERS });
+    }
+
+    // Merge + de-duplicate by snapshot id (a row could carry both markers).
+    const seen = new Set();
+    const data = [];
+    for (const row of [...(mutRes.data || []), ...(threatRes.data || [])]) {
+      if (seen.has(row.id)) continue;
+      seen.add(row.id);
+      data.push(row);
+    }
+    // Keep newest-first after merge.
+    data.sort((a, b) => new Date(b.captured_at) - new Date(a.captured_at));
 
     // Normalise every flagged snapshot into a flat list of findings.
     const findings = [];
@@ -120,7 +137,7 @@ export default async function handler(req) {
       counts,
       ecosystems_affected: ecosystems.length,
       window: FETCH_WINDOW,
-      window_truncated: (data || []).length >= FETCH_WINDOW,
+      window_truncated: (mutRes.data || []).length >= FETCH_WINDOW || (threatRes.data || []).length >= FETCH_WINDOW,
       limit, offset,
     }), { headers: HEADERS });
 
