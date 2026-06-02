@@ -25,24 +25,6 @@
   name = "queue-drainer"
   cron = "*/5 * * * *"
 
-# Three parallel backfill workers — each runs every 5 min simultaneously.
-# Worker A: ascending order (oldest rows first)
-# Worker B: descending order (newest rows first)  
-# Worker C: rubygems + cargo specialist (30k rows combined)
-# Combined: ~3x throughput, ~5 days to clear all 97k legacy rows.
-# Remove all three once remaining=0.
-[[scheduled-functions]]
-  name = "backfill"
-  cron = "*/5 * * * *"
-
-[[scheduled-functions]]
-  name = "backfill-b"
-  cron = "*/5 * * * *"
-
-[[scheduled-functions]]
-  name = "backfill-c"
-  cron = "*/5 * * * *"
-
 [[scheduled-functions]]
   name = "pruner"
   cron = "0 3 * * *"
