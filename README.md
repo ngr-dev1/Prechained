@@ -27,7 +27,7 @@ Every manifest is stored in a public GitHub archive. Anyone can download it, has
 2. Each package version is SHA-384 fingerprinted
 3. The manifest is stored permanently in [prechained-archive](https://github.com/ngr-dev1/prechained-archive)
 4. The fingerprint and manifest path are recorded in the database
-5. Every record is OpenTimestamps anchored and Bitcoin confirmed
+5. Each record is queued for OpenTimestamps anchoring; Bitcoin confirmation follows once the timestamp is included in a block
 
 Anyone can verify: download the manifest → hash it → compare to the SHA-384 on [prechained.com](https://prechained.com). If they match, the record is authentic.
 
@@ -60,7 +60,7 @@ Need a commercial license? Contact [NextGenRails™](https://nextgenrails.net).
 
 Prechained's own software bill of materials has been verified by [cbomcompliance.com](https://cbomcompliance.com).
 
-**Receipt:** `NGR-CBOM-8ED22D90DD7D` · Status: CLEAN · 0 issues · Bitcoin anchored
+**Receipt:** `NGR-CBOM-8ED22D90DD7D` · Status: CLEAN · 0 issues · OpenTimestamps anchored
 
 See [SECURITY.md](SECURITY.md) for the full compliance receipt.
 
@@ -70,7 +70,7 @@ See [SECURITY.md](SECURITY.md) for the full compliance receipt.
 
 Prechained covers the public supply chain — free, automatic, forever.
 
-**[cbomcompliance.com](https://cbomcompliance.com)** covers your private packages, internal dependencies, and proprietary software with formally signed cryptographic receipts accepted by C3PAOs and auditors under CMMC, EU CRA, and ISO 27001. Zero retention.
+**[cbomcompliance.com](https://cbomcompliance.com)** covers your private packages, internal dependencies, and proprietary software with formally signed cryptographic receipts suitable for submission to C3PAOs and auditors under frameworks such as CMMC, EU CRA, and ISO 27001. Zero retention.
 
 ---
 
