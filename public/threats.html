@@ -139,7 +139,7 @@
   </div>
 
   <div class="honest-note">
-    <strong>What this is and isn't:</strong> Each finding is a concrete, checkable difference between a new version and prior captured versions — not a verdict of malice. A detector only fires when prior history exists to compare against. Verify the receipts and read the evidence before drawing conclusions. Detection covers what Prechained captures: it is not a complete view of every package on earth.
+    <strong>What this is and isn't:</strong> Each finding is a concrete, checkable difference between a new version and prior captured versions — not a verdict of malice. A detector only fires when prior history exists to compare against. Verify the receipts and read the evidence before drawing conclusions. Detection covers what Prechained captures: it is not a complete view of every package on earth. An empty feed is the expected normal state — content substitution under a fixed version is rare, so most days there is nothing to report. The detectors run on every capture regardless.
   </div>
 
   <div class="stats-bar" id="stats-bar">
@@ -266,7 +266,7 @@ function renderStats(data){
 function renderFeed(){
   const el=document.getElementById('feed');
   if(!all.length){
-    el.innerHTML=`<div class="empty-state"><div class="icon">✓</div>No findings match this filter yet.<div class="sub">Detectors run at capture time and only fire when a new version differs from prior captured history. As crawling continues, real findings appear here.</div></div>`;
+    el.innerHTML=`<div class="empty-state"><div class="icon">✓</div>No findings match this filter yet — and that is the normal state.<div class="sub">A finding only appears when a package Prechained already has history for is republished with changed content. That is a rare event by design. The detectors are live and run on every capture; an empty feed means nothing matching has been observed in the current window, not that detection is off. When something does change, it shows here with verifiable before/after receipts.</div></div>`;
     return;
   }
   el.innerHTML=all.map(f=>{
