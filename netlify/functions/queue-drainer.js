@@ -15,7 +15,7 @@
 import {
   supabase, upsertPackage, captureVersion,
   claimCaptures, finishCapture, requeueStale, snapshotExists,
-  sha384
+  sha384, canonicalFingerprint, storeManifestInGithub
 } from "./_shared.js";
 import { stampFingerprints } from "./_ots.js";
 import { runDetectors } from "./_detectors.js";
@@ -26,6 +26,66 @@ const BATCH = 60;   // claim this many per run; drain as many as time allows
 // ── XZ-STYLE DIFF DETECTION ───────────────────────────────────
 // If a version we already archived reappears with a different fingerprint,
 // that's content substitution under a fixed version string — flag it HIGH.
+// Fetch the existing snapshot for an exact package+version, returning the
+// stored canonical fingerprint and receipt so we can compare against a fresh
+// capture. Returns null if none exists yet.
+async function getSnapshotForVersion(pkgId, version) {
+  const { data } = await supabase
+    .from("snapshots")
+    .select("id, sha384_fingerprint, receipt_id, captured_at, raw_metadata")
+    .eq("package_id", pkgId).eq("version", version)
+    .limit(1).maybeSingle();
+  return data || null;
+}
+
+// Record a same-version substitution: the manifest changed under a fixed
+// version string. We do NOT insert a second snapshot row (that would collide
+// with the package+version uniqueness and muddy the archive). Instead we flag
+// the EXISTING row with a mutation alert that carries the new fingerprint as
+// evidence, preserving the original receipt while making the change provable.
+// The new manifest is archived to GitHub so the changed content is itself
+// retained and independently checkable.
+async function recordSameVersionMutation(pkgId, pkgName, ecosystem, version, existingSnap, newFingerprint, newManifest) {
+  try {
+    const msg = `FINGERPRINT MISMATCH: ${ecosystem}/${pkgName}@${version} ` +
+      `stored=${existingSnap.sha384_fingerprint.slice(0,16)}… new=${newFingerprint.slice(0,16)}… — same version, changed manifest (XZ-style substitution)`;
+    console.error(`[DIFF-ALERT] ${msg}`);
+
+    // Archive the changed manifest so the new content is retained for inspection.
+    let changedManifestPath = null;
+    try {
+      changedManifestPath = await storeManifestInGithub(
+        ecosystem, pkgName, `${version}__mutation-${newFingerprint.slice(0,12)}`, newManifest
+      );
+    } catch (e) { console.error("[DIFF-ARCHIVE] failed:", e.message); }
+
+    // Flag the actor index.
+    await supabase.from("actor_index").update({ flagged: true })
+      .eq("package_name", pkgName).eq("ecosystem", ecosystem);
+
+    // MERGE the mutation alert into the existing row's raw_metadata.
+    const merged = {
+      ...(existingSnap.raw_metadata || {}),
+      diff_alert: true,
+      alert_type: "FINGERPRINT_MISMATCH",
+      alert_severity: "HIGH",
+      alert_detail: msg,
+      // The ORIGINAL stored fingerprint is the "prior"; the freshly observed
+      // one is the change. We store the observed change as evidence on the
+      // original row, keeping the original receipt as the anchor of record.
+      observed_changed_fingerprint: newFingerprint,
+      observed_changed_at: new Date().toISOString(),
+      observed_changed_manifest_path: changedManifestPath,
+      prior_fingerprint: existingSnap.sha384_fingerprint,
+      prior_receipt_id: existingSnap.receipt_id,
+      prior_captured_at: existingSnap.captured_at,
+    };
+    await supabase.from("snapshots").update({ raw_metadata: merged }).eq("id", existingSnap.id);
+  } catch (e) {
+    console.error("[DIFF-DETECT same-version] error:", e.message);
+  }
+}
+
 async function checkFingerprintDiff(pkgId, pkgName, ecosystem, version, newFingerprint) {
   if (!newFingerprint) return;
   try {
@@ -273,14 +333,33 @@ async function processRow(row) {
     );
     if (!pkg) { await finishCapture(id, false, "upsertPackage failed"); return false; }
 
-    // Skip if already captured (a concurrent run may have done it).
-    if (await snapshotExists(pkg.id, version)) { await finishCapture(id, true); return false; }
-
     const fullManifest = {
       ...fetched.manifest,
       captured_at: new Date().toISOString(),
       captured_by: "prechained.com/queue-drainer"
     };
+
+    // Compute the canonical fingerprint of what we just fetched, BEFORE deciding
+    // whether to skip. This is what makes same-version substitution detectable:
+    // if a snapshot for this exact package+version already exists, we compare
+    // its stored fingerprint against this fresh one.
+    //   • identical  → genuinely already captured; skip.
+    //   • different  → the published manifest CHANGED under a fixed version
+    //                  string (XZ-style substitution). Record the mutation
+    //                  against the existing row and stop — we keep the original
+    //                  receipt intact and flag the change as evidence.
+    const candidateFp = canonicalFingerprint(fullManifest);
+    const existingSnap = await getSnapshotForVersion(pkg.id, version);
+    if (existingSnap) {
+      if (existingSnap.sha384_fingerprint === candidateFp) {
+        await finishCapture(id, true); // same content, already have it
+        return false;
+      }
+      // Same version, DIFFERENT canonical fingerprint → substitution event.
+      await recordSameVersionMutation(pkg.id, package_name, ecosystem, version, existingSnap, candidateFp, fullManifest);
+      await finishCapture(id, true);
+      return false;
+    }
 
     const result = await captureVersion(
       pkg, version, ecosystem,
