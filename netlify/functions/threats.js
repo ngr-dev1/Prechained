@@ -36,7 +36,11 @@ export default async function handler(req) {
     // mishandles the ->> JSON arrow, so we run two separate reads — each using the
     // .eq("raw_metadata->>key", ...) form that is proven to work elsewhere in this
     // codebase (see anchor-checker.js) — then merge and de-duplicate by id.
-    const FETCH_WINDOW = 500;
+    // Hard cap kept small: raw_metadata rows are heavy (threat_flags arrays,
+    // detector evidence). Pulling hundreds blew the Lambda response size limit
+    // and returned a truncated body Netlify couldn't decode. The feed paginates
+    // 25 at a time, so a window of 60 is plenty and stays well under the limit.
+    const FETCH_WINDOW = 60;
     const SELECT = "id, receipt_id, version, ecosystem, captured_at, sha384_fingerprint, manifest_path, raw_metadata, packages(name, description)";
 
     function buildQuery(metaKey) {
