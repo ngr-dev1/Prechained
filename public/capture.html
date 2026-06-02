@@ -236,7 +236,7 @@ async function capture() {
       const alreadyMsg = data.versions_already_archived > 0 ? ` (${data.versions_already_archived} already in archive)` : '';
       document.getElementById('result').innerHTML = `
         <div class="result">
-          <div class="result-head success">✓ Captured & Bitcoin Anchored</div>
+          <div class="result-head success">✓ Captured${data.btc_block ? ' &amp; Bitcoin Anchored' : ' — OpenTimestamps pending'}</div>
           <div class="result-body">
             <div class="result-row"><span class="result-label">Receipt ID</span><span class="result-val receipt">${data.receipt_id || '—'}</span></div>
             <div class="result-row"><span class="result-label">Package</span><span class="result-val">${data.package} (${data.ecosystem})</span></div>
