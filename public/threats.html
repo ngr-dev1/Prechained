@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Threat Feed · Prechained</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f0ede8;--bg2:#e8e4de;--bg3:#ffffff;--border:#d8d3cc;--border2:#ccc8c0;
+    --text:#111111;--muted:#666666;--accent:#e8390e;--accent2:#c8300c;
+    --green:#16a34a;--yellow:#854d0e;--red:#dc2626;
+    --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;line-height:1.6;}
+
+  nav{display:flex;align-items:center;gap:20px;padding:16px 32px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:100;}
+  .logo{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--text);text-decoration:none;letter-spacing:-0.5px;}
+  .logo b{color:var(--accent);}
+  .live{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--green);font-family:var(--mono);}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+  nav a{color:var(--muted);text-decoration:none;font-size:13px;transition:color 0.15s;}
+  nav a:hover{color:var(--text);}
+  .nav-r{display:flex;align-items:center;gap:18px;margin-left:auto;}
+  .nav-more{position:relative;}
+  .nav-more-btn{background:none;border:1px solid #ccc;border-radius:6px;padding:4px 10px;font-size:13px;font-weight:500;color:#333;cursor:pointer;font-family:inherit;line-height:1;}
+  .nav-more-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .nav-dropdown{display:none;position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid #e0dbd4;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:240px;z-index:9999;overflow:hidden;}
+  .nav-dropdown.open{display:block;}
+  .nav-dropdown a{display:flex;flex-direction:column;padding:10px 16px;text-decoration:none;border-bottom:1px solid #f0ede8;}
+  .nav-dropdown a:last-child{border-bottom:none;}
+  .nav-dropdown a:hover{background:#f7f4f0;}
+  .nav-dropdown .dd-label{font-size:13px;font-weight:600;color:#111;}
+  .nav-dropdown .dd-desc{font-size:11px;color:#888;margin-top:2px;}
+
+  .container{max-width:980px;margin:0 auto;padding:48px 24px;}
+  .page-header{margin-bottom:28px;}
+  .page-header h1{font-family:var(--mono);font-size:22px;font-weight:600;letter-spacing:-0.5px;margin-bottom:8px;}
+  .page-header p{color:var(--muted);font-size:13px;max-width:640px;line-height:1.7;}
+
+  .honest-note{background:#fff8f0;border:1px solid #fcd9b0;border-left:3px solid var(--accent);padding:14px 18px;margin-bottom:28px;font-size:12px;color:#7c4a00;line-height:1.7;font-family:var(--mono);}
+  .honest-note strong{color:var(--accent);}
+
+  .stats-bar{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+  .stat{background:var(--bg2);border:1px solid var(--border);padding:14px 20px;flex:1;min-width:110px;}
+  .stat-val{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--text);}
+  .stat-val.red{color:var(--red);}
+  .stat-lbl{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px;}
+
+  .filters{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+  .filter-label{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-right:4px;}
+  .filter-btn{background:var(--bg2);border:1px solid var(--border2);color:var(--muted);font-family:var(--mono);font-size:11px;padding:5px 12px;cursor:pointer;transition:all 0.15s;letter-spacing:0.5px;}
+  .filter-btn:hover,.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+  .threat-card{background:var(--bg3);border:1px solid var(--border);margin-bottom:12px;transition:border-color 0.15s;}
+  .threat-card:hover{border-color:var(--accent);}
+  .threat-head{display:flex;align-items:flex-start;gap:14px;padding:16px 20px;border-bottom:1px solid var(--border);}
+  .sev{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1px;padding:4px 10px;text-transform:uppercase;white-space:nowrap;flex-shrink:0;margin-top:2px;}
+  .sev.HIGH{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;}
+  .sev.MEDIUM{background:#fef9c3;color:#854d0e;border:1px solid #fde68a;}
+  .sev.LOW{background:#dcfce7;color:#15803d;border:1px solid #86efac;}
+  .threat-pkg{font-family:var(--mono);font-size:14px;color:var(--accent);font-weight:600;word-break:break-all;}
+  .threat-sub{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:2px;}
+  .threat-eco{font-size:10px;background:var(--bg2);color:var(--muted);padding:2px 6px;font-family:var(--mono);display:inline-block;margin-right:6px;}
+  .threat-time{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap;flex-shrink:0;}
+  .type-tag{font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-top:6px;}
+
+  .threat-body{padding:16px 20px;}
+  .detail-line{font-size:13px;color:var(--text);line-height:1.6;margin-bottom:12px;}
+  .ev-row{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:start;margin-bottom:6px;}
+  .ev-label{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding-top:2px;}
+  .ev-val{font-family:var(--mono);font-size:11px;color:var(--text);word-break:break-all;line-height:1.5;}
+  .ev-val.new{color:var(--red);}
+  .ev-val.prior{color:var(--green);}
+
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+  .action-btn{font-family:var(--mono);font-size:11px;font-weight:600;padding:7px 14px;text-decoration:none;cursor:pointer;border:none;transition:all 0.15s;letter-spacing:0.3px;}
+  .action-btn.primary{background:var(--text);color:#fff;}
+  .action-btn.primary:hover{background:var(--accent);}
+  .action-btn.secondary{background:var(--bg2);color:var(--text);border:1px solid var(--border2);}
+  .action-btn.secondary:hover{border-color:var(--accent);color:var(--accent);}
+
+  .empty-state{text-align:center;padding:80px 24px;color:var(--muted);font-family:var(--mono);font-size:13px;}
+  .empty-state .icon{font-size:36px;margin-bottom:16px;}
+  .empty-state .sub{font-size:11px;margin-top:8px;opacity:0.7;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.6;}
+
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle;margin-right:8px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .load-more{display:block;width:100%;padding:14px;background:var(--bg2);border:1px solid var(--border);font-family:var(--mono);font-size:12px;color:var(--muted);cursor:pointer;text-align:center;margin-top:16px;transition:all 0.15s;}
+  .load-more:hover{border-color:var(--accent);color:var(--accent);}
+
+  .truncation-note{font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;margin-top:16px;opacity:0.7;}
+
+  footer{border-top:1px solid var(--border);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);flex-wrap:wrap;gap:10px;margin-top:32px;}
+  footer a{color:var(--muted);text-decoration:none;font-weight:500;}
+  footer a:hover{color:var(--accent);}
+
+  @media(max-width:640px){
+    nav{padding:12px 16px;}
+    .container{padding:24px 16px;}
+    .ev-row{grid-template-columns:1fr;gap:2px;}
+    .threat-time{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">Pre<b>chained</b></a>
+  <div class="nav-r">
+    <div class="live"><div class="dot"></div>Recording live</div>
+    <a href="/browse">Browse</a>
+    <a href="/capture">Capture</a>
+    <a href="/verify">Verify</a>
+    <a href="/threats" style="color:var(--accent);font-weight:600;">Threat Feed ↗</a>
+    <a href="/incidents" style="color:var(--accent);font-weight:600;">Incidents ↗</a>
+    <div class="nav-more">
+      <button class="nav-more-btn" onclick="toggleMore(event)">More ▾</button>
+      <div class="nav-dropdown" id="nav-dropdown">
+        <a href="/threat"><span class="dd-label">Actor Intel</span><span class="dd-desc">Investigate a maintainer or package</span></a>
+        <a href="/api"><span class="dd-label">API</span><span class="dd-desc">REST API docs &amp; reference</span></a>
+        <a href="/badge"><span class="dd-label">Badge</span><span class="dd-desc">README badge for your repo</span></a>
+        <a href="https://github.com/ngr-dev1/prechained" target="_blank"><span class="dd-label">GitHub</span><span class="dd-desc">Source code (AGPL-3.0)</span></a>
+        <a href="https://github.com/ngr-dev1/prechained-archive" target="_blank"><span class="dd-label">Archive</span><span class="dd-desc">Permanent manifest archive</span></a>
+        <a href="/license"><span class="dd-label">License</span><span class="dd-desc">AGPL-3.0 terms</span></a>
+        <a href="/terms"><span class="dd-label">Terms</span><span class="dd-desc">Terms of service</span></a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <h1>Live Threat Feed</h1>
+    <p>Packages where a new capture differs from the package's own prior history in a way consistent with a supply-chain attack. Every finding is evidence-backed and links to verifiable cryptographic receipts. Detection runs at capture time, comparing each version against earlier captured versions of the same package.</p>
+  </div>
+
+  <div class="honest-note">
+    <strong>What this is and isn't:</strong> Each finding is a concrete, checkable difference between a new version and prior captured versions — not a verdict of malice. A detector only fires when prior history exists to compare against. Verify the receipts and read the evidence before drawing conclusions. Detection covers what Prechained captures: it is not a complete view of every package on earth.
+  </div>
+
+  <div class="stats-bar" id="stats-bar">
+    <div class="stat"><div class="stat-val" id="stat-total">—</div><div class="stat-lbl">Findings (recent)</div></div>
+    <div class="stat"><div class="stat-val red" id="stat-high">—</div><div class="stat-lbl">High Severity</div></div>
+    <div class="stat"><div class="stat-val" id="stat-types">—</div><div class="stat-lbl">Finding Types</div></div>
+    <div class="stat"><div class="stat-val" id="stat-eco">—</div><div class="stat-lbl">Ecosystems</div></div>
+  </div>
+
+  <div class="filters" id="type-filters">
+    <span class="filter-label">Type:</span>
+    <button class="filter-btn active" data-type="" onclick="setType('', this)">All</button>
+    <button class="filter-btn" data-type="FINGERPRINT_MISMATCH" onclick="setType('FINGERPRINT_MISMATCH', this)">Mutation</button>
+    <button class="filter-btn" data-type="INSTALL_HOOK_ADDED" onclick="setType('INSTALL_HOOK_ADDED', this)">Install Hook</button>
+    <button class="filter-btn" data-type="PUBLISHER_CHANGE" onclick="setType('PUBLISHER_CHANGE', this)">Publisher Change</button>
+    <button class="filter-btn" data-type="SIZE_SPIKE" onclick="setType('SIZE_SPIKE', this)">Size Spike</button>
+  </div>
+
+  <div class="filters" id="eco-filters">
+    <span class="filter-label">Ecosystem:</span>
+    <button class="filter-btn active" data-eco="" onclick="setEco('', this)">All</button>
+    <button class="filter-btn" data-eco="npm" onclick="setEco('npm', this)">npm</button>
+    <button class="filter-btn" data-eco="pypi" onclick="setEco('pypi', this)">pypi</button>
+    <button class="filter-btn" data-eco="cargo" onclick="setEco('cargo', this)">cargo</button>
+    <button class="filter-btn" data-eco="rubygems" onclick="setEco('rubygems', this)">rubygems</button>
+    <button class="filter-btn" data-eco="packagist" onclick="setEco('packagist', this)">packagist</button>
+    <button class="filter-btn" data-eco="nuget" onclick="setEco('nuget', this)">nuget</button>
+  </div>
+
+  <div id="feed" style="margin-top:20px;">
+    <div class="empty-state"><span class="spinner"></span> Loading threat feed...</div>
+  </div>
+
+  <button class="load-more" id="load-more" style="display:none" onclick="loadMore()">Load more</button>
+  <div class="truncation-note" id="trunc-note" style="display:none"></div>
+</div>
+
+<footer>
+  <span>Prechained · Built by <a href="https://nextgenrails.net">NextGenRails™</a> · AGPL-3.0</span>
+  <span>
+    <a href="/verify.html">Verify</a> &nbsp;·&nbsp;
+    <a href="/browse.html">Browse</a> &nbsp;·&nbsp;
+    <a href="/capture.html">Capture</a> &nbsp;·&nbsp;
+    <a href="/incidents.html">Incidents</a>
+  </span>
+</footer>
+
+<script>
+let curType = '';
+let curEco = '';
+let curOffset = 0;
+const LIMIT = 25;
+let all = [];
+let total = 0;
+let windowTruncated = false;
+
+function fmt(d){return new Date(d).toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});}
+function shortFp(fp){return !fp?'—':fp.substring(0,16)+'…'+fp.slice(-8);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+const TYPE_LABELS = {
+  FINGERPRINT_MISMATCH:'Manifest Mutation',
+  INSTALL_HOOK_ADDED:'Install Hook Added',
+  PUBLISHER_CHANGE:'Publisher Change',
+  SIZE_SPIKE:'Size Spike'
+};
+
+function setType(t, btn){
+  curType=t; curOffset=0; all=[];
+  document.querySelectorAll('#type-filters .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  resetFeed(); load(true);
+}
+function setEco(e, btn){
+  curEco=e; curOffset=0; all=[];
+  document.querySelectorAll('#eco-filters .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  resetFeed(); load(true);
+}
+function resetFeed(){
+  document.getElementById('feed').innerHTML='<div class="empty-state"><span class="spinner"></span> Loading...</div>';
+  document.getElementById('load-more').style.display='none';
+  document.getElementById('trunc-note').style.display='none';
+}
+
+async function load(reset){
+  try{
+    const p=new URLSearchParams({limit:LIMIT,offset:curOffset});
+    if(curType) p.set('type',curType);
+    if(curEco) p.set('ecosystem',curEco);
+    const res=await fetch('/.netlify/functions/threats?'+p);
+    const data=await res.json();
+    if(data.error) throw new Error(data.error);
+
+    total=data.total||0;
+    windowTruncated=!!data.window_truncated;
+    if(reset) all=data.findings||[];
+    else all=[...all,...(data.findings||[])];
+
+    renderStats(data);
+    renderFeed();
+
+    const btn=document.getElementById('load-more');
+    if(all.length<total){btn.style.display='block';btn.disabled=false;btn.textContent=`Load more (${total-all.length} more)`;}
+    else btn.style.display='none';
+
+    const tn=document.getElementById('trunc-note');
+    if(windowTruncated){tn.style.display='block';tn.textContent='Showing findings from the most recent 500 flagged captures. Older findings remain in the archive.';}
+    else tn.style.display='none';
+  }catch(e){
+    document.getElementById('feed').innerHTML=`<div class="empty-state"><div class="icon">⚠️</div>${esc(e.message)}</div>`;
+  }
+}
+function loadMore(){curOffset+=LIMIT;const b=document.getElementById('load-more');b.disabled=true;b.textContent='Loading...';load(false);}
+
+function renderStats(data){
+  document.getElementById('stat-total').textContent=total.toLocaleString();
+  const high=all.filter(f=>f.severity==='HIGH').length;
+  document.getElementById('stat-high').textContent=high.toLocaleString();
+  document.getElementById('stat-types').textContent=Object.keys(data.counts||{}).length||'—';
+  document.getElementById('stat-eco').textContent=data.ecosystems_affected||'—';
+}
+
+function renderFeed(){
+  const el=document.getElementById('feed');
+  if(!all.length){
+    el.innerHTML=`<div class="empty-state"><div class="icon">✓</div>No findings match this filter yet.<div class="sub">Detectors run at capture time and only fire when a new version differs from prior captured history. As crawling continues, real findings appear here.</div></div>`;
+    return;
+  }
+  el.innerHTML=all.map(f=>{
+    const archiveUrl=f.manifest_path?`https://github.com/ngr-dev1/prechained-archive/blob/main/${f.manifest_path}`:null;
+    let evidence='';
+
+    if(f.type==='FINGERPRINT_MISMATCH'){
+      evidence=`
+        <div class="ev-row"><div class="ev-label">Prior FP</div><div class="ev-val prior" title="${esc(f.evidence.prior_fingerprint||'')}">${shortFp(f.evidence.prior_fingerprint)}</div></div>
+        <div class="ev-row"><div class="ev-label">New FP</div><div class="ev-val new" title="${esc(f.fingerprint||'')}">${shortFp(f.fingerprint)}</div></div>
+        ${f.evidence.prior_captured_at?`<div class="ev-row"><div class="ev-label">Prior capture</div><div class="ev-val" style="color:var(--muted)">${fmt(f.evidence.prior_captured_at)}</div></div>`:''}`;
+    } else if(f.type==='INSTALL_HOOK_ADDED'){
+      const hooks=f.evidence.hooks||{};
+      evidence=Object.entries(hooks).map(([k,v])=>`<div class="ev-row"><div class="ev-label">${esc(k)}</div><div class="ev-val new">${esc(String(v).substring(0,140))}</div></div>`).join('')+
+        `<div class="ev-row"><div class="ev-label">Prior versions</div><div class="ev-val" style="color:var(--muted)">${f.evidence.prior_versions_checked} checked, none had install hooks</div></div>`;
+    } else if(f.type==='PUBLISHER_CHANGE'){
+      evidence=`
+        <div class="ev-row"><div class="ev-label">New publisher</div><div class="ev-val new">${esc(f.evidence.new_publisher||'')}</div></div>
+        <div class="ev-row"><div class="ev-label">Prior</div><div class="ev-val prior">${esc((f.evidence.prior_publishers||[]).join(', '))}</div></div>`;
+    } else if(f.type==='SIZE_SPIKE'){
+      evidence=`
+        <div class="ev-row"><div class="ev-label">New size</div><div class="ev-val new">${((f.evidence.new_size_bytes||0)/1e6).toFixed(2)} MB</div></div>
+        <div class="ev-row"><div class="ev-label">Prior median</div><div class="ev-val prior">${((f.evidence.prior_median_bytes||0)/1e6).toFixed(2)} MB</div></div>
+        <div class="ev-row"><div class="ev-label">Ratio</div><div class="ev-val new">${f.evidence.ratio}x</div></div>`;
+    }
+
+    return `
+      <div class="threat-card">
+        <div class="threat-head">
+          <span class="sev ${esc(f.severity)}">${esc(f.severity)}</span>
+          <div style="flex:1;min-width:0;">
+            <div class="threat-pkg"><span class="threat-eco">${esc(f.ecosystem)}</span>${esc(f.package)}</div>
+            <div class="threat-sub">v${esc(f.version)}</div>
+            <div class="type-tag">${esc(TYPE_LABELS[f.type]||f.type)}</div>
+          </div>
+          <div class="threat-time">${fmt(f.captured_at)}</div>
+        </div>
+        <div class="threat-body">
+          <div class="detail-line">${esc(f.detail)}</div>
+          ${evidence}
+          <div class="actions">
+            <a class="action-btn primary" href="/verify?r=${encodeURIComponent(f.receipt_id)}">Verify Receipt →</a>
+            ${f.evidence.prior_receipt_id?`<a class="action-btn secondary" href="/verify?r=${encodeURIComponent(f.evidence.prior_receipt_id)}">Verify Prior</a>`:''}
+            ${archiveUrl?`<a class="action-btn secondary" href="${archiveUrl}" target="_blank">View Manifest →</a>`:''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+load(true);
+setInterval(()=>{if(curOffset===0)load(true);},60000);
+
+function toggleMore(e){e.stopPropagation();var d=document.getElementById('nav-dropdown');if(d)d.classList.toggle('open');}
+document.addEventListener('click',function(){var d=document.getElementById('nav-dropdown');if(d)d.classList.remove('open');});
+</script>
+
+<script>
+(function(){
+  var U="https://lchwaheggemowdzpbwkh.supabase.co";
+  var K="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxjaHdhaGVnZ2Vtb3dkenBid2toIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5OTk3OTMsImV4cCI6MjA5MzU3NTc5M30.XwGTtknJ4GpZT08LTXkoxvPeESjxeiYunFYeHU__t7U";
+  fetch(U+"/rest/v1/page_views",{method:"POST",headers:{"Content-Type":"application/json","apikey":K,"Authorization":"Bearer "+K},body:JSON.stringify(Object.assign({domain:window.location.hostname,page:window.location.pathname,referrer:document.referrer||"direct",user_agent:navigator.userAgent},window._ngr_geo||{}))}).catch(function(){});
+})();
+</script>
+<script>
+(function(){fetch('https://ipapi.co/json/').then(function(r){return r.json();}).then(function(d){if(d&&d.country_name){window._ngr_geo={country:d.country_name||null,city:d.city||null,region:d.region||null};}}).catch(function(){});})();
+</script>
+</body>
+</html>
