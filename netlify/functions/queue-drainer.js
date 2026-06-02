@@ -18,6 +18,7 @@ import {
   sha384
 } from "./_shared.js";
 import { stampFingerprints } from "./_ots.js";
+import { runDetectors } from "./_detectors.js";
 
 const TIMEOUT = 8500;
 const BATCH = 60;   // claim this many per run; drain as many as time allows
@@ -44,17 +45,20 @@ async function checkFingerprintDiff(pkgId, pkgName, ecosystem, version, newFinge
       .eq("package_name", pkgName).eq("ecosystem", ecosystem);
 
     const { data: newSnap } = await supabase
-      .from("snapshots").select("id")
+      .from("snapshots").select("id, raw_metadata")
       .eq("package_id", pkgId).eq("version", version)
       .eq("sha384_fingerprint", newFingerprint).limit(1).maybeSingle();
     if (newSnap?.id) {
-      await supabase.from("snapshots").update({
-        raw_metadata: {
-          diff_alert: true, prior_fingerprint: p.sha384_fingerprint,
-          prior_receipt_id: p.receipt_id, prior_captured_at: p.captured_at,
-          alert_type: "FINGERPRINT_MISMATCH", alert_severity: "HIGH", alert_detail: msg
-        }
-      }).eq("id", newSnap.id);
+      // MERGE into existing raw_metadata — never overwrite. Overwriting would
+      // wipe the fp:"v2" marker and crawler_sha384 that captureVersion set,
+      // which would silently disqualify the row from OTS anchoring.
+      const merged = {
+        ...(newSnap.raw_metadata || {}),
+        diff_alert: true, prior_fingerprint: p.sha384_fingerprint,
+        prior_receipt_id: p.receipt_id, prior_captured_at: p.captured_at,
+        alert_type: "FINGERPRINT_MISMATCH", alert_severity: "HIGH", alert_detail: msg
+      };
+      await supabase.from("snapshots").update({ raw_metadata: merged }).eq("id", newSnap.id);
     }
   } catch (e) { console.error("[DIFF-DETECT] error:", e.message); }
 }
@@ -288,6 +292,34 @@ async function processRow(row) {
       // captureVersion returns the canonical fingerprint it stored — reuse it
       // for diff detection instead of recomputing a (now non-canonical) hash.
       await checkFingerprintDiff(pkg.id, package_name, ecosystem, version, result.fingerprint);
+
+      // History-based threat detectors (install-hook-added, publisher-change,
+      // size-spike). Each only fires when prior versions exist to compare
+      // against. Findings are MERGED into raw_metadata — never overwrite.
+      try {
+        const flags = await runDetectors({
+          pkgId: pkg.id, packageName: package_name, ecosystem, version,
+          newManifest: fullManifest
+        });
+        if (flags.length) {
+          const { data: snapRow } = await supabase
+            .from("snapshots").select("id, raw_metadata")
+            .eq("id", result.snapshotId).maybeSingle();
+          if (snapRow?.id) {
+            const merged = {
+              ...(snapRow.raw_metadata || {}),
+              threat_flags: flags,
+              threat_flagged: true,
+              threat_max_severity: flags.some(f => f.severity === "HIGH") ? "HIGH"
+                : flags.some(f => f.severity === "MEDIUM") ? "MEDIUM" : "LOW"
+            };
+            await supabase.from("snapshots").update({ raw_metadata: merged }).eq("id", snapRow.id);
+            console.error(`[THREAT] ${ecosystem}/${package_name}@${version}: ${flags.map(f => f.type).join(", ")}`);
+          }
+        }
+      } catch (e) {
+        console.error("[THREAT-DETECT] error:", e.message);
+      }
     }
     await finishCapture(id, true);
     return result;   // { snapshotId, fingerprint } | null — handler batch-stamps these
