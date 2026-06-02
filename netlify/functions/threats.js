@@ -40,7 +40,7 @@ export default async function handler(req) {
     // detector evidence). Pulling hundreds blew the Lambda response size limit
     // and returned a truncated body Netlify couldn't decode. The feed paginates
     // 25 at a time, so a window of 60 is plenty and stays well under the limit.
-    const FETCH_WINDOW = 60;
+    const FETCH_WINDOW = 30;
     const SELECT = "id, receipt_id, version, ecosystem, captured_at, sha384_fingerprint, manifest_path, raw_metadata, packages(name, description)";
 
     function buildQuery(metaKey) {
@@ -77,6 +77,20 @@ export default async function handler(req) {
     // Keep newest-first after merge.
     data.sort((a, b) => new Date(b.captured_at) - new Date(a.captured_at));
 
+    // Clamp any string so one pathological row can't balloon the response
+    // (which manifests as 'error decoding lambda response').
+    const clamp = (s, n = 300) => (typeof s === 'string' && s.length > n ? s.slice(0, n) + '…' : s);
+    const clampEvidence = (ev) => {
+      if (!ev || typeof ev !== 'object') return {};
+      const out = {};
+      for (const [k, v] of Object.entries(ev)) {
+        if (typeof v === 'string') out[k] = clamp(v, 200);
+        else if (Array.isArray(v)) out[k] = v.slice(0, 20).map(x => typeof x === 'string' ? clamp(x, 120) : x);
+        else out[k] = v;
+      }
+      return out;
+    };
+
     // Normalise every flagged snapshot into a flat list of findings.
     const findings = [];
     for (const row of data || []) {
@@ -99,12 +113,12 @@ export default async function handler(req) {
           ...common,
           type: "FINGERPRINT_MISMATCH",
           severity: meta.alert_severity || "HIGH",
-          detail: `Same version recaptured with a different fingerprint. Prior: ${meta.prior_fingerprint ? meta.prior_fingerprint.slice(0,16)+"…" : "unknown"}`,
-          evidence: {
+          detail: clamp(`Same version recaptured with a different fingerprint. Prior: ${meta.prior_fingerprint ? meta.prior_fingerprint.slice(0,16)+"…" : "unknown"}`),
+          evidence: clampEvidence({
             prior_fingerprint: meta.prior_fingerprint || null,
             prior_receipt_id: meta.prior_receipt_id || null,
             prior_captured_at: meta.prior_captured_at || null,
-          },
+          }),
         });
       }
 
@@ -115,8 +129,8 @@ export default async function handler(req) {
             ...common,
             type: f.type,
             severity: f.severity,
-            detail: f.detail,
-            evidence: f.evidence || {},
+            detail: clamp(f.detail),
+            evidence: clampEvidence(f.evidence || {}),
           });
         }
       }
