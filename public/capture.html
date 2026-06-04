@@ -49,7 +49,7 @@ input:focus,select:focus{border-color:var(--accent);}
 .result-label{font-family:var(--mono);font-size:10px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.1em;}
 .result-val{font-family:var(--mono);font-size:12px;color:var(--ink);text-align:right;max-width:60%;overflow:hidden;text-overflow:ellipsis;}
 .result-val.receipt{color:var(--accent);font-weight:600;font-size:13px;}
-.result-val.btc{color:#f7931a;font-weight:600;}
+
 .result-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
 .action-btn{padding:8px 16px;border-radius:5px;font-family:var(--mono);font-size:11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all .15s;border:1px solid var(--border);background:var(--bg);color:var(--ink-3);}
 .action-btn:hover{border-color:var(--accent);color:var(--accent);}
@@ -110,7 +110,7 @@ footer a{color:var(--ink-3);text-decoration:none;}
 
 <div class="page">
   <h1>Capture a <i>package.</i></h1>
-  <div class="sub">Submit any public package for immediate cryptographic capture. SHA-384 fingerprinted and Bitcoin anchored within seconds. Free. No login required. Max 10 requests per hour.</div>
+  <div class="sub">Submit any public package for immediate cryptographic capture. SHA-384 fingerprinted and cryptographically recorded. Free. No login required. Max 10 requests per hour.</div>
 
   <div class="form-card">
     <div class="field">
@@ -146,7 +146,7 @@ footer a{color:var(--ink-3);text-decoration:none;}
   </div>
 
   <div class="note">
-    Captures are permanent and publicly archived at <a href="https://github.com/ngr-dev1/prechained-archive">github.com/ngr-dev1/prechained-archive</a>. Every receipt is independently verifiable at <a href="/verify">prechained.com/verify</a>. Bitcoin anchoring confirms the capture predates any future attack disclosure.
+    Captures are permanent and publicly archived at <a href="https://github.com/ngr-dev1/prechained-archive">github.com/ngr-dev1/prechained-archive</a>. Every receipt is independently verifiable at <a href="/verify">prechained.com/verify</a>. The cryptographic receipt confirms the capture predates any future attack disclosure.
   </div>
 </div>
 
@@ -236,12 +236,12 @@ async function capture() {
       const alreadyMsg = data.versions_already_archived > 0 ? ` (${data.versions_already_archived} already in archive)` : '';
       document.getElementById('result').innerHTML = `
         <div class="result">
-          <div class="result-head success">✓ Captured${data.btc_block ? ' &amp; Bitcoin Anchored' : ' — OpenTimestamps pending'}</div>
+          <div class="result-head success">✓ Captured &amp; Recorded</div>
           <div class="result-body">
             <div class="result-row"><span class="result-label">Receipt ID</span><span class="result-val receipt">${data.receipt_id || '—'}</span></div>
             <div class="result-row"><span class="result-label">Package</span><span class="result-val">${data.package} (${data.ecosystem})</span></div>
             <div class="result-row"><span class="result-label">Versions Captured</span><span class="result-val">${data.versions_captured} new${alreadyMsg}</span></div>
-            <div class="result-row"><span class="result-label">Bitcoin Anchor</span><span class="result-val btc">${data.btc_block ? '⬡ Block #' + data.btc_block.toLocaleString() + ' — Confirmed' : 'Pending'}</span></div>
+            
             <div class="result-row"><span class="result-label">SHA-384</span><span class="result-val">${data.sha384 ? data.sha384.substring(0,32) + '...' : '—'}</span></div>
             <div class="result-row"><span class="result-label">Captured At</span><span class="result-val">${data.captured_at ? new Date(data.captured_at).toLocaleString() : '—'}</span></div>
             <div class="result-actions">
