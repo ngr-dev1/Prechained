@@ -206,12 +206,8 @@ function fmt(d){
   if(isNaN(dt)) return '—';
   return dt.toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
 }
-function ancVal(s){
-  return'<span style="color:var(--green);font-weight:600;">✓ Cryptographically recorded · SHA-384 fingerprinted</span>';
-}
-function ancBadge(s){
-  return'<span class="anc a-anch">✓ Recorded</span>';
-}
+function ancVal(s){ return '<span style="color:var(--green);font-weight:600;">✓ Cryptographically recorded · SHA-384 fingerprinted</span>'; }
+function ancBadge(s){ return '<span class="anc a-anch">✓ Recorded</span>'; }
 
 async function loadPackage(id){
   try{
@@ -231,8 +227,6 @@ async function loadPackage(id){
     const totalV=pkg.total_versions||snaps.length;
     const first=snaps[snaps.length-1]?.captured_at||snaps[0]?.captured_at;
     const last=pkg.last_captured_at||snaps[0]?.captured_at;
-    const btcCount=snaps.filter(s=>s.btc_anchored).length;
-
     document.title=`Prechained — ${name}`;
     document.getElementById('bc-name').textContent=name;
     document.getElementById('pkg-name').textContent=name;
