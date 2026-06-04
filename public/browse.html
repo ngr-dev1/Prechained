@@ -78,6 +78,8 @@ nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:s
 .pc-date{font-size:11px;color:var(--ink-2);font-family:var(--mono);white-space:nowrap;}
 .st{font-size:11px;font-weight:600;padding:2px 9px;border-radius:100px;white-space:nowrap;display:inline-block;}
 .s-ok{background:var(--green-bg);color:var(--green);}
+.s-archive{background:#f0f9ff;color:#0369a1;}
+.archive-note{font-size:10px;color:#0369a1;font-family:var(--mono);margin-top:2px;}
 
 .loading{text-align:center;padding:40px;font-size:12px;color:var(--ink-3);font-family:var(--mono);}
 
@@ -235,33 +237,71 @@ async function loadPkgs(){
   if(eco)url+=`&ecosystem=${encodeURIComponent(eco)}`;
   if(q)url+=`&q=${encodeURIComponent(q)}`;
   if(sortBy)url+=`&sort=${sortBy}&dir=${sortDir}`;
+
   try{
-    const r=await fetch(url+'&t='+Date.now());
-    const d=await r.json();
-    const total=d.total||0;
+    // Always fetch Supabase results
+    const supaFetch = fetch(url+'&t='+Date.now()).then(r=>r.json());
+
+    // When searching, also query GitHub archive in parallel
+    let ghFetch = Promise.resolve(null);
+    if(q && q.length >= 2){
+      let ghUrl = `/.netlify/functions/github-search?q=${encodeURIComponent(q)}`;
+      if(eco) ghUrl += `&ecosystem=${encodeURIComponent(eco)}`;
+      ghFetch = fetch(ghUrl+'&t='+Date.now()).then(r=>r.json()).catch(()=>null);
+    }
+
+    const [d, ghd] = await Promise.all([supaFetch, ghFetch]);
+
+    // Merge: start with Supabase results, append GitHub-only results (not already in Supabase)
+    const supaPackages = d.packages || [];
+    const supaKeys = new Set(supaPackages.map(p=>`${p.ecosystem}::${p.name}`));
+
+    let ghOnlyPackages = [];
+    if(ghd && ghd.packages){
+      ghOnlyPackages = ghd.packages.filter(p=>!supaKeys.has(`${p.ecosystem}::${p.name}`));
+    }
+
+    const merged = [...supaPackages, ...ghOnlyPackages];
+    const supaTotal = d.total || 0;
+    const ghExtra = ghOnlyPackages.length;
+    const total = supaTotal; // pagination is Supabase-driven
+
     const from=((page-1)*20)+1;
-    const to=Math.min(page*20,total);
-    document.getElementById('results-count').textContent=
-      total>0?`Showing ${from}–${to} of ${total.toLocaleString()} packages`:'No packages found';
-    if(!d.packages?.length){
-      document.getElementById('pkg-list').innerHTML='<div class="loading">No packages yet — crawler is running.</div>';
+    const to=Math.min(page*20,supaTotal);
+
+    let countText = supaTotal>0 ? `Showing ${from}–${to} of ${supaTotal.toLocaleString()} packages` : 'No packages found';
+    if(ghExtra > 0) countText += ` · <span style="color:#0369a1;font-family:var(--mono);">+${ghExtra} archive-only result${ghExtra>1?'s':''}</span>`;
+    document.getElementById('results-count').innerHTML = countText;
+
+    if(!merged.length){
+      document.getElementById('pkg-list').innerHTML='<div class="loading">No packages found.</div>';
+      renderPages(0);
       return;
     }
-    document.getElementById('pkg-list').innerHTML=d.packages.map(p=>`
-      <div class="pkg-card" onclick="location='/package.html?id=${p.id}'">
+
+    document.getElementById('pkg-list').innerHTML=merged.map(p=>{
+      const isArchiveOnly = p._source === 'github';
+      const cardClick = isArchiveOnly
+        ? `onclick="window.open('${p._archive_path}','_blank')"`
+        : `onclick="location='/package.html?id=${p.id}'"`;
+      const statusBadge = isArchiveOnly
+        ? `<span class="st s-archive">📦 Archive only</span><div class="archive-note">In GitHub archive · not in Supabase</div>`
+        : `<span class="st s-ok">✓ Recorded</span>`;
+      return `
+      <div class="pkg-card" ${cardClick}>
         <div class="pc-cell">
           <div class="pc-name">${p.name}</div>
           <div class="pc-desc">${(p.description||'No description').substring(0,55)}${p.raw_metadata?.license ? ' · '+p.raw_metadata.license : ''}</div>
         </div>
         <div class="pc-cell"><a href="${ecoUrl(p.ecosystem, p.name)}" target="_blank" onclick="event.stopPropagation()" class="eco ${ecoC(p.ecosystem)}" style="text-decoration:none;">${p.ecosystem} ↗</a></div>
         <div class="pc-cell">
-          <div class="pc-ver">${p.total_versions} versions</div>
+          <div class="pc-ver">${p.total_versions} version${p.total_versions!==1?'s':''}</div>
           <div class="pc-ver-sub">v${p.latest_version||'—'}</div>
         </div>
-        <div class="pc-cell"><div class="pc-date">${ago(p.last_captured_at)}</div></div>
-        <div class="pc-cell"><span class="st s-ok">✓ Recorded</span></div>
-      </div>
-    `).join('');
+        <div class="pc-cell"><div class="pc-date">${p.last_captured_at ? ago(p.last_captured_at) : '—'}</div></div>
+        <div class="pc-cell">${statusBadge}</div>
+      </div>`;
+    }).join('');
     renderPages(total);
   }catch(e){
     document.getElementById('pkg-list').innerHTML='<div class="loading">Error loading — retrying...</div>';
