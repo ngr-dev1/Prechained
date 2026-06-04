@@ -17,7 +17,6 @@ import {
   claimCaptures, finishCapture, requeueStale, snapshotExists,
   sha384, canonicalFingerprint, storeManifestInGithub
 } from "./_shared.js";
-import { stampFingerprints } from "./_ots.js";
 import { runDetectors } from "./_detectors.js";
 
 const TIMEOUT = 8500;
@@ -431,12 +430,6 @@ export default async function handler(req, context) {
     }
   }
 
-  // ── BATCH OTS STAMP ─────────────────────────────────────────
-  // One Merkle root + one calendar submission for everything captured this run,
-  // regardless of how many rows — cost is ~constant. Best-effort: if the
-  // calendars are unreachable the rows stay ots_proof:null and anchor-checker's
-  // back-stamp pass retries them later. Runs after the drain loop so it never
-  // eats into the per-row time budget.
   let stamped = 0;
   if (newlyCaptured.length) {
     try {
@@ -458,10 +451,10 @@ export default async function handler(req, context) {
     .from("pending_captures").select("id", { count: "exact", head: true })
     .eq("status", "pending");
 
-  console.log(`[queue-drainer] done: processed ${processed}, captured ${captured}, stamped ${stamped}, backlog ${backlog ?? "?"}, ${elapsed}ms`);
+  console.log(`[queue-drainer] done: processed ${processed}, captured ${captured}, backlog ${backlog ?? "?"}, ${elapsed}ms`);
 
   return new Response(JSON.stringify({
-    ok: true, processed, captured, stamped, requeued, backlog: backlog ?? null,
+    ok: true, processed, captured, requeued, backlog: backlog ?? null,
     elapsed_ms: elapsed, timestamp: new Date().toISOString()
   }), { headers: { "Content-Type": "application/json" } });
 }
