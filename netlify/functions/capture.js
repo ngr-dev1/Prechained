@@ -4,7 +4,7 @@
 
 import {
   supabase, upsertPackage, captureVersion, sha384,
-  storeManifestInGithub, getCurrentBtcBlock, GITHUB_TOKEN
+  storeManifestInGithub, GITHUB_TOKEN
 } from "./_shared.js";
 import { readFileSync } from "fs";
 import { indexActors, updateVelocity, queryActorIntelligence } from "./actor-intelligence.js";
@@ -514,7 +514,6 @@ export default async function handler(req, context) {
       versions_total: result.total,
       versions_already_archived: result.already,
       receipt_id: latestSnap?.receipt_id || null,
-      btc_block: latestSnap?.btc_block || null,
       sha384: latestSnap?.sha384_fingerprint || null,
       captured_at: latestSnap?.captured_at || null,
       verify_url: `https://prechained.com/verify?r=${latestSnap?.receipt_id || ""}`,
