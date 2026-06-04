@@ -6,7 +6,7 @@
 <title>Prechained — Verify a Receipt</title>
 <!-- Dynamic OG image — shows package, BTC block, and SHA-384 when shared -->
 <meta property="og:title" content="Prechained — Cryptographic Supply Chain Verification"/>
-<meta property="og:description" content="Independently verify any package receipt. SHA-384 fingerprint, Bitcoin anchor, zero retention."/>
+<meta property="og:description" content="Independently verify any package receipt. SHA-384 fingerprint, cryptographically recorded."/>
 <meta property="og:image" id="og-image-meta" content="https://prechained.com/.netlify/functions/og-image"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
@@ -246,14 +246,16 @@ footer a:hover{color:var(--accent);}
         <div class="info-card-desc">The receipt timestamp proves the record existed before any specified incident window. Cryptographically immutable.</div>
       </div>
       <div class="info-card">
-        
+        <div class="info-card-title">🔗 Cryptographic chain</div>
+        <div class="info-card-desc">Every receipt ID maps to a unique SHA-384 fingerprint of the manifest. The archive is permanent and independently accessible on GitHub.</div>
+      </div>
       <div class="info-card">
         <div class="info-card-title">🔐 SHA-384 integrity</div>
         <div class="info-card-desc">Every snapshot is SHA-384 fingerprinted over the canonical manifest. Your browser re-hashes the archived manifest here and only shows VERIFIED if it matches — you don't have to trust our database.</div>
       </div>
       <div class="info-card">
-        <div class="info-card-title">⚖️ Legally defensible</div>
-        <div class="info-card-desc">Bitcoin-anchored timestamps constitute evidence of prior state under ESIGN and eIDAS. Shareable with auditors and legal teams.</div>
+        <div class="info-card-title">⚖️ Evidence-grade records</div>
+        <div class="info-card-desc">Cryptographic receipts with SHA-384 fingerprints constitute evidence of prior state. Shareable with auditors and legal teams.</div>
       </div>
     </div>
   </div>
@@ -318,7 +320,10 @@ async function rehashVerify(snap){
 }
 
 function fmt(d){
-  return new Date(d).toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
+  if(!d) return '—';
+  const dt = new Date(d);
+  if(isNaN(dt.getTime())) return '—';
+  return dt.toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
 }
 
 async function doVerify(){
@@ -386,31 +391,6 @@ async function doVerify(){
     document.getElementById('r-eco').textContent = snap.ecosystem;
     document.getElementById('r-fp').textContent = snap.sha384_fingerprint;
     document.getElementById('r-date').textContent = fmt(snap.captured_at);
-
-    // ── Bitcoin / OTS anchor status — now truthful: btc_* is set only on a
-    //     real OpenTimestamps Bitcoin attestation, never a fake current block.
-    
-      btcLink.style.display = 'inline-flex';
-    } else if(snap.ots_proof){
-      document.getElementById('r-btc').innerHTML = `<span class="pending">⏳ OpenTimestamps proof submitted — Bitcoin confirmation pending</span>`;
-      btcLink.style.display = 'none';
-    } else {
-      document.getElementById('r-btc').textContent = 'Pending OpenTimestamps submission';
-      btcLink.style.display = 'none';
-    }
-
-    // Offer the raw .ots proof so anyone can verify it independently (`ots verify`).
-    const otsLink = document.getElementById('ots-link');
-    if(snap.ots_proof){
-      try {
-        const bytes = Uint8Array.from(atob(snap.ots_proof), c => c.charCodeAt(0));
-        otsLink.href = URL.createObjectURL(new Blob([bytes], { type:'application/octet-stream' }));
-        otsLink.download = `${(name||'receipt').replace(/[^\w.-]+/g,'_')}-${snap.version}.ots`;
-        otsLink.style.display = 'inline-flex';
-      } catch { otsLink.style.display = 'none'; }
-    } else {
-      otsLink.style.display = 'none';
-    }
 
     // ── INTEGRITY GATE ── Re-hash the archived manifest in the browser and gate
     //     the badge on THAT result — never on the database's say-so.
