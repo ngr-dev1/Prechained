@@ -135,11 +135,11 @@
 <div class="container">
   <div class="page-header">
     <h1>Live Threat Feed</h1>
-    <p>Packages where a new capture differs from the package's own prior history in a way consistent with a supply-chain attack. Every finding is evidence-backed and links to verifiable cryptographic receipts. Detection runs at capture time, comparing each version against earlier captured versions of the same package.</p>
+    <p>The only public system with cryptographic receipts for every package version <em>before</em> an attack is disclosed. Detection runs continuously — fingerprint mutations, new install hooks, publisher changes, size spikes, and brand-new packages with suspicious patterns. Every finding links to independently verifiable receipts that prove exactly what the package contained at the moment it was captured.</p>
   </div>
 
   <div class="honest-note">
-    <strong>What this is and isn't:</strong> Each finding is a concrete, checkable difference between a new version and prior captured versions — not a verdict of malice. A detector only fires when prior history exists to compare against. Verify the receipts and read the evidence before drawing conclusions. Detection covers what Prechained captures: it is not a complete view of every package on earth. An empty feed is the expected normal state — content substitution under a fixed version is rare, so most days there is nothing to report. The detectors run on every capture regardless.
+    <strong>How this works:</strong> Prechained monitors every npm publish in real time, OSV malicious package feeds, and PyPI new packages — capturing cryptographic receipts before takedowns occur. Findings are generated automatically from concrete before/after evidence: changed fingerprints, new install hooks, publisher changes, size spikes, and suspicious new packages. <strong>A finding is not a legal determination of malice</strong> — it is a documented, verifiable anomaly that warrants investigation. Receipts are independently verifiable against the public archive. Interpret findings with professional judgment.
   </div>
 
   <div class="stats-bar" id="stats-bar">
@@ -156,6 +156,8 @@
     <button class="filter-btn" data-type="INSTALL_HOOK_ADDED" onclick="setType('INSTALL_HOOK_ADDED', this)">Install Hook</button>
     <button class="filter-btn" data-type="PUBLISHER_CHANGE" onclick="setType('PUBLISHER_CHANGE', this)">Publisher Change</button>
     <button class="filter-btn" data-type="SIZE_SPIKE" onclick="setType('SIZE_SPIKE', this)">Size Spike</button>
+    <button class="filter-btn" data-type="NEW_PACKAGE_WITH_INSTALL_HOOK" onclick="setType('NEW_PACKAGE_WITH_INSTALL_HOOK', this)">New + Hook</button>
+    <button class="filter-btn" data-type="SUSPICIOUS_PACKAGE_NAME" onclick="setType('SUSPICIOUS_PACKAGE_NAME', this)">Suspicious Name</button>
   </div>
 
   <div class="filters" id="eco-filters">
@@ -204,7 +206,10 @@ const TYPE_LABELS = {
   FINGERPRINT_MISMATCH:'Manifest Mutation',
   INSTALL_HOOK_ADDED:'Install Hook Added',
   PUBLISHER_CHANGE:'Publisher Change',
-  SIZE_SPIKE:'Size Spike'
+  SIZE_SPIKE:'Size Spike',
+  NEW_PACKAGE_WITH_INSTALL_HOOK:'New Package + Install Hook',
+  SUSPICIOUS_PACKAGE_NAME:'Suspicious Package Name',
+  NEW_PACKAGE_NO_HISTORY:'New Package — No History'
 };
 
 function setType(t, btn){
@@ -286,6 +291,10 @@ function renderFeed(){
       evidence=`
         <div class="ev-row"><div class="ev-label">New publisher</div><div class="ev-val new">${esc(f.evidence.new_publisher||'')}</div></div>
         <div class="ev-row"><div class="ev-label">Prior</div><div class="ev-val prior">${esc((f.evidence.prior_publishers||[]).join(', '))}</div></div>`;
+    } else if(f.type==='NEW_PACKAGE_WITH_INSTALL_HOOK'||f.type==='SUSPICIOUS_PACKAGE_NAME'||f.type==='NEW_PACKAGE_NO_HISTORY'){
+      const hooks=f.evidence?.hooks||{};
+      const hookRows=Object.entries(hooks).map(([k,v])=>`<div class="ev-row"><div class="ev-label">${esc(k)}</div><div class="ev-val new">${esc(String(v).substring(0,140))}</div></div>`).join('');
+      evidence=hookRows+(f.evidence?.total_versions!=null?`<div class="ev-row"><div class="ev-label">Total versions</div><div class="ev-val">${f.evidence.total_versions}</div></div>`:'');
     } else if(f.type==='SIZE_SPIKE'){
       evidence=`
         <div class="ev-row"><div class="ev-label">New size</div><div class="ev-val new">${((f.evidence.new_size_bytes||0)/1e6).toFixed(2)} MB</div></div>
