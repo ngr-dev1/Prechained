@@ -201,7 +201,10 @@ function ecoC(e){
   return m[(e||'').toLowerCase()]||'e-npm';
 }
 function fmt(d){
-  return new Date(d).toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
+  if(!d) return '—';
+  const dt = new Date(d);
+  if(isNaN(dt)) return '—';
+  return dt.toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
 }
 function ancVal(s){
   return'<span style="color:var(--green);font-weight:600;">✓ Cryptographically recorded · SHA-384 fingerprinted</span>';
@@ -226,7 +229,7 @@ async function loadPackage(id){
     const desc=pkg.description||'No description.';
     const latest=pkg.latest_version||snaps[0].version;
     const totalV=pkg.total_versions||snaps.length;
-    const first=pkg.first_captured_at||snaps[snaps.length-1]?.captured_at;
+    const first=snaps[snaps.length-1]?.captured_at||snaps[0]?.captured_at;
     const last=pkg.last_captured_at||snaps[0]?.captured_at;
     const btcCount=snaps.filter(s=>s.btc_anchored).length;
 
@@ -242,7 +245,7 @@ async function loadPackage(id){
     eb.textContent=e.toUpperCase();eb.className=`eco-badge ${ecoC(e)}`;
     document.getElementById('stat-v').textContent=totalV;
     document.getElementById('stat-s').textContent=snaps.length;
-    document.getElementById('stat-b').textContent=btcCount;
+
 
     const s=snaps[0];
     const rid=s.receipt_id||'NGR-PC-'+s.id.substring(0,12).toUpperCase();
