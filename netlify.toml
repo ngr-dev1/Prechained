@@ -7,6 +7,10 @@
   external_node_modules = ["opentimestamps"]
 
 [[scheduled-functions]]
+  name = "threat-hunter"
+  cron = "*/5 * * * *"
+
+[[scheduled-functions]]
   name = "crawler-all"
   cron = "*/10 * * * *"
 
