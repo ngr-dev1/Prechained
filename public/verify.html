@@ -13,7 +13,7 @@
 <meta property="og:type" content="website"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Prechained — Supply Chain Receipt"/>
-<meta name="twitter:description" content="SHA-384 fingerprinted. Bitcoin anchored. Recorded before it happened."/>
+<meta name="twitter:description" content="SHA-384 fingerprinted. Cryptographically recorded before it happened."/>
 <meta name="twitter:image" id="twitter-image-meta" content="https://prechained.com/.netlify/functions/og-image"/>
 <script>
   // Set OG image URL dynamically based on receipt param so crawlers get correct image
@@ -226,15 +226,15 @@ footer a:hover{color:var(--accent);}
       <div class="rrow"><div class="rlbl">SHA-384</div><div class="rval" id="r-fp">—</div></div>
       <div class="rrow"><div class="rlbl">Integrity</div><div class="rval" id="r-integrity">—</div></div>
       <div class="rrow"><div class="rlbl">Captured At</div><div class="rval" id="r-date">—</div></div>
-      <div class="rrow"><div class="rlbl">Bitcoin Anchor</div><div class="rval" id="r-btc">—</div></div>
+      
       <div class="rrow"><div class="rlbl">Issued By</div><div class="rval">Prechained · NextGenRails™ · prechained.com</div></div>
     </div>
     <div class="result-actions">
       <button class="action-btn primary" onclick="copyVerifyLink()">🔗 Copy verification link</button>
       <button class="action-btn" onclick="copyReceipt()">📋 Copy receipt ID</button>
       <a class="action-btn" id="pkg-link" href="#" target="_blank">📦 View package →</a>
-      <a class="action-btn" id="btc-link" href="https://blockstream.info" target="_blank">⬡ Verify on Bitcoin →</a>
-      <a class="action-btn" id="ots-link" href="#" download style="display:none;">⬡ Download .ots proof</a>
+      
+      
     </div>
   </div>
 
@@ -246,9 +246,7 @@ footer a:hover{color:var(--accent);}
         <div class="info-card-desc">The receipt timestamp proves the record existed before any specified incident window. Cryptographically immutable.</div>
       </div>
       <div class="info-card">
-        <div class="info-card-title">⬡ Bitcoin anchored</div>
-        <div class="info-card-desc">Records are timestamped with OpenTimestamps and confirmed in a Bitcoin block. The .ots proof is downloadable and verifiable at blockstream.info without trusting Prechained.</div>
-      </div>
+        
       <div class="info-card">
         <div class="info-card-title">🔐 SHA-384 integrity</div>
         <div class="info-card-desc">Every snapshot is SHA-384 fingerprinted over the canonical manifest. Your browser re-hashes the archived manifest here and only shows VERIFIED if it matches — you don't have to trust our database.</div>
@@ -351,11 +349,7 @@ async function doVerify(){
             version: d2.version,
             ecosystem: d2.ecosystem,
             sha384_fingerprint: d2.sha384,
-            captured_at: d2.captured_at,
-            btc_anchored: d2.btc_anchored,
-            btc_block: d2.btc_block,
-            ots_proof: d2.ots_proof || null,
-            manifest_url: d2.manifest_url || null,
+            captured_at: d2.captured_at, manifest_url: d2.manifest_url || null,
             fingerprint_version: d2.fingerprint_version || null,
             package_id: null,
             packages: { name: d2.package }
@@ -395,10 +389,7 @@ async function doVerify(){
 
     // ── Bitcoin / OTS anchor status — now truthful: btc_* is set only on a
     //     real OpenTimestamps Bitcoin attestation, never a fake current block.
-    const btcLink = document.getElementById('btc-link');
-    if(snap.btc_anchored && snap.btc_block){
-      document.getElementById('r-btc').innerHTML = `<span class="btc">⬡ Bitcoin Block #${Number(snap.btc_block).toLocaleString()} — Confirmed</span>`;
-      btcLink.href = `https://blockstream.info/block-height/${snap.btc_block}`;
+    
       btcLink.style.display = 'inline-flex';
     } else if(snap.ots_proof){
       document.getElementById('r-btc').innerHTML = `<span class="pending">⏳ OpenTimestamps proof submitted — Bitcoin confirmation pending</span>`;
