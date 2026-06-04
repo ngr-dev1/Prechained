@@ -32,7 +32,7 @@ function truncate(str, max = 40) {
   return s.length > max ? s.slice(0, max - 1) + "…" : s;
 }
 
-function buildSvg({ packageName, version, ecosystem, btcBlock, receiptId, capturedAt, sha384 }) {
+function buildSvg({ packageName, version, ecosystem, receiptId, capturedAt, sha384 }) {
   const dateStr = capturedAt
     ? new Date(capturedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
     : "Unknown date";
@@ -97,17 +97,11 @@ function buildSvg({ packageName, version, ecosystem, btcBlock, receiptId, captur
   <text x="72" y="466" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="12" fill="#6b7280" font-weight="600" letter-spacing="0.08em">ARCHIVED</text>
   <text x="72" y="492" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="15" fill="#e2e8f0">${escapeXml(dateStr)}</text>
 
-  <!-- Right column — BTC anchor -->
-  <text x="756" y="195" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="12" fill="#6b7280" font-weight="600" letter-spacing="0.08em">BITCOIN ANCHOR</text>
-
-  ${btcBlock ? `
-  <text x="756" y="255" font-family="'SF Mono',monospace" font-size="42" font-weight="800" fill="#f97316">#${escapeXml(btcBlock.toString())}</text>
-  <text x="756" y="285" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="13" fill="#6b7280">Immutably timestamped in Bitcoin blockchain</text>
-  ` : `
-  <text x="756" y="255" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="20" fill="#6b7280">Pending anchor</text>
-  `}
-
-  <!-- Trust statement -->
+  <!-- Right column — Receipt -->
+    <text x="756" y="195" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="12" fill="#6b7280" font-weight="600" letter-spacing="0.08em">RECEIPT ID</text>
+    <text x="756" y="235" font-family="'SF Mono',monospace" font-size="16" font-weight="700" fill="#1a1a1a">${escapeXml((receiptId||'').substring(0,18))}</text>
+    <text x="756" y="265" font-family="'SF Mono',monospace" font-size="14" fill="#6b7280">${escapeXml((receiptId||'').substring(18))}</text>
+    <!-- Trust statement -->
   <text x="756" y="390" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="13" fill="#4b5563" font-style="italic">Trust is not declared.</text>
   <text x="756" y="412" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="13" fill="#4b5563" font-style="italic">It is computed.</text>
 
@@ -127,7 +121,6 @@ export default async function handler(req) {
       packageName: "prechained.com",
       version: "open",
       ecosystem: "archive",
-      btcBlock: null,
       receiptId: null,
       capturedAt: null,
       sha384: null,
@@ -153,7 +146,6 @@ export default async function handler(req) {
         packageName: "Receipt not found",
         version: "?",
         ecosystem: "unknown",
-        btcBlock: null,
         receiptId,
         capturedAt: null,
         sha384: null,
@@ -165,7 +157,6 @@ export default async function handler(req) {
       packageName: data.packages?.name || "Unknown",
       version: data.version,
       ecosystem: data.ecosystem,
-      btcBlock: data.btc_block,
       receiptId: data.receipt_id,
       capturedAt: data.captured_at,
       sha384: data.sha384_fingerprint,
@@ -177,7 +168,6 @@ export default async function handler(req) {
       packageName: "prechained.com",
       version: "archive",
       ecosystem: "multi",
-      btcBlock: null,
       receiptId,
       capturedAt: null,
       sha384: null,
