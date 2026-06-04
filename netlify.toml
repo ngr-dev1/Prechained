@@ -9,6 +9,10 @@
   # Keeping it external lets Node load it natively. See netlify/functions/_ots.js.
   external_node_modules = ["opentimestamps"]
 
+# Background function — 15-minute timeout, triggered manually via POST
+[functions."backfill-ots"]
+  type = "background"
+
 [[scheduled-functions]]
   name = "crawler-all"
   cron = "*/10 * * * *"
