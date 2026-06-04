@@ -29,7 +29,7 @@ function isSuspicious(name) {
     /\b(miasma|typhonian|gesserit|fremen|fedaykin|harkonnen|shai-hulud)\b/.test(n);
 }
 
-function sha384Hex(str) {
+async function sha384Hex(str) {
   const { createHash } = await import("crypto");
   return createHash("sha384").update(str).digest("hex");
 }
