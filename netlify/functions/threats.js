@@ -47,7 +47,7 @@ export default async function handler(req) {
       let q = supabase
         .from("snapshots")
         .select(SELECT)
-        .eq(`raw_metadata->>${metaKey}`, "true")
+        .filter(`raw_metadata->>${metaKey}`, "eq", "true")
         .order("captured_at", { ascending: false })
         .limit(FETCH_WINDOW);
       if (ecosystem) q = q.eq("ecosystem", ecosystem);
