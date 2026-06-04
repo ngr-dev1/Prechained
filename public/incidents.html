@@ -142,21 +142,24 @@ footer a:hover{color:var(--accent);}
 <div class="hero">
   <div class="hero-kicker">Public Incident Registry</div>
   <h1>Recorded <i>before it happened.</i></h1>
-  <p>This is a <strong>public registry of documented attack campaigns</strong> — not a search tool. Each entry is a confirmed supply chain incident where Prechained holds a cryptographic pre-incident record with Bitcoin-anchored proof. To investigate a specific actor, email, or package, use <a href="/threat" style="color:var(--accent);font-weight:600;">Threat Intel ↗</a></p>
+  <p>A <strong>public registry of documented supply chain attacks</strong> — automated findings from Prechained's threat detectors, plus community-submitted incidents. Each entry links to a cryptographic receipt proving what the package contained at capture time. To investigate a specific actor or package, use <a href="/threat" style="color:var(--accent);font-weight:600;">Threat Intel ↗</a></p>
 </div>
 
 <div class="stats-bar">
   <div class="stats-inner">
-    <div class="stat"><div class="stat-val" id="stat-total">8</div><div class="stat-lbl">Incidents Logged</div></div>
-    <div class="stat"><div class="stat-val" id="stat-pre">8</div><div class="stat-lbl">Pre-incident Records</div></div>
-    <div class="stat"><div class="stat-val">8</div><div class="stat-lbl">Ecosystems Covered</div></div>
+    <div class="stat"><div class="stat-val" id="stat-total">—</div><div class="stat-lbl">Auto-detected Findings</div></div>
+    <div class="stat"><div class="stat-val">5</div><div class="stat-lbl">Documented Incidents</div></div>
+    <div class="stat"><div class="stat-val" id="stat-eco">—</div><div class="stat-lbl">Ecosystems Covered</div></div>
     <div class="stat"><div class="stat-val">100%</div><div class="stat-lbl">Pre-disclosure Rate</div></div>
   </div>
 </div>
 
 <div class="content">
 
-  <div class="section-label">2026 Incidents</div>
+  <div class="section-label" id="live-label" style="display:none;">Live Threat Detections</div>
+  <div id="live-findings"></div>
+
+  <div class="section-label">Documented Incidents</div>
 
   <!-- codexui-android -->
   <div class="incident">
@@ -172,13 +175,12 @@ footer a:hover{color:var(--accent);}
       </div>
       <div class="inc-right">
         <div class="inc-date">May 27, 2026</div>
-        <div class="pre-badge">⬡ Captured at disclosure</div>
+        <div class="pre-badge">✓ Captured at disclosure</div>
       </div>
     </div>
     <div class="inc-body">
       <div class="inc-rows">
         <div class="inc-row"><div class="inc-lbl">Receipt ID</div><div class="inc-val accent">NGR-PC-MP05TS6K9B1UZ5</div></div>
-        <div class="inc-row"><div class="inc-lbl">Bitcoin Block</div><div class="inc-val green">⬡ Block #951,267 — Confirmed</div></div>
         <div class="inc-row"><div class="inc-lbl">Captured At</div><div class="inc-val">May 27, 2026 · 7:29 AM UTC</div></div>
         <div class="inc-row"><div class="inc-lbl">Maintainer</div><div class="inc-val">friuns / dorumonstr@gmail.com</div></div>
         <div class="inc-row"><div class="inc-lbl">Attack Vector</div><div class="inc-val">Hidden postinstall script exfiltrating Codex auth tokens to attacker-controlled domain</div></div>
@@ -188,7 +190,6 @@ footer a:hover{color:var(--accent);}
       </div>
       <div class="inc-actions">
         <a class="inc-btn primary" href="/verify?receipt=NGR-PC-MP05TS6K9B1UZ5">🔗 Verify Receipt</a>
-        <a class="inc-btn" href="https://blockstream.info/block-height/951267" target="_blank">⬡ Bitcoin Block →</a>
         <a class="inc-btn" href="/package?name=codexui-android&ecosystem=npm">📦 View Archive →</a>
       </div>
     </div>
@@ -208,7 +209,7 @@ footer a:hover{color:var(--accent);}
       </div>
       <div class="inc-right">
         <div class="inc-date">May 26, 2026</div>
-        <div class="pre-badge">⬡ Pre-incident record</div>
+        <div class="pre-badge">✓ Pre-incident record</div>
       </div>
     </div>
     <div class="inc-body">
@@ -240,7 +241,7 @@ footer a:hover{color:var(--accent);}
       </div>
       <div class="inc-right">
         <div class="inc-date">May 22, 2026</div>
-        <div class="pre-badge">⬡ Pre-incident record</div>
+        <div class="pre-badge">✓ Pre-incident record</div>
       </div>
     </div>
     <div class="inc-body">
@@ -273,7 +274,7 @@ footer a:hover{color:var(--accent);}
       </div>
       <div class="inc-right">
         <div class="inc-date">May 11, 2026</div>
-        <div class="pre-badge">⬡ Pre-incident record</div>
+        <div class="pre-badge">✓ Pre-incident record</div>
       </div>
     </div>
     <div class="inc-body">
@@ -303,7 +304,7 @@ footer a:hover{color:var(--accent);}
       </div>
       <div class="inc-right">
         <div class="inc-date">May 18, 2026</div>
-        <div class="pre-badge">⬡ Pre-incident record</div>
+        <div class="pre-badge">✓ Pre-incident record</div>
       </div>
     </div>
     <div class="inc-body">
@@ -319,10 +320,33 @@ footer a:hover{color:var(--accent);}
     </div>
   </div>
 
-  <div class="submit-section">
-    <div class="submit-title">Know of an incident?</div>
-    <div class="submit-desc">If a supply chain attack has been publicly disclosed and you believe Prechained may have a pre-incident record, submit the package name for verification. Every verified receipt gets added to this registry.</div>
-    <a href="/capture" class="submit-btn">📦 Capture a package →</a>
+  <div class="submit-section" style="text-align:left;">
+    <div style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:10px;">Submit an Incident<span style="flex:1;height:1px;background:var(--border);display:inline-block;"></span></div>
+    <div class="submit-desc" style="text-align:left;">Know of a supply chain attack that Prechained may have a pre-incident record for? Submit it. Include the package name, ecosystem, and any public disclosure link. Every verified submission gets added to this registry.</div>
+    <form onsubmit="submitIncident(event)" style="margin-top:20px;display:flex;flex-direction:column;gap:12px;max-width:560px;">
+      <input type="text" id="sub-package" placeholder="Package name (e.g. lodash)" required
+        style="padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:13px;background:var(--white);outline:none;">
+      <div style="display:flex;gap:10px;">
+        <select id="sub-ecosystem" style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:13px;background:var(--white);">
+          <option value="npm">npm</option>
+          <option value="pypi">PyPI</option>
+          <option value="cargo">Cargo</option>
+          <option value="rubygems">RubyGems</option>
+          <option value="nuget">NuGet</option>
+          <option value="maven">Maven</option>
+          <option value="packagist">Packagist</option>
+          <option value="github">GitHub</option>
+        </select>
+        <input type="url" id="sub-disclosure" placeholder="Disclosure URL (optional)"
+          style="flex:2;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:13px;background:var(--white);">
+      </div>
+      <textarea id="sub-notes" placeholder="Brief description of the attack (optional)" rows="3"
+        style="padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:13px;background:var(--white);resize:vertical;"></textarea>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <button type="submit" class="submit-btn">Submit Incident →</button>
+        <span id="sub-status" style="font-family:var(--mono);font-size:12px;color:var(--green);display:none;"></span>
+      </div>
+    </form>
   </div>
 
 </div>
@@ -353,6 +377,106 @@ if (hash) {
   if (el) {
     el.querySelector('.inc-body')?.classList.add('open');
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// Load live findings from threat feed
+async function loadLiveFindings() {
+  try {
+    const res = await fetch('/.netlify/functions/threats?limit=10');
+    const data = await res.json();
+    if (!data.findings?.length) return;
+
+    document.getElementById('stat-total').textContent = data.total.toLocaleString();
+    document.getElementById('stat-eco').textContent = data.ecosystems_affected || '—';
+    document.getElementById('live-label').style.display = 'flex';
+
+    const TYPE_LABELS = {
+      FINGERPRINT_MISMATCH: 'Manifest Mutation',
+      INSTALL_HOOK_ADDED: 'Install Hook Added',
+      PUBLISHER_CHANGE: 'Publisher Change',
+      SIZE_SPIKE: 'Size Spike',
+      NEW_PACKAGE_WITH_INSTALL_HOOK: 'New Package + Install Hook',
+      SUSPICIOUS_PACKAGE_NAME: 'Suspicious Package Name',
+    };
+
+    const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const fmt = d => { if(!d) return '—'; const dt=new Date(d); return isNaN(dt)?'—':dt.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}); };
+
+    document.getElementById('live-findings').innerHTML = data.findings.map(f => `
+      <div class="incident">
+        <div class="inc-header" onclick="toggle(this)">
+          <div class="inc-left">
+            <div class="inc-top">
+              <span class="inc-badge ${f.severity==='HIGH'||f.severity==='CRITICAL'?'ib-high':f.severity==='MEDIUM'?'ib-medium':'ib-confirmed'}">${esc(f.severity)}</span>
+              <span class="eco-tag et-${esc(f.ecosystem)}">${esc(f.ecosystem)}</span>
+              <span class="inc-badge ib-confirmed">✓ Auto-detected</span>
+            </div>
+            <div class="inc-name">${esc(f.package)}</div>
+            <div class="inc-desc">${esc(f.detail)}</div>
+          </div>
+          <div class="inc-right">
+            <div class="inc-date">${fmt(f.captured_at)}</div>
+            <div class="pre-badge">✓ ${esc(TYPE_LABELS[f.type]||f.type)}</div>
+          </div>
+        </div>
+        <div class="inc-body">
+          <div class="inc-rows">
+            <div class="inc-row"><div class="inc-lbl">Receipt ID</div><div class="inc-val accent">${esc(f.receipt_id)}</div></div>
+            <div class="inc-row"><div class="inc-lbl">Package</div><div class="inc-val">${esc(f.package)} v${esc(f.version)}</div></div>
+            <div class="inc-row"><div class="inc-lbl">Finding</div><div class="inc-val">${esc(f.detail)}</div></div>
+            <div class="inc-row"><div class="inc-lbl">Fingerprint</div><div class="inc-val">${esc((f.fingerprint||'').substring(0,32))}…</div></div>
+            <div class="inc-row"><div class="inc-lbl">Captured At</div><div class="inc-val">${esc(f.captured_at)}</div></div>
+          </div>
+          <div class="inc-actions">
+            <a class="inc-btn primary" href="/verify?r=${encodeURIComponent(f.receipt_id)}">🔗 Verify Receipt</a>
+            <a class="inc-btn" href="/package?id=${encodeURIComponent(f.receipt_id)}">📦 View Archive →</a>
+            <a class="inc-btn" href="/threats">View All Findings →</a>
+          </div>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    console.error('live findings error:', e.message);
+  }
+}
+loadLiveFindings();
+
+// Submit incident
+async function submitIncident(e) {
+  e.preventDefault();
+  const pkg = document.getElementById('sub-package').value.trim();
+  const eco = document.getElementById('sub-ecosystem').value;
+  const disclosure = document.getElementById('sub-disclosure').value.trim();
+  const notes = document.getElementById('sub-notes').value.trim();
+  const status = document.getElementById('sub-status');
+
+  if (!pkg) return;
+
+  // First capture the package
+  status.textContent = 'Capturing package...';
+  status.style.display = 'inline';
+  status.style.color = 'var(--amber)';
+
+  try {
+    const res = await fetch('/.netlify/functions/capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: pkg, ecosystem: eco, source: 'incident-submission', notes, disclosure_url: disclosure })
+    });
+    const data = await res.json();
+    if (data.ok || data.receipt_id) {
+      status.textContent = '✓ Captured — receipt ' + (data.receipt_id || 'issued');
+      status.style.color = 'var(--green)';
+      document.getElementById('sub-package').value = '';
+      document.getElementById('sub-disclosure').value = '';
+      document.getElementById('sub-notes').value = '';
+    } else {
+      status.textContent = data.error || 'Capture failed — package may no longer exist on registry';
+      status.style.color = 'var(--red)';
+    }
+  } catch(err) {
+    status.textContent = 'Error — try again';
+    status.style.color = 'var(--red)';
   }
 }
 </script>
