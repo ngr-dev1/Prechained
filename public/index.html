@@ -341,7 +341,9 @@ function ecoC(e){
   const m={npm:'e-npm',pypi:'e-pypi',maven:'e-maven',cargo:'e-cargo',go:'e-go',nuget:'e-nuget',github:'e-gh',rubygems:'e-ruby',packagist:'e-pack'};
   return m[(e||'').toLowerCase()]||'e-npm';
 }
-function ancH(s){ return '<span class="anc a-anch">✓ Recorded</span>'; }
+function ancH(s){
+  return'<span class="anc a-anch">✓ Recorded</span>';
+}
 function ecoUrl(e,name){
   const m={npm:`https://npmjs.com/package/${name}`,pypi:`https://pypi.org/project/${name}`,maven:`https://search.maven.org/artifact/${name}`,cargo:`https://crates.io/crates/${name}`,go:`https://pkg.go.dev/${name}`,nuget:`https://nuget.org/packages/${name}`,github:`https://github.com/${name}`,rubygems:`https://rubygems.org/gems/${name}`,packagist:`https://packagist.org/packages/${name}`};
   return m[(e||'').toLowerCase()]||'#';
@@ -357,6 +359,12 @@ function rowH(s,isNew){
   </div>`;
 }
 
+async function refreshBtcBlock(){
+  try{
+    const r=await fetch('https://blockstream.info/api/blocks/tip/height');
+    const block=await r.text();
+    
+  }catch(e){}
 }
 
 async function refreshStats(){}
