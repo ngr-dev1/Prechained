@@ -246,16 +246,14 @@ footer a:hover{color:var(--accent);}
         <div class="info-card-desc">The receipt timestamp proves the record existed before any specified incident window. Cryptographically immutable.</div>
       </div>
       <div class="info-card">
-        <div class="info-card-title">🔗 Cryptographic chain</div>
-        <div class="info-card-desc">Every receipt ID maps to a unique SHA-384 fingerprint of the manifest. The archive is permanent and independently accessible on GitHub.</div>
-      </div>
+        
       <div class="info-card">
         <div class="info-card-title">🔐 SHA-384 integrity</div>
         <div class="info-card-desc">Every snapshot is SHA-384 fingerprinted over the canonical manifest. Your browser re-hashes the archived manifest here and only shows VERIFIED if it matches — you don't have to trust our database.</div>
       </div>
       <div class="info-card">
-        <div class="info-card-title">⚖️ Evidence-grade records</div>
-        <div class="info-card-desc">Cryptographic receipts with SHA-384 fingerprints constitute evidence of prior state. Shareable with auditors and legal teams.</div>
+        <div class="info-card-title">⚖️ Legally defensible</div>
+        <div class="info-card-desc">Bitcoin-anchored timestamps constitute evidence of prior state under ESIGN and eIDAS. Shareable with auditors and legal teams.</div>
       </div>
     </div>
   </div>
@@ -320,10 +318,7 @@ async function rehashVerify(snap){
 }
 
 function fmt(d){
-  if(!d) return '—';
-  const dt = new Date(d);
-  if(isNaN(dt.getTime())) return '—';
-  return dt.toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
+  return new Date(d).toLocaleString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
 }
 
 async function doVerify(){
