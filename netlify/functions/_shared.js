@@ -13,23 +13,6 @@ export const supabase = createClient(
 export const GITHUB_TOKEN = process.env.GITHUB_ARCHIVE_TOKEN;
 export const GITHUB_REPO = process.env.GITHUB_ARCHIVE_REPO || "ngr-dev1/prechained-archive";
 
-// ── BITCOIN BLOCK ──────────────────────────────────────────────
-let cachedBtcBlock = null;
-let cachedBtcBlockTime = 0;
-
-export async function getCurrentBtcBlock() {
-  if (cachedBtcBlock && Date.now() - cachedBtcBlockTime < 5 * 60 * 1000) {
-    return cachedBtcBlock;
-  }
-  try {
-    const res = await fetch("https://blockstream.info/api/blocks/tip/height");
-    if (!res.ok) return null;
-    cachedBtcBlock = parseInt((await res.text()).trim());
-    cachedBtcBlockTime = Date.now();
-    return cachedBtcBlock;
-  } catch(e) { return null; }
-}
-
 // ── CRYPTO ─────────────────────────────────────────────────────
 export function sha384(data) {
   return createHash("sha384").update(data).digest("hex");
@@ -136,11 +119,7 @@ export async function captureVersion(pkg, version, ecosystem, integrity, shasum,
   const receiptId = generateReceiptId();
   const manifestPath = await storeManifestInGithub(ecosystem, pkg.name, version, manifest);
 
-  // Insert UNANCHORED. We no longer write btc_anchored:true with a current
-  // block height that proves nothing. The OTS pipeline stamps ots_proof, and
-  // anchor-checker promotes btc_anchored/btc_block only on a real Bitcoin
-  // attestation. raw_metadata.fp:"v2" flags canonical-fingerprint rows so
-  // verify.html can tell them apart from legacy pre-OTS records.
+  // Insert with SHA-384 fingerprint. manifest_path stored in GitHub archive.
   const { data: inserted, error } = await supabase.from("snapshots").insert({
     package_id: pkg.id, version, ecosystem,
     sha384_fingerprint: fingerprint,
@@ -156,7 +135,7 @@ export async function captureVersion(pkg, version, ecosystem, integrity, shasum,
     console.error(`[capture] insert ${ecosystem}/${pkg.name}@${version}:`, error.message);
     return null;
   }
-  console.log(`CAPTURED: ${ecosystem}/${pkg.name}@${version} | manifest:${manifestPath ? "stored" : "failed"} | unanchored`);
+  console.log(`CAPTURED: ${ecosystem}/${pkg.name}@${version} | manifest:${manifestPath ? "stored" : "failed"} `);
   return { snapshotId: inserted.id, fingerprint };
 }
 
