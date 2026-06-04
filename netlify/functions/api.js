@@ -121,8 +121,6 @@ async function backfillFromGitHub(manifest, path) {
       ecosystem: manifest.ecosystem,
       sha384_fingerprint: fingerprint,
       receipt_id: receiptId,
-      btc_anchored: false,
-      btc_block: null,
       ots_proof: null,
       manifest_path: path,
       raw_metadata: { fp: "v2", backfilled_from_github: true, original_captured_at: manifest.captured_at || null },
@@ -152,8 +150,6 @@ function fingerprintFromGitHub(manifest, path) {
     artifact_integrity: manifest.dist?.integrity || null,
     artifact_shasum: manifest.dist?.shasum || null,
     receipt_id: null,                   // not yet anchored; backfill will fix this
-    btc_anchored: false,
-    btc_block: null,
     captured_at: manifest.captured_at || null,
     manifest_url: `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${path}`,
     archive_url: `https://github.com/${GITHUB_REPO}/blob/main/${path}`,
@@ -233,8 +229,6 @@ export default async function handler(req) {
         artifact_integrity: artifactIntegrity,
         artifact_shasum: artifactShasum,
         receipt_id: snap.receipt_id,
-        btc_anchored: snap.btc_anchored,
-        btc_block: snap.btc_block,
         captured_at: snap.captured_at,
         manifest_url: snap.manifest_path
           ? `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${snap.manifest_path}`
@@ -247,7 +241,6 @@ export default async function handler(req) {
           version: s.version,
           sha384: s.sha384_fingerprint,
           receipt_id: s.receipt_id,
-          btc_block: s.btc_block,
           captured_at: s.captured_at,
         })) : undefined,
       });
@@ -301,8 +294,6 @@ export default async function handler(req) {
       version: data.version,
       ecosystem: data.ecosystem,
       sha384: data.sha384_fingerprint,
-      btc_anchored: data.btc_anchored,
-      btc_block: data.btc_block,
       captured_at: data.captured_at,
       manifest_url: data.manifest_path
         ? `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${data.manifest_path}`
@@ -332,7 +323,7 @@ export default async function handler(req) {
 
     const { data: snaps, error: snapErr } = await supabase
       .from("snapshots")
-      .select("version, sha384_fingerprint, receipt_id, btc_block, btc_anchored, captured_at, manifest_path")
+      .select("version, sha384_fingerprint, receipt_id, captured_at, manifest_path")
       .eq("package_id", pkg.id)
       .order("captured_at", { ascending: false })
       .limit(100);
@@ -352,8 +343,6 @@ export default async function handler(req) {
         version: s.version,
         sha384: s.sha384_fingerprint,
         receipt_id: s.receipt_id,
-        btc_block: s.btc_block,
-        btc_anchored: s.btc_anchored,
         captured_at: s.captured_at,
         manifest_url: s.manifest_path
           ? `https://raw.githubusercontent.com/${GITHUB_REPO}/main/${s.manifest_path}`
@@ -454,7 +443,6 @@ export default async function handler(req) {
       version: v,
       sha384: snap.sha384_fingerprint,
       receipt_id: snap.receipt_id,
-      btc_block: snap.btc_block,
       captured_at: snap.captured_at,
       source: snap._source || "supabase",
       manifest_url: snap.manifest_path
