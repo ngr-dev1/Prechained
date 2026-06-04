@@ -41,6 +41,10 @@ nav{height:52px;padding:0 32px;display:flex;align-items:center;justify-content:s
 .filt{font-size:11px;font-weight:500;padding:4px 11px;border-radius:100px;border:1px solid var(--border);background:var(--white);color:var(--ink-2);cursor:pointer;transition:all .15s;white-space:nowrap;}
 .filt:hover{border-color:var(--ink-2);}
 .filt.on{border-color:var(--ink);background:var(--ink);color:#fff;}
+.sort-btn{font-size:11px;font-weight:500;padding:4px 11px;border-radius:100px;border:1px solid var(--border);background:var(--white);color:var(--ink-2);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.sort-btn:hover{border-color:var(--ink-2);}
+.sort-btn.on{border-color:var(--accent);background:var(--accent);color:#fff;}
+
 
 .main{max-width:960px;margin:0 auto;padding:20px 32px;}
 .meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
@@ -164,6 +168,14 @@ footer a:hover{color:var(--accent);}
       <button class="filt" data-eco="go">Go</button>
       <button class="filt" data-eco="nuget">NuGet</button>
     </div>
+
+    <div class="filter-row" style="margin-top:8px;">
+      <span class="fl">Sort</span>
+      <button class="sort-btn on" data-sort="last_captured_at" data-dir="desc">Latest first</button>
+      <button class="sort-btn" data-sort="last_captured_at" data-dir="asc">Oldest first</button>
+      <button class="sort-btn" data-sort="name" data-dir="asc">Name A–Z</button>
+      <button class="sort-btn" data-sort="name" data-dir="desc">Name Z–A</button>
+    </div>
   </div>
 </div>
 
@@ -183,7 +195,7 @@ footer a:hover{color:var(--accent);}
 </footer>
 
 <script>
-let page=1,eco='',q='',timer;
+let page=1,eco='',q='',sortBy='last_captured_at',sortDir='desc',timer;
 
 function ecoUrl(e, name) {
   const urls = {
@@ -222,6 +234,7 @@ async function loadPkgs(){
   let url=`/.netlify/functions/packages?page=${page}`;
   if(eco)url+=`&ecosystem=${encodeURIComponent(eco)}`;
   if(q)url+=`&q=${encodeURIComponent(q)}`;
+  if(sortBy)url+=`&sort=${sortBy}&dir=${sortDir}`;
   try{
     const r=await fetch(url+'&t='+Date.now());
     const d=await r.json();
@@ -259,9 +272,19 @@ function renderPages(total){
   const pages=Math.ceil(total/20);
   if(pages<=1){document.getElementById('pagination').innerHTML='';return;}
   let h=`<button class="pg-btn" onclick="goPage(${page-1})" ${page===1?'disabled':''}>←</button>`;
-  for(let i=1;i<=Math.min(pages,7);i++)h+=`<button class="pg-btn ${i===page?'on':''}" onclick="goPage(${i})">${i}</button>`;
-  if(pages>7)h+=`<span style="font-size:12px;color:var(--ink-3);font-family:var(--mono);">...</span>`;
+  // Smart pagination: show first, last, current ±2, with ellipsis
+  const show=new Set([1,pages,page,page-1,page-2,page+1,page+2].filter(p=>p>=1&&p<=pages));
+  const sorted=[...show].sort((a,b)=>a-b);
+  let prev=0;
+  for(const p of sorted){
+    if(prev&&p-prev>1)h+=`<span style="font-size:12px;color:var(--ink-3);font-family:var(--mono);padding:0 4px;">…</span>`;
+    h+=`<button class="pg-btn ${p===page?'on':''}" onclick="goPage(${p})">${p}</button>`;
+    prev=p;
+  }
   h+=`<button class="pg-btn" onclick="goPage(${page+1})" ${page===pages?'disabled':''}>→</button>`;
+  // Page jump input
+  h+=`<input type="number" min="1" max="${pages}" value="${page}" onchange="goPage(Math.max(1,Math.min(${pages},parseInt(this.value)||1)))" style="width:52px;padding:4px 6px;font-size:12px;font-family:var(--mono);border:1px solid var(--border);border-radius:5px;background:var(--white);color:var(--ink);text-align:center;" title="Jump to page">`;
+  h+=`<span style="font-size:11px;color:var(--ink-3);font-family:var(--mono);">of ${pages}</span>`;
   document.getElementById('pagination').innerHTML=h;
 }
 
@@ -278,6 +301,15 @@ document.querySelectorAll('.filt').forEach(b=>{
 document.getElementById('search-input').addEventListener('input',function(){
   clearTimeout(timer);
   timer=setTimeout(()=>{q=this.value.trim();page=1;loadPkgs();},400);
+});
+
+
+document.querySelectorAll('.sort-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.sort-btn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    sortBy=b.dataset.sort;sortDir=b.dataset.dir;page=1;loadPkgs();
+  });
 });
 
 loadStats();
