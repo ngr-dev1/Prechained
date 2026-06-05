@@ -228,13 +228,13 @@ async function captureBulk() {
     const rowsHtml = rows.map(r => {
       const icon = r.status === 'pending' ? '\u25cb'
         : r.status === 'running' ? '<span class="spinner" style="width:10px;height:10px;border-width:1.5px;"></span>'
-        : r.error ? '\u2717' : '\u2713';
+        : r.error && !r.background ? '\u2717' : r.background ? '\u23f3' : '\u2713';
       const receipt = r.receipt ? '<span class="bulk-row-receipt">' + esc(r.receipt) + '</span>' : '';
-      const err = r.error ? '<span class="bulk-row-err">' + esc(r.error) + '</span>' : '';
+      const err = r.error ? '<span class="bulk-row-err" style="' + (r.background ? 'color:#b45309;' : '') + '">' + esc(r.error) + '</span>' : '';
       return '<div class="bulk-row"><span class="bulk-row-status">' + icon + '</span><span class="bulk-row-pkg">' + esc(r.raw) + '</span>' + receipt + err + '</div>';
     }).join('');
     const doneDiv = done === rows.length
-      ? '<div class="bulk-done">\u2713 Done \u2014 ' + rows.filter(r=>!r.error).length + ' captured, ' + rows.filter(r=>r.error).length + ' failed &nbsp;<a href="/browse">Browse archive \u2192</a></div>'
+      ? '<div class="bulk-done">\u2713 Done \u2014 ' + rows.filter(r=>r.receipt).length + ' captured, ' + rows.filter(r=>r.background).length + ' in background, ' + rows.filter(r=>r.error&&!r.background).length + ' failed &nbsp;<a href="/browse">Browse archive \u2192</a></div>'
       : '';
     const spinnerHtml = done < rows.length ? '<span class="spinner"></span>' : '';
     document.getElementById('bulk-result').innerHTML =
@@ -270,7 +270,11 @@ async function captureBulk() {
         row.status = 'done'; row.receipt = data.receipt_id || '\u2014';
       }
     } catch(e) {
-      row.status = 'done'; row.error = 'Network error';
+      const isTimeout = e.name === 'TypeError' || e.name === 'SyntaxError'
+        || (e.message && (e.message.includes('fetch') || e.message.includes('network') || e.message.includes('JSON')));
+      row.status = 'done';
+      row.background = isTimeout;
+      row.error = isTimeout ? '⏳ capturing in background' : 'Failed: ' + e.message;
     }
     done++;
     renderProgress(done);
