@@ -58,6 +58,28 @@ input:focus,select:focus{border-color:var(--accent);}
 .note{margin-top:20px;font-size:12px;color:var(--ink-4);line-height:1.6;}
 .note a{color:var(--accent);}
 .rate{font-family:var(--mono);font-size:10px;color:var(--ink-4);margin-top:8px;}
+/* ── BULK MODE ─────────────────────────────────────────── */
+.mode-toggle{display:flex;gap:0;margin-bottom:24px;border:1px solid var(--border);border-radius:7px;overflow:hidden;width:fit-content;}
+.mode-btn{padding:8px 20px;font-family:var(--mono);font-size:12px;font-weight:500;cursor:pointer;border:none;background:var(--bg);color:var(--ink-3);transition:all .15s;}
+.mode-btn.active{background:var(--accent);color:#fff;}
+.mode-btn:first-child{border-right:1px solid var(--border);}
+textarea.bulk-input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--mono);background:var(--bg);color:var(--ink);outline:none;transition:border-color .15s;resize:vertical;min-height:140px;line-height:1.7;}
+textarea.bulk-input:focus{border-color:var(--accent);}
+.bulk-hint{font-family:var(--mono);font-size:10px;color:var(--ink-4);margin-top:6px;line-height:1.7;}
+.bulk-progress{margin-top:20px;background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.bulk-progress-head{padding:12px 20px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.08em;background:#f5f0ea;color:var(--ink-3);border-bottom:1px solid var(--border);}
+.bulk-progress-bar-wrap{height:4px;background:var(--border);}
+.bulk-progress-bar{height:4px;background:var(--accent);transition:width .3s;}
+.bulk-progress-body{padding:16px 20px;max-height:220px;overflow-y:auto;}
+.bulk-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid #f0ede8;font-family:var(--mono);font-size:11px;}
+.bulk-row:last-child{border-bottom:none;}
+.bulk-row-status{width:14px;text-align:center;flex-shrink:0;}
+.bulk-row-pkg{color:var(--ink-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bulk-row-receipt{color:var(--accent);font-weight:600;font-size:10px;flex-shrink:0;}
+.bulk-row-err{color:var(--red);font-size:10px;flex-shrink:0;}
+.bulk-done{padding:14px 20px;background:#e8f5ee;border-top:1px solid #c3e6d0;font-family:var(--mono);font-size:11px;color:var(--green);font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.bulk-done a{color:var(--accent);font-weight:600;text-decoration:none;}
+.bulk-done a:hover{text-decoration:underline;}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.15);border-top-color:var(--ink-3);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .examples{margin-top:32px;}
@@ -112,10 +134,20 @@ footer a{color:var(--ink-3);text-decoration:none;}
   <h1>Capture a <i>package.</i></h1>
   <div class="sub">Submit any public package for immediate cryptographic capture. SHA-384 fingerprinted and cryptographically recorded. Free. No login required. Max 10 requests per hour.</div>
 
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="mode-single" onclick="setMode(&#39;single&#39;)">Single</button>
+    <button class="mode-btn" id="mode-bulk" onclick="setMode(&#39;bulk&#39;)">Bulk</button>
+  </div>
+
   <div class="form-card">
-    <div class="field">
+    <div class="field" id="single-pkg-field">
       <label>Package Name</label>
       <input type="text" id="pkg-input" placeholder="e.g. token-usage-tracker, requests, serde" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+    </div>
+    <div class="field" id="bulk-pkg-field" style="display:none;">
+      <label>Packages <span style="font-weight:400;color:var(--ink-4);font-family:var(--sans);text-transform:none;letter-spacing:0;">— one per line</span></label>
+      <textarea class="bulk-input" id="bulk-input" placeholder="express&#10;lodash&#10;react@18.2.0&#10;@forjacms/analytics" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+      <div class="bulk-hint">One package per line. Optionally pin a version with @version.<br>Max 10 packages (rate limit). Ecosystem selector applies to all.</div>
     </div>
     <div class="field">
       <label>Ecosystem</label>
@@ -134,8 +166,9 @@ footer a{color:var(--ink-3);text-decoration:none;}
       <label>Version <span style="font-weight:400;color:var(--ink-4);font-family:var(--sans);text-transform:none;letter-spacing:0;">(optional — leave blank to capture all)</span></label>
       <input type="text" id="version-input" placeholder="e.g. 2.39.0" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
     </div>
-    <button class="submit-btn" id="submit-btn" onclick="capture()">Capture Package →</button>
+    <button class="submit-btn" id="submit-btn" onclick="currentMode === &#39;bulk&#39; ? captureBulk() : capture()">Capture Package →</button>
     <div id="result"></div>
+    <div id="bulk-result"></div>
   </div>
 
   <div class="examples">
@@ -156,6 +189,97 @@ footer a{color:var(--ink-3);text-decoration:none;}
 
 <script>
 let selectedEco = 'npm';
+let currentMode = 'single';
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('mode-single').classList.toggle('active', mode === 'single');
+  document.getElementById('mode-bulk').classList.toggle('active', mode === 'bulk');
+  document.getElementById('single-pkg-field').style.display = mode === 'single' ? '' : 'none';
+  document.getElementById('bulk-pkg-field').style.display = mode === 'bulk' ? '' : 'none';
+  const vf = document.getElementById('version-input');
+  if (vf) vf.closest('.field').style.display = mode === 'single' ? '' : 'none';
+  document.getElementById('result').innerHTML = '';
+  document.getElementById('bulk-result').innerHTML = '';
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = mode === 'bulk' ? 'Capture All \u2192' : 'Capture Package \u2192';
+}
+
+async function captureBulk() {
+  const raw = document.getElementById('bulk-input').value.trim();
+  if (!raw) { document.getElementById('bulk-input').focus(); return; }
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const MAX = 10;
+  const packages = lines.slice(0, MAX);
+  if (lines.length > MAX) {
+    alert('Max 10 packages per bulk capture (rate limit). Only the first 10 will be captured.');
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Capturing...';
+
+  const rows = packages.map((p, i) => ({ id: i, raw: p, status: 'pending', receipt: null, error: null }));
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function renderProgress(done) {
+    const pct = Math.round((done / rows.length) * 100);
+    const rowsHtml = rows.map(r => {
+      const icon = r.status === 'pending' ? '\u25cb'
+        : r.status === 'running' ? '<span class="spinner" style="width:10px;height:10px;border-width:1.5px;"></span>'
+        : r.error ? '\u2717' : '\u2713';
+      const receipt = r.receipt ? '<span class="bulk-row-receipt">' + esc(r.receipt) + '</span>' : '';
+      const err = r.error ? '<span class="bulk-row-err">' + esc(r.error) + '</span>' : '';
+      return '<div class="bulk-row"><span class="bulk-row-status">' + icon + '</span><span class="bulk-row-pkg">' + esc(r.raw) + '</span>' + receipt + err + '</div>';
+    }).join('');
+    const doneDiv = done === rows.length
+      ? '<div class="bulk-done">\u2713 Done \u2014 ' + rows.filter(r=>!r.error).length + ' captured, ' + rows.filter(r=>r.error).length + ' failed &nbsp;<a href="/browse">Browse archive \u2192</a></div>'
+      : '';
+    const spinnerHtml = done < rows.length ? '<span class="spinner"></span>' : '';
+    document.getElementById('bulk-result').innerHTML =
+      '<div class="bulk-progress">'
+      + '<div class="bulk-progress-head">' + spinnerHtml + done + ' / ' + rows.length + ' captured</div>'
+      + '<div class="bulk-progress-bar-wrap"><div class="bulk-progress-bar" style="width:' + pct + '%"></div></div>'
+      + '<div class="bulk-progress-body">' + rowsHtml + '</div>'
+      + doneDiv
+      + '</div>';
+  }
+
+  renderProgress(0);
+  let done = 0;
+
+  for (const row of rows) {
+    row.status = 'running';
+    renderProgress(done);
+    let pkgName = row.raw, version = null;
+    const atIdx = row.raw.lastIndexOf('@');
+    if (atIdx > 0) { pkgName = row.raw.slice(0, atIdx); version = row.raw.slice(atIdx + 1); }
+    try {
+      const body = { package: pkgName, ecosystem: selectedEco };
+      if (version) body.version = version;
+      const res = await fetch('/.netlify/functions/capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        row.status = 'done'; row.error = data.error || 'Failed';
+      } else {
+        row.status = 'done'; row.receipt = data.receipt_id || '\u2014';
+      }
+    } catch(e) {
+      row.status = 'done'; row.error = 'Network error';
+    }
+    done++;
+    renderProgress(done);
+    if (done < rows.length) await new Promise(r => setTimeout(r, 400));
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Capture All \u2192';
+}
 
 async function loadRecentCaptures() {
   try {
