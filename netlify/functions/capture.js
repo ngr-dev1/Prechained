@@ -460,7 +460,8 @@ export default async function handler(req, context) {
       if (result.lastManifest) {
         await indexActors(result.pkg, eco, result.lastManifest);
       }
-      await updateVelocity(result.pkg, eco, result.captured);
+      const maintainersForVelocity = (result.lastManifest?.maintainers || []);
+      await updateVelocity(result.pkg, eco, result.captured, maintainersForVelocity);
 
       const manifest = result.lastManifest || {};
       const maintainers = manifest.maintainers || [];
