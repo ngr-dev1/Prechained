@@ -3,6 +3,7 @@
 // prechained.com · Built by NextGenRails™
 
 import { createClient } from "@supabase/supabase-js";
+import { isKnownGood } from "./actor-intelligence.js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -60,6 +61,9 @@ export default async function handler(req) {
       const key = `${actor.package_name}:${actor.ecosystem}`;
       if (seen.has(key)) continue;
       seen.add(key);
+
+      // Skip known-good maintainers — they should never appear in the threat feed
+      if (isKnownGood(actor.email, actor.username)) continue;
 
       const vel = flaggedMap.get(key);
       const flags = [];
