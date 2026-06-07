@@ -4,6 +4,34 @@
 
 import { supabase } from "./_shared.js";
 
+// ── KNOWN-GOOD ALLOWLIST ─────────────────────────────────────────────────────
+// Established, high-volume maintainers whose velocity/new-actor signals are noise.
+// Checked against both email and npm username. Case-insensitive.
+const KNOWN_GOOD_USERNAMES = new Set([
+  "sindresorhus",   // chalk, 1000s of packages
+  "motdotenv",      // dotenv
+  "tj",             // express, many others
+  "dougwilson",     // express core
+  "ljharb",         // semver, many others
+  "nicolo-ribaudo", // babel
+  "isaacs",         // npm core packages
+  "feross",         // many core packages
+  "dominictarr",    // many core packages
+  "yarnpkg",        // yarn
+  "nicholasgasior", // axios
+]);
+
+const KNOWN_GOOD_EMAILS = new Set([
+  "mot@dotenv.org",
+  "sindresorhus@gmail.com",
+]);
+
+export function isKnownGood(email, username) {
+  if (email && KNOWN_GOOD_EMAILS.has(email.toLowerCase().trim())) return true;
+  if (username && KNOWN_GOOD_USERNAMES.has(username.toLowerCase().trim())) return true;
+  return false;
+}
+
 const CORS = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
@@ -92,6 +120,20 @@ export async function queryActorIntelligence({ email, username, pkg, ecosystem }
       }
       if (row.email) actorIdentities.add(row.email);
     }
+  }
+
+  // ── KNOWN-GOOD EARLY EXIT ────────────────────────────────────────────────────
+  if (isKnownGood(email, username)) {
+    return {
+      actor: { email: email || null, username: username || null, known_identities: [...actorIdentities] },
+      connected_packages: connectedPackages,
+      connected_package_count: connectedPackages.length,
+      flags: [],
+      threat_level: "NONE",
+      velocity: null,
+      is_new_actor: false,
+      known_good: true,
+    };
   }
 
   // ── 3. Cross-ecosystem check ─────────────────────────────────
@@ -229,6 +271,13 @@ export async function indexActors(pkg, ecosystem, manifest) {
 
   if (rows.length === 0) return;
 
+  // Skip known-good maintainers entirely — don't pollute actor_index or velocity
+  const allKnownGood = rows.every(r => isKnownGood(r.email, r.username));
+  if (allKnownGood) {
+    console.log(`[actor-intelligence] skipping known-good maintainer(s) for ${pkg.name}`);
+    return;
+  }
+
   // Insert each row — ignore duplicate key errors (unique constraint 23505)
   for (const row of rows) {
     try {
@@ -277,8 +326,14 @@ export async function indexActors(pkg, ecosystem, manifest) {
 
 // ── UPDATE VELOCITY ──────────────────────────────────────────
 // Call this from capture.js after capturing new versions
-export async function updateVelocity(pkg, ecosystem, newVersionCount) {
+export async function updateVelocity(pkg, ecosystem, newVersionCount, maintainers = []) {
   if (newVersionCount === 0) return;
+
+  // Skip velocity tracking for known-good maintainers
+  if (maintainers.length > 0 && maintainers.every(m => isKnownGood(m.email, m.name || m.username))) {
+    console.log(`[updateVelocity] skipping known-good pkg: ${pkg.name}`);
+    return;
+  }
 
   const now = new Date();
 
