@@ -1,7 +1,7 @@
 // backfill-github.mjs
-// Bulk GitHub backfill — processes as many rows as possible within timeout
-// Deploy to netlify/functions/ in prechained repo
-// Trigger via: https://prechained.com/.netlify/functions/backfill-github
+// Bulk GitHub backfill — rate-limit safe version
+// Concurrency: 3, with 500ms delay between batches
+// Each call processes ~100-150 rows safely
 // prechained.com · Built by NextGenRails™
 
 import { createClient } from "@supabase/supabase-js";
@@ -13,11 +13,10 @@ const supabase = createClient(
 
 const GITHUB_TOKEN = process.env.GITHUB_ARCHIVE_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_ARCHIVE_REPO || "ngr-dev1/prechained-archive";
-
-// Fetch in pages of 500, process concurrently in batches of 10
-const PAGE_SIZE = 500;
-const CONCURRENCY = 10;
-const MAX_RUNTIME_MS = 22000; // Stop at 22s to safely return before Netlify 26s timeout
+const PAGE_SIZE = 300;
+const CONCURRENCY = 3;
+const BATCH_DELAY_MS = 500;
+const MAX_RUNTIME_MS = 20000;
 
 async function storeManifestInGithub(ecosystem, name, version, manifest) {
   if (!GITHUB_TOKEN || !manifest) return null;
@@ -40,34 +39,16 @@ async function storeManifestInGithub(ecosystem, name, version, manifest) {
     });
 
     if (!res.ok) {
-      const err = await res.json();
+      const err = await res.json().catch(() => ({}));
       if (err.message && err.message.includes("already exists")) return path;
+      console.error(`GitHub error for ${path}: ${res.status} ${err.message}`);
       return null;
     }
     return path;
   } catch(e) {
+    console.error("GitHub store failed:", e.message);
     return null;
   }
-}
-
-async function processRow(row) {
-  const pkg = row.packages;
-  if (!pkg || !row.raw_metadata) return { id: row.id, result: "skipped" };
-
-  const manifestPath = await storeManifestInGithub(
-    pkg.ecosystem, pkg.name, row.version, row.raw_metadata
-  );
-
-  if (manifestPath) {
-    await supabase.from("snapshots").update({ manifest_path: manifestPath }).eq("id", row.id);
-    return { id: row.id, result: "archived" };
-  }
-  return { id: row.id, result: "error" };
-}
-
-async function processBatch(rows) {
-  const results = await Promise.all(rows.map(processRow));
-  return results;
 }
 
 export default async function handler(req) {
@@ -82,42 +63,62 @@ export default async function handler(req) {
   let totalArchived = 0;
   let totalSkipped = 0;
   let totalErrors = 0;
-  let pageOffset = 0;
 
   try {
-    while (true) {
-      // Stop if approaching timeout
-      if (Date.now() - startTime > MAX_RUNTIME_MS) break;
+    const { data: rows, error } = await supabase
+      .from("snapshots")
+      .select("id, version, raw_metadata, packages(name, ecosystem)")
+      .is("manifest_path", null)
+      .not("raw_metadata", "is", null)
+      .limit(PAGE_SIZE);
 
-      // Fetch next page
-      const { data: rows, error } = await supabase
-        .from("snapshots")
-        .select("id, version, raw_metadata, packages(name, ecosystem)")
-        .is("manifest_path", null)
-        .not("raw_metadata", "is", null)
-        .range(pageOffset, pageOffset + PAGE_SIZE - 1);
-
-      if (error || !rows || rows.length === 0) break;
-
-      // Process in concurrent batches of CONCURRENCY
-      for (let i = 0; i < rows.length; i += CONCURRENCY) {
-        if (Date.now() - startTime > MAX_RUNTIME_MS) break;
-        const batch = rows.slice(i, i + CONCURRENCY);
-        const results = await processBatch(batch);
-        for (const r of results) {
-          totalProcessed++;
-          if (r.result === "archived") totalArchived++;
-          else if (r.result === "skipped") totalSkipped++;
-          else totalErrors++;
-        }
-      }
-
-      // If we got a full page, continue to next page
-      if (rows.length < PAGE_SIZE) break;
-      pageOffset += PAGE_SIZE;
+    if (error) {
+      return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: CORS });
     }
 
-    // Get remaining count
+    if (!rows || rows.length === 0) {
+      const { count } = await supabase
+        .from("snapshots")
+        .select("id", { count: "exact", head: true })
+        .is("manifest_path", null);
+      return new Response(JSON.stringify({
+        ok: true,
+        message: "Backfill complete!",
+        remaining_unarchived: count || 0
+      }), { headers: CORS });
+    }
+
+    // Process in small concurrent batches with delays
+    for (let i = 0; i < rows.length; i += CONCURRENCY) {
+      if (Date.now() - startTime > MAX_RUNTIME_MS) break;
+
+      const batch = rows.slice(i, i + CONCURRENCY);
+      const results = await Promise.all(batch.map(async (row) => {
+        const pkg = row.packages;
+        if (!pkg || !row.raw_metadata) return "skipped";
+
+        const manifestPath = await storeManifestInGithub(
+          pkg.ecosystem, pkg.name, row.version, row.raw_metadata
+        );
+
+        if (manifestPath) {
+          await supabase.from("snapshots").update({ manifest_path: manifestPath }).eq("id", row.id);
+          return "archived";
+        }
+        return "error";
+      }));
+
+      for (const r of results) {
+        totalProcessed++;
+        if (r === "archived") totalArchived++;
+        else if (r === "skipped") totalSkipped++;
+        else totalErrors++;
+      }
+
+      // Rate limit safety delay between batches
+      await new Promise(r => setTimeout(r, BATCH_DELAY_MS));
+    }
+
     const { count: remaining } = await supabase
       .from("snapshots")
       .select("id", { count: "exact", head: true })
